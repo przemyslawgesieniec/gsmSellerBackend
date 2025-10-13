@@ -1,0 +1,12 @@
+version: '3.9'
+
+services:
+  app:
+#    build: .
+    image: pgesieniec/gsmseller:0.0.1
+    container_name: gsmseller
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    restart: always
