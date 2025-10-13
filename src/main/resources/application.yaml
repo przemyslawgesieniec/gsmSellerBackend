@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: gsm-seller
+
+gpt:
+  url: https://api.openai.com/v1/chat/completions

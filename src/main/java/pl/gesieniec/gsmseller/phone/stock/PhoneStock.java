@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.javamoney.moneta.Money;
 
-@RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
