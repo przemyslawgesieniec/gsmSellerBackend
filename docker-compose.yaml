@@ -3,7 +3,7 @@ version: '3.9'
 services:
   app:
 #    build: .
-    image: pgesieniec/gsmseller:0.0.1
+    image: pgesieniec/gsmseller:0.0.1-amd64
     container_name: gsmseller
     ports:
       - "8080:8080"
