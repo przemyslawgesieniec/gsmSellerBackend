@@ -41,9 +41,6 @@ public class PhoneStockController {
         return new PhoneScanDto("Iphone","12GB","128",
             "black",
             "123dfwdfwef",
-            "asdfwe234f",
-            "1ef234",
-            "123234",
-            "2343245");
+            "asdfwe234f");
     }
 }

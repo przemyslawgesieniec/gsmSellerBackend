@@ -26,24 +26,17 @@ public class PhoneStock {
     private String color;
     private String imei1;
     private String imei2;
-    private String eid;
-    private String barcode;
-    private String sn;
     private String name;
     private String source;
     private Money purchasePrice;
     private Money suggestedSellingPrice;
 
-    public PhoneStock(String model, String ram, String memory, String color, String imei1, String imei2,
-                      String eid, String barcode, String sn) {
+    public PhoneStock(String model, String ram, String memory, String color, String imei1, String imei2) {
         this.model = model;
         this.ram = ram;
         this.memory = memory;
         this.color = color;
         this.imei1 = imei1;
         this.imei2 = imei2;
-        this.eid = eid;
-        this.barcode = barcode;
-        this.sn = sn;
     }
 }

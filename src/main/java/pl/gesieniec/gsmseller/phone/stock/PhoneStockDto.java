@@ -16,9 +16,6 @@ public class PhoneStockDto {
     private String color;
     private String imei1;
     private String imei2;
-    private String eid;
-    private String barcode;
-    private String sn;
     private String name;
     private String source;
     private Money purchasePrice;

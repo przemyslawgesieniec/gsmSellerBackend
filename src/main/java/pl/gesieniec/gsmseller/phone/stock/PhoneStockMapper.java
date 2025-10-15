@@ -15,10 +15,7 @@ public class PhoneStockMapper {
             phoneScanDto.getMemory(),
             phoneScanDto.getColor(),
             phoneScanDto.getImei1(),
-            phoneScanDto.getImei2(),
-            phoneScanDto.getEid(),
-            phoneScanDto.getBarcode(),
-            phoneScanDto.getSn());
+            phoneScanDto.getImei2());
     }
 
     public PhoneStockDto toDto(PhoneStock save) {
@@ -28,9 +25,6 @@ public class PhoneStockMapper {
             save.getColor(),
             save.getImei1(),
             save.getImei2(),
-            save.getEid(),
-            save.getBarcode(),
-            save.getSn(),
             save.getName(),
             save.getSource(),
             save.getPurchasePrice(),
