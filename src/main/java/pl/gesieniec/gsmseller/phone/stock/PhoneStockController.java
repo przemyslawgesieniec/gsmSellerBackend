@@ -38,7 +38,7 @@ public class PhoneStockController {
 
     @GetMapping("/test")
     public PhoneScanDto getTestPhone(){
-        return new PhoneScanDto("Iphone","12GB","128",
+        return new PhoneScanDto("buba","12GB","128",
             "black",
             "123dfwdfwef",
             "asdfwe234f");
