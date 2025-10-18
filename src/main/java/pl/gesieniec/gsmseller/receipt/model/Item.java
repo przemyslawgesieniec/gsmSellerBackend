@@ -18,7 +18,7 @@ public class Item {
         this.name = name;
         this.nettAmount = nettAmount;
         this.vat = vat;
-        this.vatAmount = nettAmount.multiply(vat.getValue());
+        this.vatAmount = nettAmount.multiply(vat.getValue()).setScale(2, BigDecimal.ROUND_HALF_EVEN);
         this.grossAmount = nettAmount.add(vatAmount);
     }
 }

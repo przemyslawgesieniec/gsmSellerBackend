@@ -1,6 +1,8 @@
 package pl.gesieniec.gsmseller.receipt;
 
 import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.layout.Document;
@@ -10,6 +12,7 @@ import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import java.util.List;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -21,6 +24,7 @@ import pl.gesieniec.gsmseller.receipt.model.Seller;
 @Service
 public class PdfGenerationService {
 
+    @SneakyThrows
     public byte[] generateReceiptPdf(Receipt receipt) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -28,6 +32,11 @@ public class PdfGenerationService {
         PdfDocument pdfDoc = new PdfDocument(writer);
         Document document = new Document(pdfDoc, PageSize.A4);
         document.setMargins(40, 40, 40, 40);
+
+        PdfFont font = PdfFontFactory.createFont("src/main/resources/static/Fira_Sans/FiraSans-Regular.ttf",
+            "Identity-H", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+        document.setFont(font);
+
 
         prepareHeader(document, receipt);
 
@@ -58,6 +67,7 @@ public class PdfGenerationService {
     private void prepareSummary(Document document, Receipt receipt) {
         float[] columnWidths = {100f, 120f, 120f, 120f};
         Table table = new Table(columnWidths);
+        table.setFontSize(8);
         table.setWidth(UnitValue.createPercentValue(50));
 
         table.addHeaderCell(new Cell().add(new Paragraph(""))
