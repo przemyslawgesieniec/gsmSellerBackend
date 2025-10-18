@@ -89,7 +89,7 @@ public class PdfGenerationService {
 
         table.addCell("RAZEM: ");
         table.addCell(String.format("%.2f", receipt.getNetTotal()));
-        table.addCell(receipt.getItems().getFirst().getVat().getName());
+        table.addCell(receipt.getItems().get(0).getVatRate().getName());
         table.addCell(String.format("%.2f", receipt.getGrossTotal()));
 
         table.setHorizontalAlignment(HorizontalAlignment.RIGHT);
@@ -118,7 +118,7 @@ public class PdfGenerationService {
                 .setTextAlignment(TextAlignment.RIGHT);
             table.addCell(String.format("%.2f",item.getNettAmount()))
                 .setTextAlignment(TextAlignment.RIGHT);
-            table.addCell(item.getVat().getName())
+            table.addCell(item.getVatRate().getName())
                 .setTextAlignment(TextAlignment.CENTER);
             table.addCell(String.format("%.2f",item.getVatAmount()))
                 .setTextAlignment(TextAlignment.RIGHT);
