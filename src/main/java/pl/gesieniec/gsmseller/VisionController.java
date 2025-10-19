@@ -58,7 +58,7 @@ public class VisionController {
         Map<String, Object> textObj = Map.of("type", "input_text", "text", prompt);
         Map<String, Object> imageObj = Map.of(
             "type", "input_image",
-            "image_url", Map.of("url", dataUrl)
+            "image_url", dataUrl
         );
         Map<String, Object> userMessage = Map.of(
             "role", "user",
