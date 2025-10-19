@@ -2,6 +2,7 @@ package pl.gesieniec.gsmseller.receipt;
 
 import java.math.BigDecimal;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import pl.gesieniec.gsmseller.receipt.entity.DateAndPlaceEntity;
 import pl.gesieniec.gsmseller.receipt.entity.ItemEntity;
 import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
@@ -15,7 +16,10 @@ import pl.gesieniec.gsmseller.receipt.model.VatRate;
 @Mapper(componentModel = "spring")
 public interface ReceiptMapper {
 
+    @Mapping(source = "items", target = "items")
     Receipt toModel(ReceiptEntity entity);
+
+    @Mapping(source = "items", target = "items")
     ReceiptEntity toEntity(Receipt dto);
 
     Seller toModel(SellerEntity entity);

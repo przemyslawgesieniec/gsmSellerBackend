@@ -11,6 +11,7 @@ spring:
     driverClassName: org.h2.Driver
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
-gpt:
-  url: https://api.openai.com/v1/chat/completions
-  key: placeholderkey
+openai:
+  api-base: https://api.openai.com/v1
+  model: gpt-4o-mini
+

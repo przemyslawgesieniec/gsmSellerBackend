@@ -7,7 +7,8 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import pl.gesieniec.gsmseller.common.EntityNotFountException;
+import org.springframework.transaction.annotation.Transactional;
+import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
 import pl.gesieniec.gsmseller.receipt.model.DateAndPlace;
 import pl.gesieniec.gsmseller.receipt.model.Item;
@@ -28,14 +29,21 @@ public class ReceiptService {
     public byte[] generateReceiptPdf(UUID technicalId) {
 
         ReceiptEntity receiptEntity = receiptRepository.findByTechnicalId(technicalId)
-            .orElseThrow(() -> new EntityNotFountException("Nie można znaleść potwierdzenia sprzedaży"));
+            .orElseThrow(() -> new EntityNotFoundException("Nie można znaleść potwierdzenia sprzedaży"));
+
 
         Receipt receipt = receiptMapper.toModel(receiptEntity);
         return pdfService.generateReceiptPdf(receipt);
     }
 
+    @Transactional
     public UUID generateAndSaveReceipt() {
-        Receipt receipt = Receipt.of("10/10/2025",
+
+        String receiptNumber = prepareNumber();
+
+        log.info("New receipt number {} generated", receiptNumber);
+
+        Receipt receipt = Receipt.of(receiptNumber,
             List.of(
                 Item.of("SAMSUNG GALAXY A64", BigDecimal.valueOf(1234.34), VatRate.VAT_8),
                 Item.of("IPhone 12 PRO", BigDecimal.valueOf(9034.34), VatRate.VAT_23),
@@ -50,4 +58,26 @@ public class ReceiptService {
         log.info("Receipt {} generated and saved", receiptEntity);
         return receiptEntity.getTechnicalId();
     }
+
+    private String prepareNumber() {
+        return receiptRepository.getLastReceiptNumber()
+            .map(this::incrementInvoiceNumber)
+            .orElse("1/" + LocalDate.now().getMonth().getValue() + "/" + LocalDate.now().getYear());
+    }
+
+    private String incrementInvoiceNumber(String lastNumber) {
+        log.info("last receipt number was {}, generating new one", lastNumber);
+        if (lastNumber == null || lastNumber.isBlank()) {
+            throw new IllegalArgumentException("Invalid invoice number format: " + lastNumber);
+        }
+
+        String[] parts = lastNumber.split("/");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid invoice number format: " + lastNumber);
+        }
+
+        int nn = Integer.parseInt(parts[0]) + 1;
+        return String.format("%03d", nn) + "/" + parts[1] + "/" + parts[2];
+    }
+
 }

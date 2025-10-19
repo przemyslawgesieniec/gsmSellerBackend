@@ -18,7 +18,7 @@ public class ReceiptController {
 
     private final ReceiptService receiptService;
 
-    @GetMapping(produces = MediaType.APPLICATION_PDF_VALUE, params = "/{id}")
+    @GetMapping(produces = MediaType.APPLICATION_PDF_VALUE, path = "/{id}")
     public ResponseEntity<byte[]> getReceiptPfd(@PathVariable UUID id) {
 
         var pdf = receiptService.generateReceiptPdf(id);

@@ -19,37 +19,38 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class PhoneScanAiService {
 
-    private final WebClient webClient;
-    private final String apiUrl;
-    private final String apiKey;
+//    private final WebClient webClient;
+//    private final String apiUrl;
+//    private final String apiKey;
 
-    public PhoneScanAiService(WebClient webClient,
-                               @Value("${gpt.key}") String apiKey,
-                               @Value("${gpt.url}") String apiUrl) {
-        this.webClient = webClient;
-        this.apiKey = apiKey;
-        this.apiUrl = apiUrl;
-    }
+//    public PhoneScanAiService(WebClient webClient,
+//                               @Value("${gpt.key}") String apiKey,
+//                               @Value("${gpt.url}") String apiUrl) {
+//        this.webClient = webClient;
+//        this.apiKey = apiKey;
+//        this.apiUrl = apiUrl;
+//    }
 
     public PhoneScanDto scrapDataFromImage(ByteArrayResource photo) throws JsonProcessingException {
 
-        MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
-        formData.add("prompt", getPrompt());
-        formData.add(UUID.randomUUID().toString(), photo);
-
-        String response = webClient.post()
-            .uri(apiUrl)
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-            .contentType(MediaType.MULTIPART_FORM_DATA)
-            .body(BodyInserters.fromMultipartData(formData))
-            .retrieve()
-            .bodyToMono(String.class)
-            .block();
-        log.info("Received parsed image response : {}", response);
-
-        PhoneScanDto phoneScanDto = new ObjectMapper().readValue(response, PhoneScanDto.class);
-
-        return phoneScanDto;
+//        MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
+//        formData.add("prompt", getPrompt());
+//        formData.add(UUID.randomUUID().toString(), photo);
+//
+//        String response = webClient.post()
+//            .uri(apiUrl)
+//            .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+//            .contentType(MediaType.MULTIPART_FORM_DATA)
+//            .body(BodyInserters.fromMultipartData(formData))
+//            .retrieve()
+//            .bodyToMono(String.class)
+//            .block();
+//        log.info("Received parsed image response : {}", response);
+//
+//        PhoneScanDto phoneScanDto = new ObjectMapper().readValue(response, PhoneScanDto.class);
+//
+//        return phoneScanDto;
+        return null;
     }
 
     private String getPrompt() {
