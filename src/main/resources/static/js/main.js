@@ -4,84 +4,138 @@ let currentPage = 0;
 const backendPath = 'http://localhost:8090'
 const listContainer = document.getElementById("phone-list");
 
-let phones = []; // zamiast zahardkodowanych danych
+// let phones = []; // zamiast zahardkodowanych danych
 
-async function loadPhones(page = 0) {
+async function loadStock(page = 0) {
     try {
-        const response = await fetch(`/api/phones?page=${page}&size=${pageSize}`);
-        const data = await response.json();
+        const data = await fetchPhonesPage(page);
 
-        renderPhones(data.content);
-        renderPagination(data.totalPages, data.number);
-    } catch (error) {
-        console.error('Błąd podczas pobierania danych:', error);
-    }
-}
-
-function renderPagination(totalPages, current) {
-    const pagination = document.getElementById('pagination');
-    pagination.innerHTML = '';
-
-    // przycisk "poprzednia"
-    const prevDisabled = current === 0 ? 'disabled' : 'waves-effect';
-    pagination.innerHTML += `
-      <li class="${prevDisabled}">
-        <a href="#!" onclick="changePage(${current - 1})">
-          <i class="material-icons">chevron_left</i>
-        </a>
-      </li>
-    `;
-
-    // numery stron
-    for (let i = 0; i < totalPages; i++) {
-        const active = i === current ? 'active blue-grey darken-2' : 'waves-effect';
-        pagination.innerHTML += `
-        <li class="${active}">
-          <a href="#!" onclick="changePage(${i})">${i + 1}</a>
-        </li>
-      `;
-    }
-
-    // przycisk "następna"
-    const nextDisabled = current === totalPages - 1 ? 'disabled' : 'waves-effect';
-    pagination.innerHTML += `
-      <li class="${nextDisabled}">
-        <a href="#!" onclick="changePage(${current + 1})">
-          <i class="material-icons">chevron_right</i>
-        </a>
-      </li>
-    `;
-}
-
-async function fetchPhones() {
-    try {
-        const response = await fetch(backendPath + '/api/v1/phones');
-        console.log("response is : " + response);
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Dane z backendu:", data);
-
-        phones = data.content.map(phone => ({
+        const phones = data.content.map(phone => ({
             name: phone.name,
             model: phone.model,
             color: phone.color,
             imei: phone.imei1,
             price: phone.suggestedSellingPrice,
-            status: "DOSTĘPNY" // możesz ustawić domyślnie, dopóki backend tego nie zwraca
-        }));
+            status: "DOSTĘPNY"})); // możesz ustawić domyślnie, dopóki backend tego nie zwraca
 
-        renderPhones();
+        renderPhones(phones);
+        loadPagination(data.number, data.totalPages);
+    } catch (error) {
+        console.error('Błąd podczas pobierania danych:', error);
+    }
+}
+
+async function fetchPhonesPage(page = 0) {
+    try {
+        const response = await fetch(backendPath + `/api/v1/phones?page=${page}&size=${pageSize}`);
+        console.log("response is : " + response);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("Dane z backendu:", data);
+        return data;
     } catch (error) {
         console.error("Błąd podczas pobierania telefonów:", error);
         M.toast({ html: 'Błąd ładowania danych z serwera', classes: 'red' });
     }
 }
+function loadPagination(currentPage, totalPages) {
+    const pagination = document.getElementById("dynamicPagination");
+    if (!pagination) return;
+    pagination.innerHTML = "";
+
+    function createPageItem({ classes = "", inner = "", onClick = null }) {
+        const li = document.createElement("li");
+        if (classes) li.className = classes;
+
+        const a = document.createElement("a");
+        a.href = "#!";
+        if (typeof inner === "string") a.innerHTML = inner;
+        else if (inner instanceof Node) a.appendChild(inner);
+
+        if (typeof onClick === "function") {
+            a.addEventListener("click", (e) => {
+                e.preventDefault();
+                onClick();
+            });
+        } else {
+            a.setAttribute("aria-disabled", "true");
+            a.style.pointerEvents = "none";
+        }
+
+        li.appendChild(a);
+        return li;
+    }
+
+    if (totalPages <= 0) return;
+
+    // ========== PRZYCISK "POPRAWDNIE" ==========
+    if (currentPage > 0) {
+        const leftIcon = '<i class="material-icons">chevron_left</i>';
+        pagination.appendChild(createPageItem({
+            classes: "waves-effect",
+            inner: leftIcon,
+            onClick: () => loadStock(currentPage - 1)
+        }));
+    } else {
+        // disabled
+        const leftIcon = '<i class="material-icons">chevron_left</i>';
+        pagination.appendChild(createPageItem({
+            classes: "disabled",
+            inner: leftIcon,
+            onClick: null
+        }));
+    }
+
+    // ========== LOGIKA WYŚWIETLANIA MAKS 7 STRON ==========
+    const maxVisible = 7;
+    let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+    let endPage = startPage + maxVisible - 1;
+
+    if (endPage >= totalPages) {
+        endPage = totalPages - 1;
+        startPage = Math.max(0, endPage - maxVisible + 1);
+    }
+
+    // generuj numery stron
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === currentPage) {
+            pagination.appendChild(createPageItem({
+                classes: "active blue-grey darken-2",
+                inner: String(i + 1),
+                onClick: null // nie klikalna, bo aktywna
+            }));
+        } else {
+            pagination.appendChild(createPageItem({
+                classes: "waves-effect",
+                inner: String(i + 1),
+                onClick: () => loadStock(i)
+            }));
+        }
+    }
+
+    // ========== PRZYCISK "NASTĘPNA" ==========
+    if (currentPage < totalPages - 1) {
+        const rightIcon = '<i class="material-icons">chevron_right</i>';
+        pagination.appendChild(createPageItem({
+            classes: "waves-effect",
+            inner: rightIcon,
+            onClick: () => loadStock(currentPage + 1)
+        }));
+    } else {
+        const rightIcon = '<i class="material-icons">chevron_right</i>';
+        pagination.appendChild(createPageItem({
+            classes: "disabled",
+            inner: rightIcon,
+            onClick: null
+        }));
+    }
+}
+
 
 // Renderowanie kafli
-function renderPhones() {
+function renderPhones(phones) {
     listContainer.innerHTML = "";
     phones.forEach((phone, index) => {
         const statusClass = phone.status === "DOSTĘPNY" ? "dostepny" : "sprzedany";
@@ -125,7 +179,7 @@ function sellPhone(index) {
     if (phone.status === "SPRZEDANY") return;
 
     phone.status = "SPRZEDANY";
-    renderPhones();
+    // renderPhones();
 
     // Toast potwierdzający
     M.toast({ html: `Telefon ${phone.name} dodany do koszyka`, classes: 'green' });
@@ -151,11 +205,11 @@ function sellPhone(index) {
 
 
 // Inicjalizacja po załadowaniu DOM
-document.addEventListener("DOMContentLoaded", renderPhones);
+// document.addEventListener("DOMContentLoaded", renderPhones);
 
 document.addEventListener("DOMContentLoaded", function() {
     // Inicjalizacja modali
-    fetchPhones();
+    loadStock(0);
 
     M.Modal.init(document.querySelectorAll('.modal'));
 
@@ -233,7 +287,7 @@ document.getElementById('saveEditBtn').addEventListener('click', () => {
     phone.imei = document.getElementById('editImei').value;
     phone.price = parseFloat(document.getElementById('editPrice').value);
 
-    renderPhones(); // odśwież kafle
+    // renderPhones(); // odśwież kafle
     M.toast({ html: `Telefon ${phone.name} zaktualizowany`, classes: 'green' });
 
     const modal = M.Modal.getInstance(document.getElementById('editPhoneModal'));
