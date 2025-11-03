@@ -1,10 +1,10 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
+import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.javamoney.moneta.Money;
 
 @AllArgsConstructor
 @Getter
@@ -15,9 +15,8 @@ public class PhoneStockDto {
     private String memory;
     private String color;
     private String imei1;
-    private String imei2;
     private String name;
     private String source;
-    private Money purchasePrice;
-    private Money suggestedSellingPrice;
+    private BigDecimal purchasePrice;
+    private BigDecimal suggestedSellingPrice;
 }

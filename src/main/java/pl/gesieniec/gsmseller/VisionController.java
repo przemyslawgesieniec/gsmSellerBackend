@@ -45,9 +45,10 @@ public class VisionController {
     public ResponseEntity<Map<String, Object>> analyzeImage() {
 
         String prompt = """
-            Extract all possible data from the picture. 
-            Return it as a list of JSON objects. 
-            Each object containing keys: name, model, memory, ram, imei1, imei2, color. 
+            You are OCR system. Read all digits carefully and in order. There are 1 to 10 phone boxes with the stickers in the picture. Extract data from the picture, and
+            return it as a list of JSON objects.
+            Each object contains keys: model, memory, ram, imei1, imei2, color. 
+            imei1 and imei2 values are always of length 15 digits, and there are barcodes near them.
             Not matched values leave as null.
         """;
 

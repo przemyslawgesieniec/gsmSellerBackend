@@ -12,7 +12,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
 openai:
-  api-key: ${OPENAI_API_KEY}
+  api-key: tmp
   api-base: https://api.openai.com/v1
   model: gpt-4o-mini
 

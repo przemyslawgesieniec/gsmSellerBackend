@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stan magazynowy - Telefony</title>
+
+  <!-- Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Nasze style -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="blue-grey darken-3">
+  <div class="nav-wrapper container">
+    <a href="#!" class="brand-logo">Magazyn GSM</a>
+    <a href="#" data-target="mobile-nav" class="sidenav-trigger right"><i class="material-icons">menu</i></a>
+
+    <ul class="right hide-on-med-and-down">
+      <li><a href="index.html">Stan magazynowy</a></li>
+      <li><a href="dodaj.html">Dodaj telefon</a></li>
+      <li><a href="raporty.html">Raporty</a></li>
+      <li><a href="ustawienia.html">Ustawienia</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Menu mobilne -->
+<ul class="sidenav" id="mobile-nav">
+  <li><a href="index.html"><i class="material-icons">inventory_2</i>Stan magazynowy</a></li>
+  <li><a href="dodaj.html"><i class="material-icons">add_circle_outline</i>Dodaj telefon</a></li>
+  <li><a href="raporty.html"><i class="material-icons">bar_chart</i>Raporty</a></li>
+  <li><a href="ustawienia.html"><i class="material-icons">settings</i>Ustawienia</a></li>
+</ul>
+
+<div class="container">
+  <h5 class="center-align" style="margin-top: 25px;">Stan magazynowy</h5>
+
+  <!-- 🔍 Sekcja filtrów -->
+  <div class="card-panel filter-panel z-depth-1">
+    <div class="row">
+      <div class="input-field col s12 m4 l3">
+        <input id="filterName" type="text">
+        <label for="filterName">Nazwa</label>
+      </div>
+      <div class="input-field col s12 m4 l3">
+        <input id="filterModel" type="text">
+        <label for="filterModel">Model</label>
+      </div>
+      <div class="input-field col s12 m4 l3">
+        <input id="filterColor" type="text">
+        <label for="filterColor">Kolor</label>
+      </div>
+      <div class="input-field col s12 m4 l3">
+        <input id="filterImei" type="text">
+        <label for="filterImei">IMEI1</label>
+      </div>
+      <div class="input-field col s6 m3 l2">
+        <input id="filterPriceMin" type="number">
+        <label for="filterPriceMin">Cena od</label>
+      </div>
+      <div class="input-field col s6 m3 l2">
+        <input id="filterPriceMax" type="number">
+        <label for="filterPriceMax">Cena do</label>
+      </div>
+      <div class="input-field col s12 m4 l3">
+        <select id="filterStatus">
+          <option value="" selected>Dowolny</option>
+          <option value="DOSTĘPNY">DOSTĘPNY</option>
+          <option value="SPRZEDANY">SPRZEDANY</option>
+        </select>
+        <label>Status</label>
+      </div>
+    </div>
+
+    <!-- Wiersz z przyciskami w prawym dolnym rogu -->
+    <div class="row">
+      <div class="col s12 right-align filter-buttons">
+        <button id="applyFilters" class="btn blue darken-2 waves-effect">Zastosuj</button>
+        <button id="resetFilters" class="btn-flat waves-effect">Wyczyść</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📱 Lista telefonów -->
+  <div id="phone-list" class="row"></div>
+
+  <!-- Paginacja -->
+  <ul class="pagination center-align">
+    <li class="disabled"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+    <li class="active blue-grey darken-2"><a href="#!">1</a></li>
+    <li class="waves-effect"><a href="#!">2</a></li>
+    <li class="waves-effect"><a href="#!">3</a></li>
+    <li class="waves-effect"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+  </ul>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fixed-action-btn">
+  <a class="btn-floating btn-large red modal-trigger" href="#addBulkModal">
+    <i class="large material-icons">add</i>
+  </a>
+</div>
+
+<!-- Modal: Hurtowe dodawanie telefonów -->
+<div id="addBulkModal" class="modal">
+  <div class="modal-content">
+    <h5>Hurtowe dodawanie telefonów</h5>
+
+    <!-- Obszar przeciągnij & upuść -->
+    <div id="dropArea" class="drop-area z-depth-1">
+      <p>Przeciągnij zdjęcia tutaj lub kliknij, aby wybrać z dysku</p>
+      <input type="file" id="fileInput" multiple style="display:none;">
+    </div>
+
+    <!-- Ręczne pola -->
+    <div class="row" style="margin-top: 15px;">
+      <div class="input-field col s12 m4">
+        <input type="number" id="manualPrice">
+        <label for="manualPrice">Cena zakupu</label>
+      </div>
+      <div class="input-field col s12 m4">
+        <input type="text" id="manualSource">
+        <label for="manualSource">Pochodzenie</label>
+      </div>
+      <div class="input-field col s12 m4">
+        <input type="text" id="manualName">
+        <label for="manualName">Nazwa</label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn blue darken-2" id="addBulkBtn">Dodaj</button>
+    <button class="btn-flat modal-close">Anuluj</button>
+  </div>
+</div>
+
+<!-- Modal: Edycja telefonu -->
+<div id="editPhoneModal" class="modal">
+  <div class="modal-content">
+    <h5>Edycja telefonu</h5>
+    <a class="modal-close right"><i class="material-icons">close</i></a>
+
+    <div class="row">
+      <div class="input-field col s12 m6">
+        <input id="editName" type="text">
+        <label for="editName">Nazwa</label>
+      </div>
+      <div class="input-field col s12 m6">
+        <input id="editModel" type="text">
+        <label for="editModel">Model</label>
+      </div>
+      <div class="input-field col s12 m6">
+        <input id="editColor" type="text">
+        <label for="editColor">Kolor</label>
+      </div>
+      <div class="input-field col s12 m6">
+        <input id="editImei" type="text">
+        <label for="editImei">IMEI1</label>
+      </div>
+      <div class="input-field col s12 m6">
+        <input id="editPrice" type="number">
+        <label for="editPrice">Cena</label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn blue darken-2" id="saveEditBtn">Zapisz</button>
+  </div>
+</div>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    M.FormSelect.init(document.querySelectorAll('select'));
+  });
+</script>
+</body>
+</html>

@@ -10,12 +10,12 @@ import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 public class PhoneStockMapper {
 
     public PhoneStock toPhoneStock(PhoneScanDto phoneScanDto){
+        //TODO fix me
         return new PhoneStock(phoneScanDto.getModel(),
             phoneScanDto.getRam(),
             phoneScanDto.getMemory(),
             phoneScanDto.getColor(),
-            phoneScanDto.getImei1(),
-            phoneScanDto.getImei2());
+            phoneScanDto.getImei1(),null,null,null,null);
     }
 
     public PhoneStockDto toDto(PhoneStock save) {
@@ -23,8 +23,7 @@ public class PhoneStockMapper {
             save.getRam(),
             save.getMemory(),
             save.getColor(),
-            save.getImei1(),
-            save.getImei2(),
+            save.getImei(),
             save.getName(),
             save.getSource(),
             save.getPurchasePrice(),
