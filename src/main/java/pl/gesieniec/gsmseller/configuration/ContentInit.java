@@ -1,18 +1,30 @@
 package pl.gesieniec.gsmseller.configuration;
 
 import java.math.BigDecimal;
+import java.util.List;
 import org.springframework.stereotype.Component;
+import pl.gesieniec.gsmseller.cart.Cart;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockRepository;
+import pl.gesieniec.gsmseller.user.User;
+import pl.gesieniec.gsmseller.user.UserRepository;
 
 @Component
 public class ContentInit {
 
-    public ContentInit(PhoneStockRepository phoneStockRepository) {
-        initData(phoneStockRepository);
+    public ContentInit(PhoneStockRepository phoneStockRepository,
+                       UserRepository userRepository) {
+        initData(phoneStockRepository, userRepository);
     }
 
-    private void initData(PhoneStockRepository phoneStockRepository) {
+    private void initData(PhoneStockRepository phoneStockRepository,
+                          UserRepository userRepository) {
+
+        User user1 = new User("seller1", "{noop}password1", "ROLE_SELLER");
+        User user2 = new User("seller2", "{noop}password2", "ROLE_SELLER");
+
+        userRepository.saveAll(List.of(user1, user2));
+
         phoneStockRepository
             .save(PhoneStock.create("SNVF5493", "16", "128", "yellow", "56663563563", "Samsung", "Od Andrzeja",
                 new BigDecimal("2400"), new BigDecimal("2600")));
@@ -26,8 +38,9 @@ public class ContentInit {
                 new BigDecimal("2200"), new BigDecimal("2500")));
 
         phoneStockRepository.save(
-            PhoneStock.create("M2004J19C", "6", "128", "black", "356712908765432", "Xiaomi Redmi Note 12", "Od Andrzeja",
-                new BigDecimal("1000"), new BigDecimal("1200")));
+            PhoneStock
+                .create("M2004J19C", "6", "128", "black", "356712908765432", "Xiaomi Redmi Note 12", "Od Andrzeja",
+                    new BigDecimal("1000"), new BigDecimal("1200")));
 
         phoneStockRepository
             .save(PhoneStock.create("A2407", "6", "256", "graphite", "355678902134567", "iPhone 12 Pro", "Od Andrzeja",
@@ -46,8 +59,9 @@ public class ContentInit {
                 new BigDecimal("2100"), new BigDecimal("2400")));
 
         phoneStockRepository
-            .save(PhoneStock.create("XQ-CQ54", "8", "128", "black", "355512908765430", "Sony Xperia 5 IV", "Od Andrzeja",
-                new BigDecimal("2000"), new BigDecimal("2300")));
+            .save(
+                PhoneStock.create("XQ-CQ54", "8", "128", "black", "355512908765430", "Sony Xperia 5 IV", "Od Andrzeja",
+                    new BigDecimal("2000"), new BigDecimal("2300")));
 
         phoneStockRepository
             .save(PhoneStock.create("XT2303", "8", "256", "red", "358812908765430", "Motorola Edge 40", "Od Andrzeja",
