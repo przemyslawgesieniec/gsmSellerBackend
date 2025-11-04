@@ -2,9 +2,11 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Logowanie - GSM Seller</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
   <style>
     body {
       display: flex;
@@ -12,10 +14,34 @@
       justify-content: center;
       align-items: center;
       background-color: #eceff1;
+      margin: 0;
+      padding: 1rem;
     }
+
     .login-card {
-      width: 400px;
+      width: 100%;
+      max-width: 400px;
       padding: 2rem;
+      border-radius: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 1.5rem;
+      }
+
+      h5 {
+        font-size: 1.4rem;
+      }
+
+      .material-icons.large {
+        font-size: 3rem;
+      }
+    }
+
+    button.btn {
+      width: 100%;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -38,12 +64,14 @@
       <label for="password">Hasło</label>
     </div>
 
-    <button type="submit" class="btn blue darken-2 full-width" style="width:100%;">
+    <button type="submit" class="btn blue darken-2">
       Zaloguj się
     </button>
 
     <div class="center-align" style="margin-top: 1rem;">
-      <p class="grey-text">Testowe konto: <b>seller1 / password1</b></p>
+      <p class="grey-text text-darken-1" style="font-size: 0.9rem;">
+        Testowe konto: <b>seller1 / password1</b>
+      </p>
     </div>
   </form>
 </div>
@@ -66,7 +94,6 @@
     });
 
     if (response.ok) {
-      // Przekieruj po udanym logowaniu
       window.location.href = '/';
     } else {
       M.toast({ html: 'Błędny login lub hasło', classes: 'red' });

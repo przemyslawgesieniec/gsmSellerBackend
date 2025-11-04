@@ -1,7 +1,7 @@
 const pageSize = 5;
 let currentPage = 0;
 
-const backendPath = 'http://localhost:8090'
+const backendPath = `http://${window.location.hostname}:8090`;
 const listContainer = document.getElementById("phone-list");
 
 async function loadStock(page = 0) {
@@ -328,9 +328,12 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
             body: JSON.stringify(updatedPhone)
         });
 
-        if (!response.ok) throw new Error("Nie udało się zapisać zmian");
-
-        M.toast({ html: "Telefon został zaktualizowany", classes: "green" });
+        if (!response.ok) {
+            throw new Error("Nie udało się zapisać zmian");
+        }
+        else {
+            M.toast({ html: "Telefon został zaktualizowany", classes: "green" });
+        }
 
         // Zamknij modal
         const modal = M.Modal.getInstance(document.getElementById("editPhoneModal"));
