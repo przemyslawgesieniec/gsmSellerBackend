@@ -14,6 +14,7 @@
 </head>
 <body>
 
+
 <!-- Navbar -->
 <nav class="blue-grey darken-3">
   <div class="nav-wrapper container">
@@ -25,16 +26,37 @@
       <li><a href="dodaj.html">Dodaj telefon</a></li>
       <li><a href="raporty.html">Raporty</a></li>
       <li><a href="ustawienia.html">Ustawienia</a></li>
+
+      <li>
+        <form action="/logout" method="post" style="margin:0;">
+          <button type="submit"
+                  class="btn-flat white-text waves-effect"
+                  style="height:64px; line-height:64px; display:flex; align-items:center; gap:4px;">
+            <i class="material-icons right" style="font-size:18px;">logout</i>
+            Wyloguj
+          </button>
+        </form>
+      </li>
     </ul>
+
   </div>
 </nav>
 
-<!-- Menu mobilne -->
 <ul class="sidenav" id="mobile-nav">
   <li><a href="index.html"><i class="material-icons">inventory_2</i>Stan magazynowy</a></li>
   <li><a href="dodaj.html"><i class="material-icons">add_circle_outline</i>Dodaj telefon</a></li>
   <li><a href="raporty.html"><i class="material-icons">bar_chart</i>Raporty</a></li>
   <li><a href="ustawienia.html"><i class="material-icons">settings</i>Ustawienia</a></li>
+  <li>
+    <form action="/logout" method="post" style="margin:0;">
+      <button type="submit"
+              class="btn-flat white-text waves-effect"
+              style="height:64px; line-height:64px; display:flex; align-items:center; gap:4px;">
+        <i class="material-icons right" style="font-size:18px;">logout</i>
+        Wyloguj
+      </button>
+    </form>
+  </li>
 </ul>
 
 <div class="container">
