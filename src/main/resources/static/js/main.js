@@ -337,7 +337,7 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
         modal.close();
 
         // Odśwież listę telefonów
-        loadPhones(currentPage);
+        loadStock(currentPage);
 
     } catch (error) {
         console.error("Błąd podczas zapisywania zmian:", error);
