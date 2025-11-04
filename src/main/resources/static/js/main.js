@@ -136,6 +136,7 @@ function loadPagination(currentPage, totalPages) {
 
 // Renderowanie kafli
 const sellButtonIdPrefix = "sellBtn";
+const editButtonIdPrefix = "editBtn";
 
 function renderPhones(phones) {
     listContainer.innerHTML = "";
@@ -143,6 +144,7 @@ function renderPhones(phones) {
         const statusClass = phone.status === "DOSTĘPNY" ? "dostepny" : "sprzedany";
         const disabled = phone.status === "SPRZEDANY" ? "disabled" : "";
         const sellButtonId = sellButtonIdPrefix + phone.technicalId;
+        const editButtonId = editButtonIdPrefix + phone.technicalId;
 
         const card = `
       <div class="col s12">
@@ -163,7 +165,7 @@ function renderPhones(phones) {
             <button class="btn-small orange darken-2 id=${sellButtonId} ${disabled}" onclick="sellPhone('${phone.technicalId}')">
               <i class="material-icons left">attach_money</i>Sprzedaj
             </button>
-            <button class="btn-small blue darken-2" onclick="editPhone('${phone.technicalId}')">
+            <button class="btn-small blue darken-2" id=${editButtonId} onclick="editPhone('${phone.technicalId}')">
               <i class="material-icons left">edit</i>Edytuj
             </button>
           </div>
@@ -256,42 +258,90 @@ document.addEventListener("DOMContentLoaded", function () {
     createCartButton();
 });
 
-let currentEditIndex = null; // indeks edytowanego telefonu
+function editPhone(technicalId) {
+    try {
+        const editButton = document.getElementById(editButtonIdPrefix + technicalId);
+        if (!editButton) {
+            console.error("Nie znaleziono przycisku edycji dla ID:", technicalId);
+            return;
+        }
 
-function editPhone(index) {
-    currentEditIndex = index;
-    const phone = phones[index];
+        // znajdź kartę (najbliższy .card)
+        const card = editButton.closest(".card");
+        if (!card) {
+            console.error("Nie znaleziono karty telefonu dla ID:", technicalId);
+            return;
+        }
 
-    // Wypełnij pola modal
-    document.getElementById('editName').value = phone.name;
-    document.getElementById('editModel').value = phone.model;
-    document.getElementById('editColor').value = phone.color;
-    document.getElementById('editImei').value = phone.imei;
-    document.getElementById('editPrice').value = phone.price;
+        // Pobierz dane z karty
+        const name = card.querySelector(".card-title")?.textContent.trim() || "";
+        const model = card.querySelector("p:nth-of-type(1)")?.textContent.replace("Model:", "").trim() || "";
+        const color = card.querySelector("p:nth-of-type(2)")?.textContent.replace("Kolor:", "").trim() || "";
+        const imei = card.querySelector("p:nth-of-type(3)")?.textContent.replace("IMEI:", "").trim() || "";
+        const priceText = card.querySelector(".sellingPrice")?.textContent.replace("zł", "").trim() || "";
+        const price = parseFloat(priceText) || 0;
 
-    // Odśwież Materialize labelki
-    M.updateTextFields();
+        // Wypełnij formularz w modalu
+        document.getElementById("editName").value = name;
+        document.getElementById("editModel").value = model;
+        document.getElementById("editColor").value = color;
+        document.getElementById("editImei").value = imei;
+        document.getElementById("editPrice").value = price;
 
-    // Otwórz modal
-    const modal = M.Modal.getInstance(document.getElementById('editPhoneModal'));
-    modal.open();
+        // odśwież labelki Materialize
+        M.updateTextFields();
+
+        // zapisz ID telefonu w przycisku Zapisz
+        const saveBtn = document.getElementById("saveEditBtn");
+        saveBtn.setAttribute("data-technical-id", technicalId);
+
+        // otwórz modal
+        const modal = M.Modal.getInstance(document.getElementById("editPhoneModal"));
+        modal.open();
+
+    } catch (error) {
+        console.error("Błąd podczas otwierania edycji:", error);
+        M.toast({ html: "Nie udało się otworzyć edycji telefonu", classes: "red" });
+    }
 }
 
-// Zapisz zmiany
-document.getElementById('saveEditBtn').addEventListener('click', () => {
-    if (currentEditIndex === null) return;
 
-    const phone = phones[currentEditIndex];
-    phone.name = document.getElementById('editName').value;
-    phone.model = document.getElementById('editModel').value;
-    phone.color = document.getElementById('editColor').value;
-    phone.imei = document.getElementById('editImei').value;
-    phone.price = parseFloat(document.getElementById('editPrice').value);
+document.getElementById("saveEditBtn").addEventListener("click", async () => {
+    const technicalId = document
+        .getElementById("saveEditBtn")
+        .getAttribute("data-technical-id");
 
-    // renderPhones(); // odśwież kafle
-    M.toast({html: `Telefon ${phone.name} zaktualizowany`, classes: 'green'});
+    const updatedPhone = {
+        name: document.getElementById("editName").value,
+        model: document.getElementById("editModel").value,
+        color: document.getElementById("editColor").value,
+        imei1: document.getElementById("editImei").value,
+        sellingPrice: parseFloat(document.getElementById("editPrice").value)
+    };
 
-    const modal = M.Modal.getInstance(document.getElementById('editPhoneModal'));
-    modal.close();
+    try {
+        const response = await fetch(`/api/v1/phones/${technicalId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(updatedPhone)
+        });
+
+        if (!response.ok) throw new Error("Nie udało się zapisać zmian");
+
+        M.toast({ html: "Telefon został zaktualizowany", classes: "green" });
+
+        // Zamknij modal
+        const modal = M.Modal.getInstance(document.getElementById("editPhoneModal"));
+        modal.close();
+
+        // Odśwież listę telefonów
+        loadPhones(currentPage);
+
+    } catch (error) {
+        console.error("Błąd podczas zapisywania zmian:", error);
+        M.toast({ html: "Błąd podczas zapisu", classes: "red" });
+    }
 });
 

@@ -40,17 +40,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) //TODO fixme
+            .headers(headers -> headers.frameOptions(frame -> frame.disable())) //TODO remove with H2
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/login",       // endpoint POST logowania
                     "/login.html",  // strona logowania
                     "/css/**",
                     "/js/**",
-                    "/images/**"
+                    "/images/**",
+                    "/h2-console/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
+
             .formLogin(form -> form
                 .loginPage("/login.html")     // wyświetlana strona logowania
                 .loginProcessingUrl("/login") // endpoint do POST logowania

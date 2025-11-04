@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -7,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 
 @Service
@@ -38,5 +41,24 @@ public class PhoneStockService {
 
         return repository.findAll(spec, pageable)
             .map(phoneStockMapper::toDto);
+    }
+
+    @Transactional
+    public PhoneStockDto updatePhone(UUID technicalId, PhoneStockDto dto) {
+        PhoneStock phone = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() -> new EntityNotFoundException("Phone not found: " + technicalId));
+
+        phone.update(
+            dto.getModel(),
+            dto.getRam(),
+            dto.getMemory(),
+            dto.getColor(),
+            dto.getImei1(),
+            dto.getName(),
+            dto.getSource(),
+            dto.getSellingPrice()
+        );
+
+        return phoneStockMapper.toDto(phone);
     }
 }

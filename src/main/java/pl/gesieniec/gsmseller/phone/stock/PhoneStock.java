@@ -49,4 +49,24 @@ public class PhoneStock {
 
         return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name, source, purchasePrice, sellingPrice);
     }
+
+    public void update(String model,
+                       String ram,
+                       String memory,
+                       String color,
+                       String imei,
+                       String name,
+                       String source,
+                       BigDecimal sellingPrice) {
+
+        if (model != null) this.model = model;
+        if (ram != null) this.ram = ram;
+        if (memory != null) this.memory = memory;
+        if (color != null) this.color = color;
+        if (imei != null) this.imei = imei;
+        if (name != null) this.name = name;
+        if (source != null) this.source = source;
+        if (sellingPrice != null) this.sellingPrice = sellingPrice;
+    }
+
 }
