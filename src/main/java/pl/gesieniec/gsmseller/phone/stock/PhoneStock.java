@@ -5,11 +5,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.math.BigDecimal;
+import java.util.UUID;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.javamoney.moneta.Money;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -20,6 +19,7 @@ public class PhoneStock {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private UUID technicalId;
     private String model;
     private String ram;
     private String memory;
@@ -28,10 +28,11 @@ public class PhoneStock {
     private String name;
     private String source;
     private BigDecimal purchasePrice;
-    private BigDecimal suggestedSellingPrice;
+    private BigDecimal sellingPrice;
 
-    public PhoneStock(String model, String ram, String memory, String color, String imei, String name,
-                      String source, BigDecimal purchasePrice, BigDecimal suggestedSellingPrice) {
+    public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei, String name,
+                      String source, BigDecimal purchasePrice, BigDecimal sellingPrice) {
+        this.technicalId = technicalId;
         this.model = model;
         this.ram = ram;
         this.memory = memory;
@@ -40,6 +41,12 @@ public class PhoneStock {
         this.name = name;
         this.source = source;
         this.purchasePrice = purchasePrice;
-        this.suggestedSellingPrice = suggestedSellingPrice;
+        this.sellingPrice = sellingPrice;
+    }
+
+    public static PhoneStock create(String model, String ram, String memory, String color, String imei, String name,
+                                    String source, BigDecimal purchasePrice, BigDecimal sellingPrice) {
+
+        return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name, source, purchasePrice, sellingPrice);
     }
 }

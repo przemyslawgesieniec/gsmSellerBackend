@@ -11,15 +11,19 @@ public class PhoneStockMapper {
 
     public PhoneStock toPhoneStock(PhoneScanDto phoneScanDto){
         //TODO fix me
-        return new PhoneStock(phoneScanDto.getModel(),
+        return PhoneStock.create(
+            phoneScanDto.getModel(),
             phoneScanDto.getRam(),
             phoneScanDto.getMemory(),
             phoneScanDto.getColor(),
-            phoneScanDto.getImei1(),null,null,null,null);
+            phoneScanDto.getImei1()
+            ,null,null,null,null);
     }
 
     public PhoneStockDto toDto(PhoneStock save) {
-        return new PhoneStockDto(save.getModel(),
+        return new PhoneStockDto(
+            save.getTechnicalId(),
+            save.getModel(),
             save.getRam(),
             save.getMemory(),
             save.getColor(),
@@ -27,6 +31,6 @@ public class PhoneStockMapper {
             save.getName(),
             save.getSource(),
             save.getPurchasePrice(),
-            save.getSuggestedSellingPrice());
+            save.getSellingPrice());
     }
 }

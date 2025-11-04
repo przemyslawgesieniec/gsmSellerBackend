@@ -4,19 +4,19 @@ let currentPage = 0;
 const backendPath = 'http://localhost:8090'
 const listContainer = document.getElementById("phone-list");
 
-// let phones = []; // zamiast zahardkodowanych danych
-
 async function loadStock(page = 0) {
     try {
         const data = await fetchPhonesPage(page);
 
         const phones = data.content.map(phone => ({
+            technicalId: phone.technicalId,
             name: phone.name,
             model: phone.model,
             color: phone.color,
             imei: phone.imei1,
-            price: phone.suggestedSellingPrice,
-            status: "DOSTĘPNY"})); // możesz ustawić domyślnie, dopóki backend tego nie zwraca
+            sellingPrice: phone.sellingPrice,
+            status: "DOSTĘPNY"
+        }));
 
         renderPhones(phones);
         loadPagination(data.number, data.totalPages);
@@ -37,15 +37,16 @@ async function fetchPhonesPage(page = 0) {
         return data;
     } catch (error) {
         console.error("Błąd podczas pobierania telefonów:", error);
-        M.toast({ html: 'Błąd ładowania danych z serwera', classes: 'red' });
+        M.toast({html: 'Błąd ładowania danych z serwera', classes: 'red'});
     }
 }
+
 function loadPagination(currentPage, totalPages) {
     const pagination = document.getElementById("dynamicPagination");
     if (!pagination) return;
     pagination.innerHTML = "";
 
-    function createPageItem({ classes = "", inner = "", onClick = null }) {
+    function createPageItem({classes = "", inner = "", onClick = null}) {
         const li = document.createElement("li");
         if (classes) li.className = classes;
 
@@ -133,13 +134,15 @@ function loadPagination(currentPage, totalPages) {
     }
 }
 
-
 // Renderowanie kafli
+const sellButtonIdPrefix = "sellBtn";
+
 function renderPhones(phones) {
     listContainer.innerHTML = "";
-    phones.forEach((phone, index) => {
+    phones.forEach((phone) => {
         const statusClass = phone.status === "DOSTĘPNY" ? "dostepny" : "sprzedany";
         const disabled = phone.status === "SPRZEDANY" ? "disabled" : "";
+        const sellButtonId = sellButtonIdPrefix + phone.technicalId;
 
         const card = `
       <div class="col s12">
@@ -152,15 +155,15 @@ function renderPhones(phones) {
               <p><b>IMEI:</b> ${phone.imei}</p>
             </div>
             <div class="phone-right">
-              <p class="price">${phone.price} zł</p>
+              <p class="sellingPrice">${phone.sellingPrice} zł</p>
               <span class="status-badge ${statusClass}">${phone.status}</span>
             </div>
           </div>
           <div class="card-action right-align">
-            <button class="btn-small orange darken-2 ${disabled}" onclick="sellPhone(${index})">
+            <button class="btn-small orange darken-2 id=${sellButtonId} ${disabled}" onclick="sellPhone('${phone.technicalId}')">
               <i class="material-icons left">attach_money</i>Sprzedaj
             </button>
-            <button class="btn-small blue darken-2" onclick="editPhone(${index})">
+            <button class="btn-small blue darken-2" onclick="editPhone('${phone.technicalId}')">
               <i class="material-icons left">edit</i>Edytuj
             </button>
           </div>
@@ -174,40 +177,36 @@ function renderPhones(phones) {
 let cartCount = 0;
 let cartBtn = null;
 
-function sellPhone(index) {
+function sellPhone(technicalId) {
+    console.log("selling phone with id " + technicalId);
     const phone = phones[index];
     if (phone.status === "SPRZEDANY") return;
 
     phone.status = "SPRZEDANY";
-    // renderPhones();
 
     // Toast potwierdzający
-    M.toast({ html: `Telefon ${phone.name} dodany do koszyka`, classes: 'green' });
-
-    // Jeśli koszyk nie istnieje, stwórz go
-    if (!cartBtn) {
-        cartBtn = document.createElement('div');
-        cartBtn.id = 'cartBtn';
-        cartBtn.className = 'btn-floating btn-large blue';
-        cartBtn.innerHTML = `<i class="material-icons">shopping_cart</i><span class="badge">0</span>`;
-        document.body.appendChild(cartBtn);
-
-        // Obsługa kliknięcia w koszyk
-        cartBtn.addEventListener('click', () => {
-            M.toast({ html: `W koszyku ${cartCount} telefonów`, classes: 'blue' });
-        });
-    }
+    M.toast({html: `Telefon ${phone.name} dodany do koszyka`, classes: 'green'});
 
     // Zwiększ licznik
     cartCount += 1;
     cartBtn.querySelector('.badge').textContent = cartCount;
 }
 
+function createCartButton() {
+    cartBtn = document.createElement('div');
+    cartBtn.id = 'cartBtn';
+    cartBtn.className = 'btn-floating btn-large blue';
+    cartBtn.innerHTML = `<i class="material-icons">shopping_cart</i><span class="badge">0</span>`;
+    document.body.appendChild(cartBtn);
 
-// Inicjalizacja po załadowaniu DOM
-// document.addEventListener("DOMContentLoaded", renderPhones);
+    // Obsługa kliknięcia w koszyk
+    cartBtn.addEventListener('click', () => {
+        M.toast({html: `W koszyku ${cartCount} telefonów`, classes: 'blue'});
+    });
 
-document.addEventListener("DOMContentLoaded", function() {
+}
+
+document.addEventListener("DOMContentLoaded", function () {
     // Inicjalizacja modali
     loadStock(0);
 
@@ -238,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function handleFiles(files) {
         console.log("Wybrane pliki:", files);
-        M.toast({ html: `${files.length} plików wybranych`, classes: 'green' });
+        M.toast({html: `${files.length} plików wybranych`, classes: 'green'});
         // Tutaj później będzie logika przesyłania do backendu
     }
 
@@ -248,11 +247,13 @@ document.addEventListener("DOMContentLoaded", function() {
         const source = document.getElementById('manualSource').value;
         const name = document.getElementById('manualName').value;
 
-        console.log({ price, source, name });
-        M.toast({ html: 'Telefony dodane (symulacja)', classes: 'blue' });
+        console.log({price, source, name});
+        M.toast({html: 'Telefony dodane (symulacja)', classes: 'blue'});
         const modal = M.Modal.getInstance(document.getElementById('addBulkModal'));
         modal.close();
     });
+
+    createCartButton();
 });
 
 let currentEditIndex = null; // indeks edytowanego telefonu
@@ -288,7 +289,7 @@ document.getElementById('saveEditBtn').addEventListener('click', () => {
     phone.price = parseFloat(document.getElementById('editPrice').value);
 
     // renderPhones(); // odśwież kafle
-    M.toast({ html: `Telefon ${phone.name} zaktualizowany`, classes: 'green' });
+    M.toast({html: `Telefon ${phone.name} zaktualizowany`, classes: 'green'});
 
     const modal = M.Modal.getInstance(document.getElementById('editPhoneModal'));
     modal.close();
