@@ -156,3 +156,34 @@ body {
     justify-content: center;
 }
 
+
+/* Poszerza tylko tę jedną stronę */
+.container.wide-layout {
+    width: 95%;
+    max-width: 1700px;   /* możesz dać 1800, 1600 – jak Ci pasuje */
+}
+
+/* Usuwa ograniczenia row wewnątrz szerokiego layoutu */
+.container.wide-layout .main-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: none !important;
+}
+
+/* Układ filtrów 2 w rzędzie na komputerach */
+.container.wide-layout .filter-panel .input-field.col.s12.m4.l3 {
+    /* l3 zostaje, więc na desktopie masz 4 pola w jednym wierszu */
+}
+
+.container.wide-layout .filters-col{
+    margin-top: 17px;
+}
+
+.container.wide-layout .phones-col {
+    margin-top: 10px;
+}
+
+/* Usuwamy poprzedni margines z panelu filtrów, jeśli istnieje */
+.container.wide-layout .filters-col .filter-panel {
+    margin-top: 0 !important;
+}
