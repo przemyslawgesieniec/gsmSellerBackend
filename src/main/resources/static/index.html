@@ -65,6 +65,7 @@
 
     <!-- Aktywne filtry -->
     <div class="col s12" id="active-filters" class="active-filters"></div>
+    <div id="activeFiltersChips" class="chips-container" style="margin-bottom: 15px;"></div>
 
     <!-- LEWA KOLUMNA – FILTRY -->
     <div class="col s12 m4 l3 filters-col">
@@ -89,7 +90,7 @@
 
           <div class="input-field col s12 m6">
             <input id="filterImei" type="text">
-            <label for="filterImei">IMEI1</label>
+            <label for="filterImei">Imei</label>
           </div>
 
           <!-- ceny obok siebie zawsze -->
@@ -115,8 +116,7 @@
 
         <div class="row">
           <div class="col s12 right-align filter-buttons">
-            <button id="applyFilters" class="btn blue darken-2 waves-effect">Zastosuj</button>
-            <button id="resetFilters" class="btn-flat waves-effect">Wyczyść</button>
+            <button id="resetFilters" class="btn blue darken-2 waves-effect">Wyczyść</button>
           </div>
         </div>
 
@@ -195,7 +195,7 @@
       </div>
       <div class="input-field col s12 m6">
         <input id="editImei" type="text">
-        <label for="editImei">IMEI1</label>
+        <label for="editImei">Imei</label>
       </div>
       <div class="input-field col s12 m6">
         <input id="editPrice" type="number">

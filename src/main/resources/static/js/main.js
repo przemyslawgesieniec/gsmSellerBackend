@@ -18,6 +18,8 @@ function getFilters() {
 async function loadStock(page = 0) {
     try {
         const filters = getFilters();
+        renderFilterChips();
+
         const data = await fetchPhonesPage(page, filters);
 
         const phones = data.content.map(phone => ({
@@ -35,6 +37,7 @@ async function loadStock(page = 0) {
     } catch (error) {
         console.error("Błąd podczas pobierania danych:", error);
     }
+    renderChips(filters);
 }
 
 // wysyłamy request z filtrami jako parametry zapytania
@@ -279,6 +282,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     createCartButton();
+    [
+        "filterName",
+        "filterModel",
+        "filterColor",
+        "filterImei",
+        "filterPriceMin",
+        "filterPriceMax",
+        "filterStatus"
+    ].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", liveReload);
+        el.addEventListener("change", liveReload);
+    });
+
 });
 
 function editPhone(technicalId) {
@@ -371,11 +389,6 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
     }
 });
 
-document.getElementById("applyFilters").addEventListener("click", () => {
-    loadStock(0);
-    renderFilterChips();
-});
-
 document.getElementById("resetFilters").addEventListener("click", () => {
     document.getElementById("filterName").value = "";
     document.getElementById("filterModel").value = "";
@@ -389,47 +402,125 @@ document.getElementById("resetFilters").addEventListener("click", () => {
         M.FormSelect.init(document.querySelectorAll('select'));
     }
 
-    loadStock(0);
     renderFilterChips();
+    loadStock(0);
 });
 
+// === CHIPS SECTION === //
+const chipContainer = document.getElementById("activeChips");
 
-function renderFilterChips() {
-    const chipContainer = document.getElementById("active-filters");
+// tłumaczenia etykiet
+const filterLabels = {
+    name: "Nazwa",
+    model: "Model",
+    color: "Kolor",
+    imei: "IMEI",
+    priceMin: "Cena od",
+    priceMax: "Cena do",
+    status: "Status"
+};
+
+// generowanie chipów
+function renderChips(filters) {
     chipContainer.innerHTML = "";
 
-    const filters = getFilters();
-
-    const labels = {
-        name: "Nazwa",
-        model: "Model",
-        color: "Kolor",
-        imei: "IMEI",
-        priceMin: "Cena od",
-        priceMax: "Cena do",
-        status: "Status"
-    };
-
-    Object.entries(filters).forEach(([key, value]) => {
-        if (!value || value.trim() === "") return;
+    Object.entries(filters).forEach(([key, val]) => {
+        if (!val) return;
 
         const chip = document.createElement("div");
         chip.className = "chip";
-        chip.innerHTML = `${labels[key]}: ${value} <i class="close material-icons">close</i>`;
 
-        chip.querySelector(".close").addEventListener("click", () => {
-            // wyczyszczenie danego pola filtra
-            document.getElementById("filter" + key.charAt(0).toUpperCase() + key.slice(1)).value = "";
+        chip.innerHTML = `
+            ${filterLabels[key]}: <b>${val}</b>
+            <i class="close material-icons" data-filter="${key}">close</i>
+        `;
 
-            // jeśli select – odśwież materializowy UI
-            if (key === "status") {
+        chipContainer.appendChild(chip);
+    });
+
+    // usuwanie chipa → czyści filtr → reload
+    chipContainer.querySelectorAll(".close").forEach(icon => {
+        icon.addEventListener("click", () => {
+            const filterKey = icon.dataset.filter;
+            document.getElementById("filter" + capitalize(filterKey)).value = "";
+
+            if (filterKey === "status") {
                 M.FormSelect.init(document.querySelectorAll('select'));
             }
 
-            loadStock(0);
+            loadStock(0); // automatyczne odświeżenie
+        });
+    });
+
+
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+
+function renderFilterChips() {
+    const filters = getFilters();
+    const container = document.getElementById("activeFiltersChips");
+    container.innerHTML = "";
+
+    Object.entries(filters).forEach(([key, value]) => {
+        if (!value) return;
+
+        const prettyName = {
+            name: "Nazwa",
+            model: "Model",
+            color: "Kolor",
+            imei: "IMEI",
+            priceMin: "Cena od",
+            priceMax: "Cena do",
+            status: "Status"
+        };
+
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.innerHTML = `${prettyName[key]}: ${value} <i class="close material-icons">close</i>`;
+
+        chip.querySelector("i").addEventListener("click", () => {
+            document.getElementById("filter" + key.charAt(0).toUpperCase() + key.slice(1)).value = "";
+
+            if (key === "status") {
+                M.FormSelect.init(document.querySelectorAll("select"));
+            }
+
             renderFilterChips();
+            loadStock(0);
         });
 
-        chipContainer.appendChild(chip);
+        container.appendChild(chip);
+    });
+}
+
+function debounce(fn, delay = 300) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+    };
+}
+
+const liveReload = debounce(() => loadStock(0), 300);
+
+
+function attachLiveFilterListeners() {
+    const filterIds = [
+        "filterName", "filterModel", "filterColor", "filterImei",
+        "filterPriceMin", "filterPriceMax", "filterStatus"
+    ];
+
+    filterIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const eventName = (el.tagName === "SELECT") ? "change" : "input";
+        el.addEventListener(eventName, () => {
+            renderFilterChips();   // chipy odświeżają się na żywo
+        });
     });
 }
