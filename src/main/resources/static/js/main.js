@@ -4,9 +4,21 @@ let currentPage = 0;
 const backendPath = `http://${window.location.hostname}:8090`;
 const listContainer = document.getElementById("phone-list");
 
+function getFilters() {
+    return {
+        name: document.getElementById("filterName").value.trim(),
+        model: document.getElementById("filterModel").value.trim(),
+        color: document.getElementById("filterColor").value.trim(),
+        imei: document.getElementById("filterImei").value.trim(),
+        priceMin: document.getElementById("filterPriceMin").value.trim(),
+        priceMax: document.getElementById("filterPriceMax").value.trim(),
+        status: document.getElementById("filterStatus").value.trim()
+    };
+}
 async function loadStock(page = 0) {
     try {
-        const data = await fetchPhonesPage(page);
+        const filters = getFilters();
+        const data = await fetchPhonesPage(page, filters);
 
         const phones = data.content.map(phone => ({
             technicalId: phone.technicalId,
@@ -21,20 +33,31 @@ async function loadStock(page = 0) {
         renderPhones(phones);
         loadPagination(data.number, data.totalPages);
     } catch (error) {
-        console.error('Błąd podczas pobierania danych:', error);
+        console.error("Błąd podczas pobierania danych:", error);
     }
 }
 
-async function fetchPhonesPage(page = 0) {
+// wysyłamy request z filtrami jako parametry zapytania
+async function fetchPhonesPage(page = 0, filters = {}) {
     try {
-        const response = await fetch(backendPath + `/api/v1/phones?page=${page}&size=${pageSize}`);
-        console.log("response is : " + response);
+        const params = new URLSearchParams();
+
+        params.append("page", page);
+        params.append("size", pageSize);
+
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== null && value !== "") {
+                params.append(key, value);
+            }
+        });
+
+        const response = await fetch(`${backendPath}/api/v1/phones?${params.toString()}`);
+
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        const data = await response.json();
-        console.log("Dane z backendu:", data);
-        return data;
+
+        return await response.json();
     } catch (error) {
         console.error("Błąd podczas pobierania telefonów:", error);
         M.toast({html: 'Błąd ładowania danych z serwera', classes: 'red'});
@@ -348,3 +371,23 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
     }
 });
 
+document.getElementById("applyFilters").addEventListener("click", () => {
+    loadStock(0); // Za każdym razem zaczynamy od pierwszej strony
+});
+
+document.getElementById("resetFilters").addEventListener("click", () => {
+    document.getElementById("filterName").value = "";
+    document.getElementById("filterModel").value = "";
+    document.getElementById("filterColor").value = "";
+    document.getElementById("filterImei").value = "";
+    document.getElementById("filterPriceMin").value = "";
+    document.getElementById("filterPriceMax").value = "";
+    document.getElementById("filterStatus").value = "";
+
+    // Materialize select wymaga aktualizacji
+    if (M && M.FormSelect) {
+        M.FormSelect.init(document.querySelectorAll('select'));
+    }
+
+    loadStock(0); // odśwież bez filtrów
+});
