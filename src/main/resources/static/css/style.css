@@ -187,3 +187,10 @@ body {
 .container.wide-layout .filters-col .filter-panel {
     margin-top: 0 !important;
 }
+
+#active-filters {
+    margin-top: 15px;
+}
+#active-filters .chip {
+    margin: 4px;
+}

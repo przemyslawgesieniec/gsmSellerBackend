@@ -372,7 +372,8 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("applyFilters").addEventListener("click", () => {
-    loadStock(0); // Za każdym razem zaczynamy od pierwszej strony
+    loadStock(0);
+    renderFilterChips();
 });
 
 document.getElementById("resetFilters").addEventListener("click", () => {
@@ -384,10 +385,51 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     document.getElementById("filterPriceMax").value = "";
     document.getElementById("filterStatus").value = "";
 
-    // Materialize select wymaga aktualizacji
     if (M && M.FormSelect) {
         M.FormSelect.init(document.querySelectorAll('select'));
     }
 
-    loadStock(0); // odśwież bez filtrów
+    loadStock(0);
+    renderFilterChips();
 });
+
+
+function renderFilterChips() {
+    const chipContainer = document.getElementById("active-filters");
+    chipContainer.innerHTML = "";
+
+    const filters = getFilters();
+
+    const labels = {
+        name: "Nazwa",
+        model: "Model",
+        color: "Kolor",
+        imei: "IMEI",
+        priceMin: "Cena od",
+        priceMax: "Cena do",
+        status: "Status"
+    };
+
+    Object.entries(filters).forEach(([key, value]) => {
+        if (!value || value.trim() === "") return;
+
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.innerHTML = `${labels[key]}: ${value} <i class="close material-icons">close</i>`;
+
+        chip.querySelector(".close").addEventListener("click", () => {
+            // wyczyszczenie danego pola filtra
+            document.getElementById("filter" + key.charAt(0).toUpperCase() + key.slice(1)).value = "";
+
+            // jeśli select – odśwież materializowy UI
+            if (key === "status") {
+                M.FormSelect.init(document.querySelectorAll('select'));
+            }
+
+            loadStock(0);
+            renderFilterChips();
+        });
+
+        chipContainer.appendChild(chip);
+    });
+}
