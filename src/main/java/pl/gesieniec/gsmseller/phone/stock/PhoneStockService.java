@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,13 +28,20 @@ public class PhoneStockService {
 
     public Page<PhoneStockDto> getPhones(String name,
                                          String model,
+                                         String color,
                                          String imei,
+                                         BigDecimal priceMin,
+                                         BigDecimal priceMax,
                                          int page,
                                          int size) {
         Specification<PhoneStock> spec = Specification
-            .where(PhoneStockSpecifications.hasName(name))
+        .where(PhoneStockSpecifications.hasName(name))
             .and(PhoneStockSpecifications.hasModel(model))
-            .and(PhoneStockSpecifications.hasImei(imei));
+            .and(PhoneStockSpecifications.hasImeiLike(imei))
+            .and(PhoneStockSpecifications.hasColor(color))
+            .and(PhoneStockSpecifications.hasPriceMin(priceMin))
+            .and(PhoneStockSpecifications.hasPriceMax(priceMax));
+
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").descending());
 

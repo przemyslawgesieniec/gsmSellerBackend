@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,10 +35,15 @@ public class PhoneStockController {
         @RequestParam(required = false) String name,
         @RequestParam(required = false) String model,
         @RequestParam(required = false) String imei,
+        @RequestParam(required = false) String color,
+        @RequestParam(required = false) BigDecimal priceMin,
+        @RequestParam(required = false) BigDecimal priceMax,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "50") int size) {
-        return service.getPhones(name, model, imei, page, size);
+        @RequestParam(defaultValue = "50") int size
+    ) {
+        return service.getPhones(name, model, color, imei, priceMin, priceMax, page, size);
     }
+
 
     @PatchMapping("/{technicalId}")
     public PhoneStockDto updatePhone(

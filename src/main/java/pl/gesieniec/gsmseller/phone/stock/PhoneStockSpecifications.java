@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
+import java.math.BigDecimal;
 import org.springframework.data.jpa.domain.Specification;
 
 public class PhoneStockSpecifications {
@@ -21,7 +22,7 @@ public class PhoneStockSpecifications {
             model == null ? null : cb.like(cb.lower(root.get("model")), "%" + model.toLowerCase() + "%");
     }
 
-    public static Specification<PhoneStock> hasImei(String imei) {
+    public static Specification<PhoneStock> hasImeiLike(String imei) {
         return (root, query, cb) -> {
             if (imei == null || imei.isBlank()) {
                 return null;
@@ -31,4 +32,22 @@ public class PhoneStockSpecifications {
             return cb.like(root.get("imei"), "%" + imei);
         };
     }
+
+    public static Specification<PhoneStock> hasColor(String color) {
+        return (root, query, cb) ->
+            color == null || color.isBlank()
+                ? null
+                : cb.like(cb.lower(root.get("color")), "%" + color.toLowerCase() + "%");
+    }
+
+    public static Specification<PhoneStock> hasPriceMin(BigDecimal min) {
+        return (root, query, cb) ->
+            min == null ? null : cb.greaterThanOrEqualTo(root.get("sellingPrice"), min);
+    }
+
+    public static Specification<PhoneStock> hasPriceMax(BigDecimal max) {
+        return (root, query, cb) ->
+            max == null ? null : cb.lessThanOrEqualTo(root.get("sellingPrice"), max);
+    }
+
 }
