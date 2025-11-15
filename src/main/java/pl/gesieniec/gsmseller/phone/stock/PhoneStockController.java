@@ -33,11 +33,10 @@ public class PhoneStockController {
     public Page<PhoneStockDto> getPhones(
         @RequestParam(required = false) String name,
         @RequestParam(required = false) String model,
-        @RequestParam(required = false) String imei1,
-        @RequestParam(required = false) String imei2,
+        @RequestParam(required = false) String imei,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "50") int size) {
-        return service.getPhones(name, model, imei1, imei2, page, size);
+        return service.getPhones(name, model, imei, page, size);
     }
 
     @PatchMapping("/{technicalId}")

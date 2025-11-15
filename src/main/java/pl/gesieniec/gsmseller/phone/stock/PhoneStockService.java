@@ -27,15 +27,13 @@ public class PhoneStockService {
 
     public Page<PhoneStockDto> getPhones(String name,
                                          String model,
-                                         String imei1,
-                                         String imei2,
+                                         String imei,
                                          int page,
                                          int size) {
         Specification<PhoneStock> spec = Specification
             .where(PhoneStockSpecifications.hasName(name))
             .and(PhoneStockSpecifications.hasModel(model))
-            .and(PhoneStockSpecifications.hasImei1(imei1))
-            .and(PhoneStockSpecifications.hasImei2(imei2));
+            .and(PhoneStockSpecifications.hasImei(imei));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").descending());
 
