@@ -1,0 +1,94 @@
+@startuml
+skinparam defaultTextAlignment left
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #333333
+    RoundCorner 10
+}
+
+' Główna struktura
+rectangle "D. Nguyen\nPresident" as president
+
+rectangle "E. Fitzgerald\nVice President" as vp1
+rectangle "N. S. Kahn\nVice President" as vp2
+
+president --> vp1
+president --> vp2
+
+' VP1 branch
+rectangle "Y. Honda\nController" as honda
+rectangle "F. Cortez\nBenefits Manager" as cortez
+rectangle "H. Jones Jr.\nCompensation" as jones
+rectangle "D. Martin\nBudget Analyst" as martin
+rectangle "F. A. Sinatra\nBudget Analyst" as sinatra
+rectangle "S. Chavez\nPayroll Manager" as chavez
+
+vp1 --> honda
+vp1 --> cortez
+vp1 --> jones
+vp1 --> martin
+vp1 --> sinatra
+vp1 --> chavez
+
+' VP2 branch
+rectangle "J. Lipton\nCustomer Relations" as lipton
+rectangle "J. Byrne\nReturns Manager" as byrne
+rectangle "R. Halford\nReturns Manager" as halford
+rectangle "R. Faulkner\nAnalyst" as faulkner
+rectangle "N. Schon\nAnalyst" as schon
+rectangle "E. Haines\nAnalyst" as haines
+rectangle "G. Lee\nAssociate" as lee
+rectangle "N. Peart\nTech Support" as peart
+rectangle "S. Lee\nTech Analyst" as slee
+rectangle "M. Smith\nTech Analyst" as smith
+
+vp2 --> lipton
+vp2 --> byrne
+byrne --> halford
+vp2 --> faulkner
+vp2 --> schon
+vp2 --> haines
+vp2 --> lee
+vp2 --> peart
+vp2 --> slee
+vp2 --> smith
+
+' Project Management
+rectangle "T. Anderson\nProject Manager" as anderson
+rectangle "J. Abreu\nProject Manager" as abreu
+
+anderson --> abreu
+
+rectangle "V. Fries\nAssociate" as fries
+rectangle "J. Kirby\nAssociate" as kirby
+rectangle "N. Adams\nAnalyst" as nadams
+
+abreu --> fries
+abreu --> kirby
+abreu --> nadams
+
+' Project Controls
+rectangle "Q. Gupta\nProject Controls" as gupta
+rectangle "V. Li\nProject Controls" as li
+
+gupta --> li
+
+rectangle "L. Putnam\nLead Controller" as putnam
+rectangle "V. Curley\nAssociate" as curley
+
+li --> putnam
+putnam --> curley
+
+rectangle "J. Brown\nDirector" as brown
+rectangle "P. Stanley\nAnalyst" as stanley
+rectangle "G. Simmons\nAnalyst" as simmons
+rectangle "E. Green\nAssociate" as green
+rectangle "J. Doe\nAssociate" as doe
+
+li --> brown
+brown --> stanley
+brown --> simmons
+brown --> green
+brown --> doe
+
+@enduml

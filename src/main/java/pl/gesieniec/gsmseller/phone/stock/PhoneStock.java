@@ -1,6 +1,8 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,9 +31,14 @@ public class PhoneStock {
     private String source;
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
+    private String location;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei, String name,
-                      String source, BigDecimal purchasePrice, BigDecimal sellingPrice) {
+                      String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
+                      String location, Status status) {
         this.technicalId = technicalId;
         this.model = model;
         this.ram = ram;
@@ -42,12 +49,15 @@ public class PhoneStock {
         this.source = source;
         this.purchasePrice = purchasePrice;
         this.sellingPrice = sellingPrice;
+        this.location = location;
+        this.status = status;
     }
 
     public static PhoneStock create(String model, String ram, String memory, String color, String imei, String name,
                                     String source, BigDecimal purchasePrice, BigDecimal sellingPrice) {
 
-        return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name, source, purchasePrice, sellingPrice);
+        return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name, source, purchasePrice, sellingPrice,
+            null, Status.WPROWADZONY);
     }
 
     public void update(String model,
@@ -67,6 +77,15 @@ public class PhoneStock {
         if (name != null) this.name = name;
         if (source != null) this.source = source;
         if (sellingPrice != null) this.sellingPrice = sellingPrice;
+    }
+
+    public void sell(){
+        this.status = Status.SPRZEDANY;
+    }
+
+    public void acceptAtLocation(String location){
+        this.status = Status.DOSTĘPNY;
+        this.location = location;
     }
 
 }

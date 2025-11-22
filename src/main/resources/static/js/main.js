@@ -29,7 +29,7 @@ async function loadStock(page = 0) {
             color: phone.color,
             imei: phone.imei1,
             sellingPrice: phone.sellingPrice,
-            status: "DOSTĘPNY"
+            status: phone.status
         }));
 
         renderPhones(phones);
@@ -506,21 +506,3 @@ function debounce(fn, delay = 300) {
 }
 
 const liveReload = debounce(() => loadStock(0), 300);
-
-
-function attachLiveFilterListeners() {
-    const filterIds = [
-        "filterName", "filterModel", "filterColor", "filterImei",
-        "filterPriceMin", "filterPriceMax", "filterStatus"
-    ];
-
-    filterIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-
-        const eventName = (el.tagName === "SELECT") ? "change" : "input";
-        el.addEventListener(eventName, () => {
-            renderFilterChips();   // chipy odświeżają się na żywo
-        });
-    });
-}

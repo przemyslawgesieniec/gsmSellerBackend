@@ -30,6 +30,7 @@ public class PhoneStockMapper {
             save.getImei(),
             save.getName(),
             save.getSource(),
+            save.getStatus(),
             save.getPurchasePrice(),
             save.getSellingPrice());
     }

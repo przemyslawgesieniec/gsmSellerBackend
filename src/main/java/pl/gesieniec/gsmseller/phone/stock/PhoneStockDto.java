@@ -18,9 +18,10 @@ public class PhoneStockDto {
     private String ram;
     private String memory;
     private String color;
-    private String imei1;
+    private String imei;
     private String name;
     private String source;
+    private Status status;
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
 }

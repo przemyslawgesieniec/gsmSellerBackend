@@ -50,4 +50,8 @@ public class PhoneStockSpecifications {
             max == null ? null : cb.lessThanOrEqualTo(root.get("sellingPrice"), max);
     }
 
+    public static Specification<PhoneStock> hasStatus(Status status) {
+        return (root, query, cb) ->
+            status == null ? null : cb.equal(root.get("status"), status);
+    }
 }

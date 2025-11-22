@@ -30,6 +30,7 @@ public class PhoneStockService {
                                          String model,
                                          String color,
                                          String imei,
+                                         Status status,
                                          BigDecimal priceMin,
                                          BigDecimal priceMax,
                                          int page,
@@ -39,6 +40,7 @@ public class PhoneStockService {
             .and(PhoneStockSpecifications.hasModel(model))
             .and(PhoneStockSpecifications.hasImeiLike(imei))
             .and(PhoneStockSpecifications.hasColor(color))
+            .and(PhoneStockSpecifications.hasStatus(status))
             .and(PhoneStockSpecifications.hasPriceMin(priceMin))
             .and(PhoneStockSpecifications.hasPriceMax(priceMax));
 
@@ -59,7 +61,7 @@ public class PhoneStockService {
             dto.getRam(),
             dto.getMemory(),
             dto.getColor(),
-            dto.getImei1(),
+            dto.getImei(),
             dto.getName(),
             dto.getSource(),
             dto.getSellingPrice()
