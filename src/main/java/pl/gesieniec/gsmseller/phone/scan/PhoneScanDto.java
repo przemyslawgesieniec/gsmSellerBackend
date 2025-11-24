@@ -15,6 +15,5 @@ public class PhoneScanDto {
     private String ram;
     private String memory;
     private String color;
-    private String imei1;
-    private String imei2;
+    private String imei;
 }

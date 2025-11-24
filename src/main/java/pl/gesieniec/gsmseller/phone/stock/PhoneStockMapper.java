@@ -16,7 +16,7 @@ public class PhoneStockMapper {
             phoneScanDto.getRam(),
             phoneScanDto.getMemory(),
             phoneScanDto.getColor(),
-            phoneScanDto.getImei1()
+            phoneScanDto.getImei()
             ,null,null,null,null);
     }
 

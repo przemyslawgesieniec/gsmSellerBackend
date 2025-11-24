@@ -61,7 +61,6 @@ public class PhoneStockController {
     public PhoneScanDto getTestPhone() {
         return new PhoneScanDto("buba", "12GB", "128",
             "black",
-            "123dfwdfwef",
-            "asdfwe234f");
+            "123dfwdfwef");
     }
 }
