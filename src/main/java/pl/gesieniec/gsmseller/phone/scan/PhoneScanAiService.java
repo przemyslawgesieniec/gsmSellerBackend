@@ -2,6 +2,7 @@ package pl.gesieniec.gsmseller.phone.scan;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -31,7 +33,7 @@ public class PhoneScanAiService {
 //        this.apiUrl = apiUrl;
 //    }
 
-    public PhoneScanDto scrapDataFromImage(ByteArrayResource photo) throws JsonProcessingException {
+    public PhoneScanDto scrapDataFromImage(List<MultipartFile> photo) throws JsonProcessingException {
 
 //        MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
 //        formData.add("prompt", getPrompt());

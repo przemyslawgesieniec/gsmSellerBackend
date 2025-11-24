@@ -10,15 +10,15 @@ import com.google.cloud.vision.v1.ImageAnnotatorClient;
 import com.google.cloud.vision.v1.ImageAnnotatorSettings;
 import com.google.protobuf.ByteString;
 import java.io.FileInputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import lombok.SneakyThrows;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GoogleCloudVision {
 
     @SneakyThrows
-    public String detect() {
+    public String detect(byte[] photo) {
 
         GoogleCredentials credentials = GoogleCredentials
             .fromStream(new FileInputStream(
@@ -29,8 +29,7 @@ public class GoogleCloudVision {
             .setCredentialsProvider(() -> credentials)
             .build();
 
-        byte[] data = Files.readAllBytes(Paths.get("src/main/resources/static/IMG_1603A6853523-1.jpeg"));
-        ByteString imgBytes = ByteString.copyFrom(data);
+        ByteString imgBytes = ByteString.copyFrom(photo);
 
         Image img = Image.newBuilder().setContent(imgBytes).build();
 
@@ -55,7 +54,6 @@ public class GoogleCloudVision {
                 return "";
             }
 
-            // 4. Cały tekst
             String fullText = response.getFullTextAnnotation().getText();
             System.out.println("=== Odczytany tekst ===\n" + fullText);
 
@@ -63,4 +61,6 @@ public class GoogleCloudVision {
 
         }
     }
+
+
 }
