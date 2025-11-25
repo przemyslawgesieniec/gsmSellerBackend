@@ -4,11 +4,12 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
+import lombok.With;
 
 @ToString
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PhoneScanDto {
     private String model;
@@ -16,4 +17,20 @@ public class PhoneScanDto {
     private String memory;
     private String color;
     private String imei;
+    @Setter
+    private String source;
+    @Setter
+    private String initPrice;
+    @Setter
+    private String name;
+
+    public PhoneScanDto(String model, String ram, String memory, String color, String imei) {
+        this.model = model;
+        this.ram = ram;
+        this.memory = memory;
+        this.color = color;
+        this.imei = imei;
+    }
+
+
 }
