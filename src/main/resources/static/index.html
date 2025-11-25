@@ -23,7 +23,7 @@
 
     <ul class="right hide-on-med-and-down">
       <li><a href="index.html">Stan magazynowy</a></li>
-      <li><a href="dodaj.html">Dodaj telefon</a></li>
+      <li><a href="addPhones.html">Dodaj telefon</a></li>
       <li><a href="raporty.html">Raporty</a></li>
       <li><a href="ustawienia.html">Ustawienia</a></li>
 
@@ -44,7 +44,7 @@
 
 <ul class="sidenav" id="mobile-nav">
   <li><a href="index.html"><i class="material-icons">inventory_2</i>Stan magazynowy</a></li>
-  <li><a href="dodaj.html"><i class="material-icons">add_circle_outline</i>Dodaj telefon</a></li>
+  <li><a href="addPhones.html"><i class="material-icons">add_circle_outline</i>Dodaj telefon</a></li>
   <li><a href="raporty.html"><i class="material-icons">bar_chart</i>Raporty</a></li>
   <li><a href="ustawienia.html"><i class="material-icons">settings</i>Ustawienia</a></li>
   <li>
@@ -59,7 +59,6 @@
   </li>
 </ul>
 <div class="container wide-layout">
-  <h5 class="center-align" style="margin-top: 25px;">Stan magazynowy</h5>
 
   <div class="row">
 
@@ -137,12 +136,12 @@
 </div>
 
 
-<!-- Floating Action Button -->
-<div class="fixed-action-btn">
-  <a class="btn-floating btn-large red modal-trigger" href="#addBulkModal">
-    <i class="large material-icons">add</i>
-  </a>
-</div>
+<!--&lt;!&ndash; Floating Action Button &ndash;&gt;-->
+<!--<div class="fixed-action-btn">-->
+<!--  <a class="btn-floating btn-large red modal-trigger" href="#addBulkModal">-->
+<!--    <i class="large material-icons">add</i>-->
+<!--  </a>-->
+<!--</div>-->
 
 <!-- Modal: Hurtowe dodawanie telefonów -->
 <div id="addBulkModal" class="modal">
@@ -176,6 +175,9 @@
     <button class="btn-flat modal-close">Anuluj</button>
   </div>
 </div>
+
+<!-- Modal: podsumowanie dodawania telefonów -->
+<div id="scanResultsContainer" class="modal"></div>
 
 <!-- Modal: Edycja telefonu -->
 <div id="editPhoneModal" class="modal">
@@ -214,6 +216,7 @@
 <!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="js/main.js"></script>
+<script src="js/uploadFiles.js"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {

@@ -40,7 +40,6 @@ async function loadStock(page = 0) {
     renderChips(filters);
 }
 
-// wysyłamy request z filtrami jako parametry zapytania
 async function fetchPhonesPage(page = 0, filters = {}) {
     try {
         const params = new URLSearchParams();
@@ -268,18 +267,6 @@ document.addEventListener("DOMContentLoaded", function () {
         M.toast({html: `${files.length} plików wybranych`, classes: 'green'});
         // Tutaj później będzie logika przesyłania do backendu
     }
-
-    // Przycisk Dodaj w modal
-    document.getElementById('addBulkBtn').addEventListener('click', () => {
-        const price = document.getElementById('manualPrice').value;
-        const source = document.getElementById('manualSource').value;
-        const name = document.getElementById('manualName').value;
-
-        console.log({price, source, name});
-        M.toast({html: 'Telefony dodane (symulacja)', classes: 'blue'});
-        const modal = M.Modal.getInstance(document.getElementById('addBulkModal'));
-        modal.close();
-    });
 
     createCartButton();
     [
