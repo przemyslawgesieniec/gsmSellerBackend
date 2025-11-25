@@ -1,12 +1,10 @@
 package pl.gesieniec.gsmseller.phone.scan;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.With;
 
 @ToString
 @Getter
@@ -20,7 +18,9 @@ public class PhoneScanDto {
     @Setter
     private String source;
     @Setter
-    private String initPrice;
+    private String initialPrice;
+    @Setter
+    private String sellingPrice;
     @Setter
     private String name;
 

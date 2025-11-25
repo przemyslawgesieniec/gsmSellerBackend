@@ -13,7 +13,7 @@ public class PhoneScanService {
     private final GoogleCloudVision googleCloudVision;
     private final PhoneDataOcrParser phoneDataOcrParser;
 
-    public List<PhoneScanDto> getPhoneScanDtos(String name, String source, String price,
+    public List<PhoneScanDto> getPhoneScanDtos(String name, String source, String initialPrice, String sellingPrice,
                                                List<MultipartFile> photos) {
         return photos.stream()
             .map(this::toBytes)
@@ -22,7 +22,8 @@ public class PhoneScanService {
                 PhoneScanDto phoneScanDto = phoneDataOcrParser.parseRawOcrData(extractedData);
                 phoneScanDto.setName(name);
                 phoneScanDto.setSource(source);
-                phoneScanDto.setInitPrice(price);
+                phoneScanDto.setInitialPrice(initialPrice);
+                phoneScanDto.setSellingPrice(sellingPrice);
                 return phoneScanDto;
             }).toList();
     }

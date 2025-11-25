@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,8 +27,9 @@ public class PhoneStockController {
     }
 
     @PostMapping
-    public PhoneStockDto addPhone(@RequestBody PhoneScanDto phoneScanDto) {
-        return service.savePhone(phoneScanDto);
+    public void addPhones(@RequestBody List<PhoneScanDto> phoneScanDtoList) {
+        log.info("Teleofny otrzymane do zapisu:  {} ", phoneScanDtoList);
+        service.saveAllPhone(phoneScanDtoList);
     }
 
     @GetMapping
@@ -51,16 +53,9 @@ public class PhoneStockController {
         @PathVariable UUID technicalId,
         @RequestBody PhoneStockDto updateDto) {
 
-        log.info("Aktualizacja pozycji {} z danymi {}",technicalId,updateDto);
+        log.info("Aktualizacja pozycji {} z danymi {}", technicalId, updateDto);
         PhoneStockDto phoneStockDto = service.updatePhone(technicalId, updateDto);
         log.info("Aktualizacja pozycji {} zrealizowana", technicalId);
         return phoneStockDto;
-    }
-
-    @GetMapping("/test")
-    public PhoneScanDto getTestPhone() {
-        return new PhoneScanDto("buba", "12GB", "128",
-            "black",
-            "123dfwdfwef");
     }
 }

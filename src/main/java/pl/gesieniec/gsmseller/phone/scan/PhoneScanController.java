@@ -22,11 +22,12 @@ public class PhoneScanController {
     @PostMapping(consumes = {"multipart/form-data"})
     public List<PhoneScanDto> uploadFiles(
         @RequestParam("name") String name,
-        @RequestParam("price") String price,
+        @RequestParam("initialPrice") String initialPrice,
+        @RequestParam("sellingPrice") String sellingPrice,
         @RequestParam("source") String source,
         @RequestParam("photos") List<MultipartFile> photos
     ) {
-        return phoneScanService.getPhoneScanDtos(name, source, price, photos);
+        return phoneScanService.getPhoneScanDtos(name, source, initialPrice, sellingPrice, photos);
     }
 
 }

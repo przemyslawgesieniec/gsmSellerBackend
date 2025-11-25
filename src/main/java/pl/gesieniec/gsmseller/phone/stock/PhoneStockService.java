@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -68,5 +69,12 @@ public class PhoneStockService {
         );
 
         return phoneStockMapper.toDto(phone);
+    }
+
+    @Transactional
+    public void saveAllPhone(List<PhoneScanDto> phoneScanDtoList) {
+        phoneScanDtoList.stream()
+            .map(phoneStockMapper::toPhoneStock)
+            .forEach(repository::save);
     }
 }

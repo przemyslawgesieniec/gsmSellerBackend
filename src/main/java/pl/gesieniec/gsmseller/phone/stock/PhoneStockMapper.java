@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
+import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -10,14 +11,16 @@ import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 public class PhoneStockMapper {
 
     public PhoneStock toPhoneStock(PhoneScanDto phoneScanDto){
-        //TODO fix me
         return PhoneStock.create(
             phoneScanDto.getModel(),
             phoneScanDto.getRam(),
             phoneScanDto.getMemory(),
             phoneScanDto.getColor(),
-            phoneScanDto.getImei()
-            ,null,null,null,null);
+            phoneScanDto.getImei(),
+            phoneScanDto.getName(),
+            phoneScanDto.getSource(),
+            new BigDecimal(phoneScanDto.getSellingPrice()),
+            new BigDecimal(phoneScanDto.getInitialPrice()));
     }
 
     public PhoneStockDto toDto(PhoneStock save) {
