@@ -37,6 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // === WYSYŁANIE ===
     addBtn.addEventListener("click", async () => {
 
+        showLoader();
+
         console.log("Kliknięto Dodaj");
 
         const formData = new FormData();
@@ -66,6 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
             console.error("ERROR:", err);
             M.toast({html: "Błąd podczas przetwarzania", classes: "red"});
+        } finally {
+            hideLoader();
         }
     });
 
@@ -144,6 +148,14 @@ document.addEventListener("DOMContentLoaded", () => {
         card.appendChild(content);
         container.appendChild(card);
 
-        M.updateTextFields(); // ważne dla Materialize
+        M.updateTextFields();
     }
 });
+
+function showLoader() {
+    document.getElementById("loadingOverlay").classList.remove("hide");
+}
+
+function hideLoader() {
+    document.getElementById("loadingOverlay").classList.add("hide");
+}
