@@ -135,6 +135,15 @@
         M.Sidenav.init(document.querySelectorAll('.sidenav'));
         M.FormSelect.init(document.querySelectorAll('select'));
     });
+
+        document.addEventListener("DOMContentLoaded", () => {
+        if (localStorage.getItem("phonesSaved") === "true") {
+
+        M.toast({ html: "Telefony zapisane!", classes: "green" });
+
+        localStorage.removeItem("phonesSaved");
+    }
+    });
 </script>
 </body>
 </html>

@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
 
                 <div class="input-field col s12 m4">
-                    <input type="number" value="${p.initPrice || ''}" data-field="initialPrice">
+                    <input type="number" value="${p.initialPrice || ''}" data-field="initialPrice">
                     <label class="active">Cena zakupu</label>
                 </div>
 
@@ -164,9 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("savePhonesBtn")
             .addEventListener("click", sendFinalPhones);
+
     }
-
-
 });
 
 function showLoader() {
@@ -176,40 +175,41 @@ function showLoader() {
 function hideLoader() {
     document.getElementById("loadingOverlay").classList.add("hide");
 }
+
 function sendFinalPhones() {
     const phoneBlocks = document.querySelectorAll(".scan-item");
-
     const resultList = [];
 
     phoneBlocks.forEach(block => {
         const inputs = block.querySelectorAll("input[data-field]");
-
         const phone = {};
-
         inputs.forEach(input => {
             const key = input.getAttribute("data-field");
             phone[key] = input.value;
         });
-
         resultList.push(phone);
     });
-
-    console.log("Sending JSON:", resultList);
 
     fetch("/api/v1/phones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(resultList)
     })
-        .then(r => {
-            if (!r.ok) throw new Error("Błąd");
-            M.toast({ html: "Telefony zapisane!", classes: "green" });
+        .then(res => {
+            if (!res.ok) throw new Error("Błąd");
+
+            // Zapisz flagę do localStorage
+            localStorage.setItem("phonesSaved", "true");
+
+            // Przeładuj stronę
+            location.reload();
         })
         .catch(err => {
             console.error(err);
             M.toast({ html: "Błąd zapisu", classes: "red" });
         });
 }
+
 
 
 
