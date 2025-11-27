@@ -56,11 +56,23 @@ body {
     letter-spacing: 0.5px;
 }
 
-.status-badge.dostepny {
+.status-badge.DOSTĘPNY {
     background-color: #43a047; /* zielony */
 }
 
-.status-badge.sprzedany {
+.status-badge.SPRZEDANY {
+    background-color: #d46262; /* szary */
+}
+
+.status-badge.ODDANY {
+    background-color: #d46262; /* szary */
+}
+
+.status-badge.USUNIĘTY {
+    background-color: #d46262; /* szary */
+}
+
+.status-badge.WPROWADZONY {
     background-color: #9e9e9e; /* szary */
 }
 
@@ -215,3 +227,24 @@ body {
 }
 /*~loading indicator*/
 
+.price-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.sellingPrice {
+    opacity: 1;
+    transition: opacity 0.25s ease;
+    cursor: pointer;
+}
+
+.initialPrice-hover {
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.price-wrapper:hover .initialPrice-hover {
+    opacity: 1;
+}

@@ -15,6 +15,7 @@ function getFilters() {
         status: document.getElementById("filterStatus").value.trim()
     };
 }
+
 async function loadStock(page = 0) {
     try {
         const filters = getFilters();
@@ -27,8 +28,9 @@ async function loadStock(page = 0) {
             name: phone.name,
             model: phone.model,
             color: phone.color,
-            imei: phone.imei1,
+            imei: phone.imei,
             sellingPrice: phone.sellingPrice,
+            purchasePrice: phone.purchasePrice,
             status: phone.status
         }));
 
@@ -166,8 +168,8 @@ const editButtonIdPrefix = "editBtn";
 function renderPhones(phones) {
     listContainer.innerHTML = "";
     phones.forEach((phone) => {
-        const statusClass = phone.status === "DOSTĘPNY" ? "dostepny" : "sprzedany";
-        const disabled = phone.status === "SPRZEDANY" ? "disabled" : "";
+        const statusClass = phone.status;
+        const disableSellButton = phone.status === ("SPRZEDANY" || "USUNIĘTY" || "ODDANY") ? "disabled" : "";
         const sellButtonId = sellButtonIdPrefix + phone.technicalId;
         const editButtonId = editButtonIdPrefix + phone.technicalId;
 
@@ -182,16 +184,19 @@ function renderPhones(phones) {
               <p><b>IMEI:</b> ${phone.imei}</p>
             </div>
             <div class="phone-right">
-              <p class="sellingPrice">${phone.sellingPrice} zł</p>
+            <div class="price-wrapper col s12">
+                <p class="sellingPrice">${phone.sellingPrice} zł</p>
+                <p class="initialPrice-hover">Zakup: ${phone.purchasePrice} zł</p>
+            </div>          
               <span class="status-badge ${statusClass}">${phone.status}</span>
             </div>
           </div>
           <div class="card-action right-align">
-            <button class="btn-small orange darken-2 id=${sellButtonId} ${disabled}" onclick="sellPhone('${phone.technicalId}')">
-              <i class="material-icons left">attach_money</i>Sprzedaj
-            </button>
-            <button class="btn-small blue darken-2" id=${editButtonId} onclick="editPhone('${phone.technicalId}')">
+           <button class="btn-small blue darken-2" id=${editButtonId} onclick="editPhone('${phone.technicalId}')">
               <i class="material-icons left">edit</i>Edytuj
+            </button>
+            <button class="btn-small orange darken-2 id=${sellButtonId} ${disableSellButton}" onclick="sellPhone('${phone.technicalId}')">
+              <i class="material-icons left">attach_money</i>Sprzedaj
             </button>
           </div>
         </div>
@@ -329,7 +334,7 @@ function editPhone(technicalId) {
 
     } catch (error) {
         console.error("Błąd podczas otwierania edycji:", error);
-        M.toast({ html: "Nie udało się otworzyć edycji telefonu", classes: "red" });
+        M.toast({html: "Nie udało się otworzyć edycji telefonu", classes: "red"});
     }
 }
 
@@ -343,7 +348,7 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
         name: document.getElementById("editName").value,
         model: document.getElementById("editModel").value,
         color: document.getElementById("editColor").value,
-        imei1: document.getElementById("editImei").value,
+        imei: document.getElementById("editImei").value,
         sellingPrice: parseFloat(document.getElementById("editPrice").value)
     };
 
@@ -358,9 +363,8 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
 
         if (!response.ok) {
             throw new Error("Nie udało się zapisać zmian");
-        }
-        else {
-            M.toast({ html: "Telefon został zaktualizowany", classes: "green" });
+        } else {
+            M.toast({html: "Telefon został zaktualizowany", classes: "green"});
         }
 
         // Zamknij modal
@@ -372,7 +376,7 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
 
     } catch (error) {
         console.error("Błąd podczas zapisywania zmian:", error);
-        M.toast({ html: "Błąd podczas zapisu", classes: "red" });
+        M.toast({html: "Błąd podczas zapisu", classes: "red"});
     }
 });
 
