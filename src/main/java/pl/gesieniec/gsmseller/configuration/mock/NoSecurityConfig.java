@@ -1,4 +1,4 @@
-package pl.gesieniec.gsmseller.configuration;
+package pl.gesieniec.gsmseller.configuration.mock;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,14 +11,16 @@ import org.springframework.security.web.SecurityFilterChain;
 public class NoSecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, FakeUserFilter fakeUserFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .addFilterBefore(fakeUserFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable());
 
         return http.build();
     }
+
 }

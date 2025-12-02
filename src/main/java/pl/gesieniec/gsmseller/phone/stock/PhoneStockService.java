@@ -21,11 +21,12 @@ public class PhoneStockService {
     private final PhoneStockRepository repository;
     private final PhoneStockMapper phoneStockMapper;
 
-    public PhoneStockDto savePhone(PhoneScanDto dto) {
-        PhoneStock phoneStock = phoneStockMapper.toPhoneStock(dto);
-        PhoneStock save = repository.save(phoneStock);
-        return phoneStockMapper.toDto(save);
+    public PhoneStockDto getByTechnicalId(UUID id) {
+        return repository.findByTechnicalId(id)
+            .map(phoneStockMapper::toDto)
+            .orElse(null);
     }
+
 
     public Page<PhoneStockDto> getPhones(String name,
                                          String model,
@@ -77,4 +78,5 @@ public class PhoneStockService {
             .map(phoneStockMapper::toPhoneStock)
             .forEach(repository::save);
     }
+
 }

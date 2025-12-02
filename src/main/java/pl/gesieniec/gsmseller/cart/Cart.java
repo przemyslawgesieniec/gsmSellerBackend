@@ -18,6 +18,10 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Jeden koszyk na użytkownika
+    @Column(nullable = false, unique = true)
+    private String username;
+
     @ElementCollection
     @CollectionTable(name = "cart_items", joinColumns = @JoinColumn(name = "cart_id"))
     @Column(name = "phone_technical_id")

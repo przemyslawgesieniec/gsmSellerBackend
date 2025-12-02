@@ -206,36 +206,95 @@ function renderPhones(phones) {
     });
 }
 
-let cartCount = 0;
 let cartBtn = null;
+// const cartBtn = document.getElementById('cartBtn'); // jeśli taki masz
 
-function sellPhone(technicalId) {
-    console.log("selling phone with id " + technicalId);
-    const phone = phones[index];
-    if (phone.status === "SPRZEDANY") return;
+async function sellPhone(technicalId) {
+    try {
+        // opcjonalnie: zablokuj przycisk na czas requestu
+        const btn = document.querySelector(`button[data-technical-id="${technicalId}"]`);
+        if (btn) {
+            btn.disabled = true;
+        }
 
-    phone.status = "SPRZEDANY";
+        const params = new URLSearchParams({ technicalId });
 
-    // Toast potwierdzający
-    M.toast({html: `Telefon ${phone.name} dodany do koszyka`, classes: 'green'});
+        const response = await fetch(`/api/v1/cart/add?${params.toString()}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+                // jeśli używasz CSRF, trzeba tu dodać nagłówek z tokenem
+            }
+        });
 
-    // Zwiększ licznik
-    cartCount += 1;
-    cartBtn.querySelector('.badge').textContent = cartCount;
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const updatedCart = await response.json();
+        cartState = updatedCart;
+
+        // 🔢 aktualizacja liczby w koszyku – dostosuj do swojego modelu Cart
+        // Zakładam np. że masz: cart.items albo cart.phones
+        const items = updatedCart.items || updatedCart.phones || [];
+        cartCount = items.length;
+
+        // Jeśli masz gdzieś licznik w UI, np. badge przy ikonce koszyka:
+        const cartCountBadge = document.getElementById('cartCountBadge');
+        if (cartCountBadge) {
+            cartCountBadge.textContent = cartCount;
+        }
+
+        M.toast({ html: 'Telefon dodany do koszyka', classes: 'green' });
+
+        // opcjonalnie: zmień wygląd przycisku na „W koszyku”
+        if (btn) {
+            btn.textContent = 'W koszyku';
+            btn.classList.remove('orange', 'darken-2');
+            btn.classList.add('grey');
+        }
+
+    } catch (e) {
+        console.error('Error adding to cart:', e);
+        M.toast({ html: 'Nie udało się dodać do koszyka', classes: 'red' });
+
+        // przy błędzie pozwól znowu kliknąć
+        const btn = document.querySelector(`button[data-technical-id="${technicalId}"]`);
+        if (btn) {
+            btn.disabled = false;
+        }
+    }
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const res = await fetch('/api/v1/cart', { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+        if (res.ok) {
+            const cart = await res.json();
+            cartState = cart;
+            const items = cart.items || cart.phones || [];
+            cartCount = items.length;
+
+            const cartCountBadge = document.getElementById('cartCountBadge');
+            if (cartCountBadge) {
+                cartCountBadge.textContent = cartCount;
+            }
+        }
+    } catch (e) {
+        console.warn('Nie udało się pobrać koszyka przy starcie:', e);
+    }
+});
 
 function createCartButton() {
     cartBtn = document.createElement('div');
     cartBtn.id = 'cartBtn';
     cartBtn.className = 'btn-floating btn-large blue';
-    cartBtn.innerHTML = `<i class="material-icons">shopping_cart</i><span class="badge">0</span>`;
+    cartBtn.innerHTML = `
+        <i class="material-icons">shopping_cart</i>
+        <span id="cartBadge" class="badge">0</span>
+    `;
+
     document.body.appendChild(cartBtn);
-
-    // Obsługa kliknięcia w koszyk
-    cartBtn.addEventListener('click', () => {
-        M.toast({html: `W koszyku ${cartCount} telefonów`, classes: 'blue'});
-    });
-
 }
 
 document.addEventListener("DOMContentLoaded", function () {
