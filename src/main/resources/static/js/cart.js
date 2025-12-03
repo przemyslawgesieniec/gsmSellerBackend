@@ -42,9 +42,6 @@ async function openCart() {
     M.Modal.getInstance(document.getElementById("cartModal")).open();
 }
 
-
-
-
 /**
  * Rendering karty koszyka
  */
@@ -74,15 +71,14 @@ function renderCartCard(phones) {
                         RAM: ${phone.ram}<br>
                         Pamięć: ${phone.memory}<br>
                         IMEI: ${phone.imei}<br>
-                        <span class="grey-text">ID: ${phone.technicalId}</span>
                     </div>
 
                     <div style="display:flex; flex-direction:column; align-items:flex-end;">
                         
-                        <div class="input-field" style="margin-top:0; max-width:130px;">
+                        <div class="input-field" style="margin-top:12px; max-width:130px;">
                             <input type="number" 
                                    id="price-${phone.technicalId}"
-                                   value="${phone.sellingPrice ?? phone.purchasePrice ?? ''}"
+                                   value="${phone.sellingPrice}"
                                    class="validate">
                             <label class="active" for="price-${phone.technicalId}">Cena (zł)</label>
                         </div>
@@ -97,9 +93,31 @@ function renderCartCard(phones) {
         });
     }
 
+    // --- PRZYCISK DODAJ POZYCJĘ RĘCZNIE ---
+    html += `
+    <div class="z-depth-1 hoverable add-manual-item"
+         onclick="addManualItem()"
+         style="padding: 25px; border-radius: 8px; margin-bottom: 15px; 
+                display:flex; justify-content:center; align-items:center;
+                cursor:pointer; height:120px; background:#f2f2f2;">
+
+        <i class="material-icons" style="font-size:48px; color:#b5b5b5;">add</i>
+    </div>
+`;
+
+
     html += `</div>`;
 
     container.innerHTML = html;
+
+    setTimeout(() => {
+        const priceInputs = document.querySelectorAll("input[id^='price-']");
+        priceInputs.forEach(input => {
+            input.addEventListener("input", updateCartTotal);
+        });
+        updateCartTotal();
+    }, 0);
+
 }
 
 /**
@@ -115,6 +133,7 @@ async function removeFromCart(technicalId) {
         const phones = await fetchCartPhones();
 
         renderCartCard(phones);
+        updateCartTotal();
 
         M.toast({ html: "Usunięto z koszyka", classes: "blue" });
 
@@ -140,6 +159,82 @@ async function fetchCartPhones() {
         return [];
     }
 }
+
+
+function addManualItem() {
+    const container = document.getElementById("cartItemsList");
+    if (!container) return;
+
+    const tempId = "manual-" + Date.now();
+
+    const html = `
+        <div class="z-depth-1 manual-item"
+             id="${tempId}"
+             style="padding: 12px; border-radius: 8px; margin-bottom: 15px;
+                    display:flex; justify-content:space-between;">
+
+            <div style="flex-grow:1; margin-right: 15px;">
+                <div class="input-field" style="margin-top:12px;">
+                    <input type="text" id="desc-${tempId}" class="validate">
+                    <label class="active" for="desc-${tempId}">Opis</label>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column;">
+                <div class="input-field" style="margin-top:12px; max-width:130px; position:relative;">
+                    <input type="number" id="price-${tempId}" class="validate">
+                    <label class="active" for="price-${tempId}">Cena (zł)</label>
+                </div>
+                
+                <button class="btn-small red" onclick="removeManualItem('${tempId}')">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    // Dodaj przed przyciskiem +
+    const addBtn = document.querySelector(".add-manual-item");
+    container.insertBefore(
+        document.createRange().createContextualFragment(html),
+        addBtn
+    );
+
+    // podłącz aktualizację sumy
+    const priceInput = document.getElementById(`price-${tempId}`);
+    if (priceInput) {
+        priceInput.addEventListener("input", updateCartTotal);
+    }
+    updateCartTotal();
+
+}
+
+function removeManualItem(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    updateCartTotal();
+}
+
+function updateCartTotal() {
+    let sum = 0;
+
+    // wszystkie pola input mają ID w formacie "price-xxx"
+    const priceInputs = document.querySelectorAll("input[id^='price-']");
+
+    priceInputs.forEach(input => {
+        const value = parseFloat(input.value);
+        if (!isNaN(value)) {
+            sum += value;
+        }
+    });
+
+    const totalEl = document.getElementById("cartTotal");
+    if (totalEl) {
+        totalEl.textContent = `Suma: ${sum.toFixed(2)} zł`;
+    }
+}
+
+
 
 
 // ===========================
