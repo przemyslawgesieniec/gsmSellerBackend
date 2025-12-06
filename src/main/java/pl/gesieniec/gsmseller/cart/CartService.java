@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.cart;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -18,6 +19,55 @@ public class CartService {
     private final CartRepository cartRepository;
     private final PhoneStockService phoneStockService;
 
+    @Transactional
+    public Cart addPhoneToCart(String username, UUID technicalId) {
+        Cart cart = getOrCreateCart(username);
+
+        if (cart.getTechnicalIds().contains(technicalId)) {
+            log.info("ℹ [{}] Telefon {} już jest w koszyku", username, technicalId);
+            return null;
+        }
+        PhoneStockDto phone = phoneStockService.getByTechnicalId(technicalId);
+
+        cart.addItem(CartItem.fromPhone(phone));
+        log.info("➕ [{}] Dodano telefon {} do koszyka", username, technicalId);
+
+        return cartRepository.save(cart);
+    }
+
+    public Cart getCart(String username) {
+        return getOrCreateCart(username);
+    }
+
+    @Transactional
+    public Cart removeFromCart(String username, UUID technicalId) {
+        Cart cart = getOrCreateCart(username);
+
+        if (cart.remove(technicalId)) {
+            log.info("❌ [{}] Usunięto przedmiot {} z koszyka", username, technicalId);
+        } else {
+            log.warn("⚠ [{}] Przedmiotu {} nie był w koszyku", username, technicalId);
+        }
+
+        return cartRepository.save(cart);
+    }
+
+
+    @Transactional
+    public Cart addMiscItem(String username, String description, BigDecimal price, UUID technicalId) {
+        Cart cart = getOrCreateCart(username);
+
+        if (cart.getTechnicalIds().contains(technicalId)) {
+            log.info("ℹ [{}] Przedmiot {} już jest w koszyku. Zostanie zaktualizowany.", username, technicalId);
+            cart.updateMiscItem( description,  price,  technicalId);
+        }
+        else{
+            cart.addItem(new CartItem(description, price, technicalId, ItemType.MISC));
+            log.info("➕ [{}] Dodano przedmiot {} do koszyka", username, technicalId);
+        }
+        return cartRepository.save(cart);
+    }
+
     private Cart getOrCreateCart(String username) {
         return cartRepository.findByUsername(username)
             .orElseGet(() -> {
@@ -28,47 +78,16 @@ public class CartService {
             });
     }
 
-    @Transactional
-    public Cart addPhoneToCart(String username, String technicalId) {
-        Cart cart = getOrCreateCart(username);
-
-        if (!cart.getPhoneIds().contains(technicalId)) {
-            cart.addPhone(technicalId);
-            log.info("➕ [{}] Dodano telefon {} do koszyka", username, technicalId);
-        } else {
-            log.info("ℹ [{}] Telefon {} już jest w koszyku", username, technicalId);
-        }
-
-        return cartRepository.save(cart);
-    }
-
-    public Cart getCart(String username) {
-        return getOrCreateCart(username);
-    }
-
-    @Transactional
-    public Cart removeFromCart(String username, String technicalId) {
-        Cart cart = getOrCreateCart(username);
-
-        if (cart.getPhoneIds().remove(technicalId)) {
-            log.info("❌ [{}] Usunięto telefon {} z koszyka", username, technicalId);
-        } else {
-            log.warn("⚠ [{}] Telefon {} nie był w koszyku", username, technicalId);
-        }
-
-        return cartRepository.save(cart);
-    }
-
     /**
      * ✔ Zwraca pełne dane telefonów z koszyka jako DTO
      */
     public List<PhoneStockDto> getPhonesInCart(String username) {
         Cart cart = getOrCreateCart(username);
 
-        return cart.getPhoneIds().stream()
+        return cart.getPhonesIds().stream()
             .map(id -> {
                 try {
-                    return phoneStockService.getByTechnicalId(UUID.fromString(id));
+                    return phoneStockService.getByTechnicalId(id);
                 } catch (IllegalArgumentException e) {
                     log.error("❌ Błędny UUID w koszyku: {}", id);
                     return null;
@@ -77,4 +96,10 @@ public class CartService {
             .filter(Objects::nonNull)
             .toList();
     }
+
+    public List<CartItemDto> getMiscInCart(String username) {
+        Cart cart = getOrCreateCart(username);
+        return cart.getMicsItems();
+    }
+
 }

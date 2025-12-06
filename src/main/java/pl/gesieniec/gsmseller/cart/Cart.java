@@ -1,12 +1,20 @@
 package pl.gesieniec.gsmseller.cart;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -18,20 +26,50 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Jeden koszyk na użytkownika
     @Column(nullable = false, unique = true)
     private String username;
 
-    @ElementCollection
-    @CollectionTable(name = "cart_items", joinColumns = @JoinColumn(name = "cart_id"))
-    @Column(name = "phone_technical_id")
-    private List<String> phoneIds = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "cart_id")
+    private List<CartItem> items = new ArrayList<>();
 
-    public void addPhone(String technicalId) {
-        phoneIds.add(technicalId);
+    public void addItem(CartItem item) {
+        items.add(item);
     }
 
-    public void removePhone(String technicalId) {
-        phoneIds.remove(technicalId);
+    public List<UUID> getTechnicalIds() {
+        return items
+            .stream()
+            .map(CartItem::getTechnicalId)
+            .toList();
+    }
+
+    public boolean remove(UUID technicalId) {
+        return items.stream()
+            .filter(e -> e.getTechnicalId().equals(technicalId))
+            .findAny()
+            .map(items::remove)
+            .orElse(false);
+    }
+
+    public List<UUID> getPhonesIds() {
+        return items.stream()
+            .filter(e -> e.getItemType().equals(ItemType.PHONE))
+            .map(CartItem::getTechnicalId).toList();
+    }
+
+
+    public List<CartItemDto> getMicsItems() {
+        return items.stream()
+            .filter(e -> e.getItemType().equals(ItemType.MISC))
+            .map(i -> new CartItemDto(i.getTechnicalId(), i.getDescription(), i.getPrice(), i.getItemType()))
+            .toList();
+    }
+
+    public void updateMiscItem(String description, BigDecimal price, UUID technicalId) {
+        items.stream()
+            .filter(e->e.getTechnicalId().equals(technicalId))
+            .findFirst()
+            .ifPresent(e->e.update(description, price));
     }
 }
