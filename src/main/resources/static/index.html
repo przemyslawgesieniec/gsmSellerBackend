@@ -24,6 +24,7 @@
     <ul class="right hide-on-med-and-down">
       <li><a href="index.html">Stan magazynowy</a></li>
       <li><a href="addPhones.html">Dodaj telefon</a></li>
+      <li><a href="invoice.html">Wystaw dok. sprz.</a></li>
       <li><a href="raporty.html">Raporty</a></li>
       <li><a href="ustawienia.html">Ustawienia</a></li>
 
@@ -45,6 +46,7 @@
 <ul class="sidenav" id="mobile-nav">
   <li><a href="index.html"><i class="material-icons">inventory_2</i>Stan magazynowy</a></li>
   <li><a href="addPhones.html"><i class="material-icons">add_circle_outline</i>Dodaj telefon</a></li>
+  <li><a href="invoice.html"><i class="material-icons">add_circle_outline</i>Wystaw dok. sprz.</a></li>
   <li><a href="raporty.html"><i class="material-icons">bar_chart</i>Raporty</a></li>
   <li><a href="ustawienia.html"><i class="material-icons">settings</i>Ustawienia</a></li>
   <li>
@@ -220,8 +222,9 @@
   </div>
   <div class="modal-footer">
     <span id="cartTotal" style="margin-right:20px; font-weight:bold;"></span>
-    <button class="btn green darken-2">Wystaw dokument sprzedaży</button>
-    <button class="btn-flat modal-close">Zamknij</button>
+    <div class="modal-footer">
+      <button class="btn blue" onclick="goToInvoice()">Wystaw dokument sprzedaży</button>
+    </div>    <button class="btn-flat modal-close">Zamknij</button>
   </div>
 </div>
 

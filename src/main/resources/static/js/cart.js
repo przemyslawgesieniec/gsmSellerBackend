@@ -338,4 +338,8 @@ function generateUUID() {
         });
 }
 
+function goToInvoice() {
+    window.location.href = "invoice.html";
+}
+
 

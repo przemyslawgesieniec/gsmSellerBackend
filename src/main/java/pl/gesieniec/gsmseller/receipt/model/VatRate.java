@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.receipt.model;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,4 +20,15 @@ public class VatRate {
     public static final VatRate VAT_5  = new VatRate(BigDecimal.valueOf(0.05), "5%");
     public static final VatRate VAT_0  = new VatRate(BigDecimal.valueOf(0), "0%");
     public static final VatRate VAT_EXEMPT = new VatRate(BigDecimal.valueOf(0), "ZW");
+
+    private static final Map<String,VatRate> values = Map.of(
+        VAT_0.name,VAT_0,
+        VAT_8.name,VAT_8,
+        VAT_5.name,VAT_23,
+        VAT_23.name,VAT_23,
+        VAT_EXEMPT.name,VAT_EXEMPT);
+
+    public static VatRate parse(String vatRate) {
+        return values.get(vatRate);
+    }
 }

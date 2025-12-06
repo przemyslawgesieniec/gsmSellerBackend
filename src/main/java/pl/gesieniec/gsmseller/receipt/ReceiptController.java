@@ -1,19 +1,27 @@
 package pl.gesieniec.gsmseller.receipt;
 
+import java.security.Principal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import pl.gesieniec.gsmseller.receipt.model.ReceiptCreateRequest;
 
+@Slf4j
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/receipts")
+@RequestMapping("/api/v1/receipt")
 public class ReceiptController {
 
     private final ReceiptService receiptService;
@@ -21,7 +29,18 @@ public class ReceiptController {
     @GetMapping(produces = MediaType.APPLICATION_PDF_VALUE, path = "/{id}")
     public ResponseEntity<byte[]> getReceiptPfd(@PathVariable UUID id) {
 
-        var pdf = receiptService.generateReceiptPdf(id);
+        log.info("📄 [GET RECEIPT PDF] Wejście do endpointu z id={}", id);
+
+        byte[] pdf;
+        try {
+            pdf = receiptService.generateReceiptPdf(id);
+        } catch (Exception e) {
+            log.error("❌ [GET RECEIPT PDF] Błąd podczas generowania PDF dla id={}", id, e);
+            throw e;
+        }
+
+        int size = (pdf != null) ? pdf.length : 0;
+        log.info("📄 [GET RECEIPT PDF] Wygenerowano PDF dla id={}, rozmiar={} bajtów", id, size);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=potwierdzenie_sprzedazy.pdf")
@@ -30,8 +49,32 @@ public class ReceiptController {
     }
 
     @PostMapping
-    public UUID createReceipt() {
-        return receiptService.generateAndSaveReceipt();
+    @Transactional
+    public UUID createReceipt(Principal principal,
+                              @RequestBody ReceiptCreateRequest request) {
+
+        log.info("🧾 [CREATE RECEIPT] Wejście do endpointu createReceipt");
+
+        if (principal == null) {
+            log.warn("🧾 [CREATE RECEIPT] Brak principal – UNAUTHORIZED");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No principal");
+        }
+
+        String username = principal.getName();
+        log.info("🧾 [CREATE RECEIPT] Użytkownik={} przesyła request: {}", username, request);
+
+        UUID receiptId;
+        try {
+            receiptId = receiptService.generateAndSaveReceipt(username, request);
+        } catch (Exception e) {
+            log.error("❌ [CREATE RECEIPT] Błąd podczas generowania paragonu dla użytkownika={}", username, e);
+            throw e;
+        }
+
+        log.info("🧾 [CREATE RECEIPT] Utworzono dokument sprzedaży: id={} dla user={}", receiptId, username);
+        // TODO notyfikacja do wyczyszczenia koszyka i przestawienia statusów telefonów na sprzedane.
+
+        return receiptId;
     }
 
 }
