@@ -183,7 +183,7 @@
 
 <!-- Modal: Edycja telefonu -->
 <div id="editPhoneModal" class="modal">
-  <div class="modal-content">
+  <div class="modal-content" style="position: relative;">
     <h5>Edycja telefonu</h5>
     <a class="modal-close right"><i class="material-icons">close</i></a>
 
@@ -209,11 +209,32 @@
         <label for="editPrice">Cena</label>
       </div>
     </div>
+
+    <!-- NOWY PRZYCISK -->
+    <button id="acceptAtStoreBtn"
+            class="btn green darken-2"
+            style="position:absolute; bottom:10px; left:10px;">
+      Przyjmij na sklep
+    </button>
+
   </div>
+
   <div class="modal-footer">
     <button class="btn blue darken-2" id="saveEditBtn">Zapisz</button>
   </div>
 </div>
+
+<!-- Modal: Potwierdzenie przyjecia telefonu -->
+<div id="acceptConfirmModal" class="modal">
+  <div class="modal-content">
+    <h5>Czy na pewno chcesz przyjąć ten telefon na sklep?</h5>
+  </div>
+  <div class="modal-footer">
+    <button id="confirmAcceptYes" class="btn green">TAK</button>
+    <button class="modal-close btn red">NIE</button>
+  </div>
+</div>
+
 
 <!-- Modal koszyka -->
 <div id="cartModal" class="modal">

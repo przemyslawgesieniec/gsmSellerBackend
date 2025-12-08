@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import pl.gesieniec.gsmseller.cart.Cart;
+import pl.gesieniec.gsmseller.location.LocationEntity;
 
 @Entity
 @Getter
@@ -28,6 +29,10 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "cart_id")
     private Cart cart;
+
+    @OneToOne
+    @JoinColumn(name = "location_id")
+    private LocationEntity location;
 
     public User(String username, String password, String role) {
         this.username = username;

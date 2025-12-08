@@ -1,10 +1,12 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,4 +60,11 @@ public class PhoneStockController {
         log.info("Aktualizacja pozycji {} zrealizowana", technicalId);
         return phoneStockDto;
     }
+
+    @PostMapping("/{technicalId}/accept")
+    public ResponseEntity<Void> acceptPhoneAtLocation(@PathVariable UUID technicalId, Principal principal) {
+        service.acceptPhone(technicalId, principal.getName());
+        return ResponseEntity.ok().build();
+    }
+
 }

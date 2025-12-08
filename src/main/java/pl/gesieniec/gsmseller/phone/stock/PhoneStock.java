@@ -1,16 +1,13 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import java.math.BigDecimal;
-import java.util.UUID;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pl.gesieniec.gsmseller.location.LocationEntity;
+
+import java.math.BigDecimal;
+import java.util.UUID;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -31,15 +28,20 @@ public class PhoneStock {
     private String source;
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
-    private String location;
+
+    @ManyToOne
+    @JoinColumn(name = "location_id")
+    private LocationEntity location;
+
     private BigDecimal soldFor;
 
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei, String name,
-                      String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
-                      String location, Status status) {
+    public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei,
+                      String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
+                      LocationEntity location, Status status) {
+
         this.technicalId = technicalId;
         this.model = model;
         this.ram = ram;
@@ -54,21 +56,15 @@ public class PhoneStock {
         this.status = status;
     }
 
-    public static PhoneStock create(String model, String ram, String memory, String color, String imei, String name,
-                                    String source, BigDecimal purchasePrice, BigDecimal sellingPrice) {
+    public static PhoneStock create(String model, String ram, String memory, String color, String imei,
+                                    String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice) {
 
-        return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name, source, purchasePrice, sellingPrice,
-            null, Status.WPROWADZONY);
+        return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name,
+            source, purchasePrice, sellingPrice, null, Status.WPROWADZONY);
     }
 
-    public void update(String model,
-                       String ram,
-                       String memory,
-                       String color,
-                       String imei,
-                       String name,
-                       String source,
-                       BigDecimal sellingPrice) {
+    public void update(String model, String ram, String memory, String color,
+                       String imei, String name, String source, BigDecimal sellingPrice) {
 
         if (model != null) this.model = model;
         if (ram != null) this.ram = ram;
@@ -80,14 +76,13 @@ public class PhoneStock {
         if (sellingPrice != null) this.sellingPrice = sellingPrice;
     }
 
-    public void sell(BigDecimal soldPrice){
+    public void sell(BigDecimal soldPrice) {
         this.status = Status.SPRZEDANY;
         this.soldFor = soldPrice;
     }
 
-    public void acceptAtLocation(String location){
+    public void acceptAtLocation(LocationEntity location) {
         this.status = Status.DOSTĘPNY;
         this.location = location;
     }
-
 }

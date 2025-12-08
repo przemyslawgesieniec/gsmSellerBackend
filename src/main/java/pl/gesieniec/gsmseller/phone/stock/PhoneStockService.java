@@ -12,14 +12,18 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
+import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
+import pl.gesieniec.gsmseller.user.User;
+import pl.gesieniec.gsmseller.user.UserRepository;
 
 @Service
 @RequiredArgsConstructor
-public class PhoneStockService implements PhoneSoldHandler{
+public class PhoneStockService implements PhoneSoldHandler {
 
     private final PhoneStockRepository repository;
     private final PhoneStockMapper phoneStockMapper;
+    private final UserRepository userRepository;
 
     public PhoneStockDto getByTechnicalId(UUID id) {
         return repository.findByTechnicalId(id)
@@ -38,7 +42,7 @@ public class PhoneStockService implements PhoneSoldHandler{
                                          int page,
                                          int size) {
         Specification<PhoneStock> spec = Specification
-        .where(PhoneStockSpecifications.hasName(name))
+            .where(PhoneStockSpecifications.hasName(name))
             .and(PhoneStockSpecifications.hasModel(model))
             .and(PhoneStockSpecifications.hasImeiLike(imei))
             .and(PhoneStockSpecifications.hasColor(color))
@@ -82,6 +86,26 @@ public class PhoneStockService implements PhoneSoldHandler{
     @Override
     @Transactional
     public void markPhoneSold(UUID technicalId, BigDecimal soldPrice) {
-        repository.findByTechnicalId(technicalId).ifPresent(e->e.sell(soldPrice));
+        repository.findByTechnicalId(technicalId).ifPresent(e -> e.sell(soldPrice));
     }
+
+    public void acceptPhone(UUID technicalId, String username) {
+
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocationEntity userLocation = user.getLocation();
+        if (userLocation == null) {
+            throw new RuntimeException("User has no assigned location");
+        }
+
+        PhoneStock phone = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() -> new RuntimeException("Phone not found"));
+
+        phone.acceptAtLocation(userLocation);
+
+        repository.save(phone);
+    }
+
+
 }

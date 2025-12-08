@@ -547,6 +547,43 @@ function renderFilterChips() {
     });
 }
 
+// Kliknięcie "Przyjmij na sklep"
+document.getElementById("acceptAtStoreBtn").addEventListener("click", () => {
+    const confirmModal = M.Modal.getInstance(document.getElementById("acceptConfirmModal"));
+    confirmModal.open();
+});
+
+// Kliknięcie "TAK" w potwierdzeniu
+document.getElementById("confirmAcceptYes").addEventListener("click", async () => {
+    const technicalId = document
+        .getElementById("saveEditBtn")
+        .getAttribute("data-technical-id");
+
+    try {
+        const response = await fetch(`/api/v1/phones/${technicalId}/accept`, {
+            method: "POST"
+        });
+
+        if (!response.ok) {
+            throw new Error("Błąd podczas przyjmowania na sklep");
+        }
+
+        M.toast({html: "Telefon przyjęty na sklep", classes: "green"});
+
+        // Zamknięcie obu modali
+        M.Modal.getInstance(document.getElementById("acceptConfirmModal")).close();
+        M.Modal.getInstance(document.getElementById("editPhoneModal")).close();
+
+        // Odśwież listę
+        loadStock(currentPage);
+
+    } catch (error) {
+        console.error(error);
+        M.toast({html: "Nie udało się przyjąć telefonu", classes: "red"});
+    }
+});
+
+
 function debounce(fn, delay = 300) {
     let timeout;
     return (...args) => {

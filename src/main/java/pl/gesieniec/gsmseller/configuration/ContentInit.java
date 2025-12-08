@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import pl.gesieniec.gsmseller.cart.Cart;
+import pl.gesieniec.gsmseller.location.LocationEntity;
+import pl.gesieniec.gsmseller.location.LocationRepository;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockRepository;
 import pl.gesieniec.gsmseller.user.User;
@@ -13,17 +15,25 @@ import pl.gesieniec.gsmseller.user.UserRepository;
 public class ContentInit {
 
     public ContentInit(PhoneStockRepository phoneStockRepository,
-                       UserRepository userRepository) {
-        initData(phoneStockRepository, userRepository);
+                       UserRepository userRepository,
+                       LocationRepository locationRepository) {
+        initData(phoneStockRepository, userRepository,locationRepository);
     }
 
     private void initData(PhoneStockRepository phoneStockRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          LocationRepository locationRepository) {
 
-        User user1 = new User("seller1", "{noop}password1", "ROLE_SELLER");
+        LocationEntity locationEntity = new LocationEntity("Manu", "Drewnowska 13A");
+        locationRepository.save(locationEntity);
+
+        User user1 = new User("devUser", "{noop}password1", "ROLE_SELLER");
         User user2 = new User("seller2", "{noop}password2", "ROLE_SELLER");
 
+        user1.setLocation(locationEntity);
+
         userRepository.saveAll(List.of(user1, user2));
+
 
         phoneStockRepository
             .save(PhoneStock.create("SNVF5493", "16", "128", "yellow", "56663563563", "Samsung", "Od Andrzeja",
