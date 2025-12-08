@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pl.gesieniec.gsmseller.common.ItemType;
 
 @Getter
 @AllArgsConstructor

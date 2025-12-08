@@ -32,6 +32,7 @@ public class PhoneStock {
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
     private String location;
+    private BigDecimal soldFor;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -79,8 +80,9 @@ public class PhoneStock {
         if (sellingPrice != null) this.sellingPrice = sellingPrice;
     }
 
-    public void sell(){
+    public void sell(BigDecimal soldPrice){
         this.status = Status.SPRZEDANY;
+        this.soldFor = soldPrice;
     }
 
     public void acceptAtLocation(String location){

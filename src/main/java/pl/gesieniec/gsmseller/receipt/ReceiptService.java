@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
+import pl.gesieniec.gsmseller.common.ItemType;
+import pl.gesieniec.gsmseller.phone.stock.PhoneSoldHandler;
 import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
 import pl.gesieniec.gsmseller.receipt.model.DateAndPlace;
 import pl.gesieniec.gsmseller.receipt.model.Item;
@@ -26,6 +28,7 @@ public class ReceiptService {
     private final PdfGenerationService pdfService;
     private final ReceiptRepository receiptRepository;
     private final ReceiptMapper receiptMapper;
+    private final PhoneSoldHandler phoneSoldHandler;
 
     /**
      * Pobiera PDF na podstawie UUID
@@ -80,9 +83,16 @@ public class ReceiptService {
         ReceiptEntity entity = receiptMapper.toEntity(receipt);
         receiptRepository.save(entity);
 
+        updateSoldPhones(items);
         log.info("💾 Zapisano dokument sprzedaży {} przez użytkownika {}", receiptNumber, username);
 
         return entity.getTechnicalId();
+    }
+
+    private void updateSoldPhones(List<Item> items) {
+        items.stream()
+            .filter(e->e.getItemType().equals(ItemType.PHONE))
+            .forEach(e-> phoneSoldHandler.markPhoneSold(e.getTechnicalId(),e.getNettAmount()));
     }
 
 
@@ -94,7 +104,7 @@ public class ReceiptService {
 
         return itemRequests.stream()
             .map(req -> {
-                if ("PHONE" .equals(req.getItemType())) {
+                if (ItemType.PHONE.equals(req.getItemType())) {
                     log.info("📱 Pozycja PHONE: {}, gwarancja={} mies., używany={}",
                         req.getDescription(), req.getWarrantyMonths(), req.getUsed());
 

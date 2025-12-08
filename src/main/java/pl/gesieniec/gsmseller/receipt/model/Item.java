@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import pl.gesieniec.gsmseller.common.ItemType;
 
 @Getter
 @AllArgsConstructor
@@ -20,6 +21,7 @@ public class Item {
     private final UUID technicalId;
     private final Integer warrantyMonths;
     private final Boolean used;
+    private final ItemType itemType;
 
 
     /**
@@ -40,7 +42,8 @@ public class Item {
             grossAmount,
             null,
             null,
-            null
+            null,
+            ItemType.MISC
         );
     }
 
@@ -70,7 +73,8 @@ public class Item {
             grossAmount,
             technicalId,
             warrantyMonths,
-            used
+            used,
+            ItemType.PHONE
         );
     }
 }

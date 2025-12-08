@@ -15,6 +15,7 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import pl.gesieniec.gsmseller.common.ItemType;
 
 @Entity
 @Getter

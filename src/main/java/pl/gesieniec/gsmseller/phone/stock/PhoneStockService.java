@@ -16,7 +16,7 @@ import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 
 @Service
 @RequiredArgsConstructor
-public class PhoneStockService {
+public class PhoneStockService implements PhoneSoldHandler{
 
     private final PhoneStockRepository repository;
     private final PhoneStockMapper phoneStockMapper;
@@ -79,4 +79,9 @@ public class PhoneStockService {
             .forEach(repository::save);
     }
 
+    @Override
+    @Transactional
+    public void markPhoneSold(UUID technicalId, BigDecimal soldPrice) {
+        repository.findByTechnicalId(technicalId).ifPresent(e->e.sell(soldPrice));
+    }
 }
