@@ -195,7 +195,7 @@ function renderPhones(phones) {
            <button class="btn-small blue darken-2" id=${editButtonId} onclick="editPhone('${phone.technicalId}')">
               <i class="material-icons left">edit</i>Edytuj
             </button>
-            <button class="btn-small orange darken-2 id=${sellButtonId} ${disableSellButton}" onclick="sellPhone('${phone.technicalId}')">
+            <button class="btn-small green darken-2 id=${sellButtonId} ${disableSellButton}" onclick="sellPhone('${phone.technicalId}')">
               <i class="material-icons left">attach_money</i>Sprzedaj
             </button>
           </div>

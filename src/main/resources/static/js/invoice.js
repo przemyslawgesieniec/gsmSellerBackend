@@ -132,6 +132,8 @@ async function saveAndPrint() {
         return;
     }
 
+    console.log("Koszyk zawiera : " + cart)
+
     const vat = getSelectedVatBackend();
     const items = collectInvoiceExtraData(cart);
 
@@ -172,17 +174,35 @@ function collectInvoiceExtraData(cart) {
         const isPhone = item.itemType === "PHONE";
 
         // -----------------------------
-        //  MISCE / ACCESSORIES
+        // NORMALIZACJA CENY
         // -----------------------------
+        const rawPrice =
+            item.sellingPrice ??
+            item.price ??
+            0;
+
+        const price = Number(rawPrice);
+
+        // -----------------------------
+        // NORMALIZACJA OPISU
+        // (to pole teraz zastępuje name)
+        // -----------------------------
+        const baseDescription =
+            item.description ??
+            `${item.name ?? ""} ${item.model ?? ""}`.trim() ??
+            "Pozycja";
+
         if (!isPhone) {
+            // -----------------------------
+            //  MISC
+            // -----------------------------
             return {
                 itemType: "MISC",
                 technicalId: null,
-                description: item.description,
-                price: item.price,
+                description: baseDescription,
+                price: price,
                 warrantyMonths: null,
-                used: null,
-                name: item.description
+                used: null
             };
         }
 
@@ -192,14 +212,16 @@ function collectInvoiceExtraData(cart) {
         const gwValue = document.getElementById(`gw-${item.technicalId}-num`)?.value;
         const usedValue = document.getElementById(`used-${item.technicalId}`)?.checked;
 
+        const phoneDescription =
+            `${item.name ?? ""} ${item.model ?? ""}`.trim() || baseDescription;
+
         return {
             itemType: "PHONE",
             technicalId: item.technicalId,
             warrantyMonths: Number(gwValue ?? 0),
             used: Boolean(usedValue),
-            price: item.sellingPrice,
-            name: `${item.name} ${item.model ?? ""}`.trim(),
-            description: null
+            price: price,
+            description: phoneDescription
         };
     });
 }
