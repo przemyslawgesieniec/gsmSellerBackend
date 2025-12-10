@@ -1,17 +1,11 @@
 package pl.gesieniec.gsmseller.receipt.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import java.math.BigDecimal;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import pl.gesieniec.gsmseller.receipt.model.VatRate;
+import jakarta.persistence.*;
+import lombok.*;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+import pl.gesieniec.gsmseller.common.ItemType;
 
 @ToString
 @Entity
@@ -23,9 +17,25 @@ public class ItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // ====== PODSTAWOWE POLA SPRZEDAŻY ======
     private String name;
     private BigDecimal nettAmount;
+
     private BigDecimal vatRate;
+
     private BigDecimal vatAmount;
     private BigDecimal grossAmount;
+
+    // ====== DODATKOWE DANE DLA TELEFONÓW ======
+
+    @Column(nullable = true)
+    private UUID technicalId;
+
+    private Integer warrantyMonths;
+
+    private Boolean used;
+
+    @Enumerated(EnumType.STRING)
+    private ItemType itemType;
 }

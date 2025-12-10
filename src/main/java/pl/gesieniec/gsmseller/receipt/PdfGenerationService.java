@@ -7,6 +7,7 @@ import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
@@ -46,9 +47,55 @@ public class PdfGenerationService {
 
         prepareSummary(document, receipt);
 
+        prepareRemarks(document, receipt);
+
+        prepareSignatures(document, receipt);
+
         document.close();
         return out.toByteArray();
     }
+
+    private void prepareSignatures(Document document, Receipt receipt) {
+
+        // Odstęp od poprzednich elementów
+        document.add(new Paragraph("\n\n"));
+
+        float[] columnWidths = {1f, 1f};
+        Table table = new Table(columnWidths);
+        table.setWidth(UnitValue.createPercentValue(100));
+
+        // ====== LEWA STRONA (kupujący) ======
+        Cell left = new Cell()
+            .setBorder(Border.NO_BORDER)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMinHeight(60);
+
+        left.add(new Paragraph(".............................................")
+            .setMarginBottom(3)
+            .setFontSize(10));
+        left.add(new Paragraph("Podpis kupującego")
+            .setFontSize(9));
+
+        // ====== PRAWA STRONA (sprzedawca) ======
+        Cell right = new Cell()
+            .setBorder(Border.NO_BORDER)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMinHeight(60);
+
+        right.add(new Paragraph(".............................................")
+            .setMarginBottom(3)
+            .setFontSize(10));
+        right.add(new Paragraph("Podpis i pieczątka sprzedawcy")
+            .setFontSize(9));
+
+        table.addCell(left);
+        table.addCell(right);
+
+        table.setMarginTop(50);
+
+        document.add(table);
+    }
+
 
     private void prepareTopPart(Receipt receipt, Document document) {
         float[] columnWidths = {100f, 100f};
@@ -160,5 +207,42 @@ public class PdfGenerationService {
             .setTextAlignment(TextAlignment.CENTER)
             .setMarginBottom(40));
     }
+
+    private void prepareRemarks(Document document, Receipt receipt) {
+        boolean hasUsedItem = receipt.getItems().stream().anyMatch(Item::getUsed);
+
+        if (!hasUsedItem) {
+            return;
+        }
+
+        // Ramka po prawej stronie
+        float[] columnWidths = {350f, 200f}; // lewa część pusta, prawa to ramka
+        Table wrapper = new Table(columnWidths);
+        wrapper.setWidth(UnitValue.createPercentValue(100));
+
+        // Lewa pusta komórka
+        wrapper.addCell(new Cell()
+            .setBorder(Border.NO_BORDER));
+
+        // Prawa komórka z ramką i treścią
+        Cell remarksCell = new Cell()
+            .add(new Paragraph("Uwagi").setBold().setFontSize(10))
+            .add(new Paragraph(
+                "Gwarancja j/w z wyłączeniem rękojmi sprzedawcy ze względu na niższą " +
+                    "cenę towaru niż rynkowa na dzień sprzedaży urządzenia. Zwrot towaru niemożliwy.")
+                .setFontSize(9)
+                .setMarginTop(5))
+            .setBorder(new SolidBorder(1))
+            .setPadding(10)
+            .setTextAlignment(TextAlignment.LEFT);
+
+        wrapper.addCell(remarksCell);
+
+        wrapper.setMarginTop(20);
+        wrapper.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+
+        document.add(wrapper);
+    }
+
 
 }
