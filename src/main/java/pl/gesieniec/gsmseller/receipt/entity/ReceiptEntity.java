@@ -62,6 +62,6 @@ public class ReceiptEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "receipt_id")
-    private List<ItemEntity> items;
+    private List<ReceiptItemEntity> items;
 
 }

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import pl.gesieniec.gsmseller.receipt.entity.DateAndPlaceEntity;
-import pl.gesieniec.gsmseller.receipt.entity.ItemEntity;
+import pl.gesieniec.gsmseller.receipt.entity.ReceiptItemEntity;
 import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
 import pl.gesieniec.gsmseller.receipt.entity.SellerEntity;
 import pl.gesieniec.gsmseller.receipt.model.DateAndPlace;
@@ -28,8 +28,8 @@ public interface ReceiptMapper {
     DateAndPlace toModel(DateAndPlaceEntity entity);
     DateAndPlaceEntity toEntity(DateAndPlace dto);
 
-    Item toModel(ItemEntity entity);
-    ItemEntity toEntity(Item dto);
+    Item toModel(ReceiptItemEntity entity);
+    ReceiptItemEntity toEntity(Item dto);
 
     default VatRate map(BigDecimal value) {
         if (value == null) {

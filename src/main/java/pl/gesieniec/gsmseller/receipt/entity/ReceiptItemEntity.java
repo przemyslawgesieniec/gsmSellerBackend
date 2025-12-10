@@ -12,7 +12,7 @@ import pl.gesieniec.gsmseller.common.ItemType;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ItemEntity {
+public class ReceiptItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
