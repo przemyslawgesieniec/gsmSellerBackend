@@ -248,3 +248,38 @@ body {
 .price-wrapper:hover .initialPrice-hover {
     opacity: 1;
 }
+
+/* CUSTOM DROPDOWN – estetyczna wersja */
+
+.custom-dropdown {
+    min-width: 260px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+}
+
+.custom-dropdown .dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 18px !important;
+    font-size: 15px !important;
+    color: #37474F !important; /* grey darken-3 */
+}
+
+.custom-dropdown .dropdown-item i {
+    margin-right: 12px !important;
+    font-size: 20px !important;
+    color: #546E7A !important; /* grey blue tone */
+}
+
+/* Hover effect */
+.custom-dropdown .dropdown-item:hover {
+    background-color: #ECEFF1 !important;  /* light grey */
+}
+
+/* Divider */
+.custom-dropdown .divider {
+    margin: 0 !important;
+    background-color: #CFD8DC !important;  /* light grey line */
+}

@@ -16,51 +16,9 @@
 
 
 <!-- Navbar -->
-<nav class="blue-grey darken-3">
-  <div class="nav-wrapper container">
-    <a href="#!" class="brand-logo">Magazyn GSM</a>
-    <a href="#" data-target="mobile-nav" class="sidenav-trigger right"><i class="material-icons">menu</i></a>
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
 
-    <ul class="right hide-on-med-and-down">
-      <li><a href="index.html">Stan magazynowy</a></li>
-      <li><a href="addPhones.html">Dodaj telefon</a></li>
-      <li><a href="invoice.html">Wystaw dok. sprz.</a></li>
-      <li><a href="receipts.html">Sprzedaż</a></li>
-      <li><a href="raporty.html">Raporty</a></li>
-      <li><a href="ustawienia.html">Ustawienia</a></li>
-
-      <li>
-        <form action="/logout" method="post" style="margin:0;">
-          <button type="submit"
-                  class="btn-flat white-text waves-effect"
-                  style="height:64px; line-height:64px; display:flex; align-items:center; gap:4px;">
-            <i class="material-icons right" style="font-size:18px;">logout</i>
-            Wyloguj
-          </button>
-        </form>
-      </li>
-    </ul>
-
-  </div>
-</nav>
-
-<ul class="sidenav" id="mobile-nav">
-  <li><a href="index.html"><i class="material-icons">inventory_2</i>Stan magazynowy</a></li>
-  <li><a href="addPhones.html"><i class="material-icons">add_circle_outline</i>Dodaj telefon</a></li>
-  <li><a href="invoice.html"><i class="material-icons">add_circle_outline</i>Wystaw dok. sprz.</a></li>
-  <li><a href="raporty.html"><i class="material-icons">bar_chart</i>Raporty</a></li>
-  <li><a href="ustawienia.html"><i class="material-icons">settings</i>Ustawienia</a></li>
-  <li>
-    <form action="/logout" method="post" style="margin:0;">
-      <button type="submit"
-              class="btn-flat white-text waves-effect"
-              style="height:64px; line-height:64px; display:flex; align-items:center; gap:4px;">
-        <i class="material-icons right" style="font-size:18px;">logout</i>
-        Wyloguj
-      </button>
-    </form>
-  </li>
-</ul>
 <div class="container wide-layout">
 
   <div class="row">
@@ -137,14 +95,6 @@
 
   </div>
 </div>
-
-
-<!--&lt;!&ndash; Floating Action Button &ndash;&gt;-->
-<!--<div class="fixed-action-btn">-->
-<!--  <a class="btn-floating btn-large red modal-trigger" href="#addBulkModal">-->
-<!--    <i class="large material-icons">add</i>-->
-<!--  </a>-->
-<!--</div>-->
 
 <!-- Modal: Hurtowe dodawanie telefonów -->
 <div id="addBulkModal" class="modal">
