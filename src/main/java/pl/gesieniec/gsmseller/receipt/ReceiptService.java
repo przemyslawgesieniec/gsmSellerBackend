@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
@@ -30,6 +34,14 @@ public class ReceiptService {
     private final ReceiptRepository receiptRepository;
     private final ReceiptMapper receiptMapper;
     private final ApplicationEventPublisher eventPublisher;
+
+    public Page<ReceiptEntity> getReceipts(String username, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createDate"));
+
+        return receiptRepository.findByCreatedByOrderByCreateDateDesc(username, pageable);
+    }
+
 
     public byte[] generateReceiptPdf(UUID technicalId) {
 

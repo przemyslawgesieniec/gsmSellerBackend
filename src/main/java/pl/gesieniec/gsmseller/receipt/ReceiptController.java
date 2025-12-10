@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,8 +15,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
 import pl.gesieniec.gsmseller.receipt.model.ReceiptCreateRequest;
 
 @Slf4j
@@ -25,6 +28,25 @@ import pl.gesieniec.gsmseller.receipt.model.ReceiptCreateRequest;
 public class ReceiptController {
 
     private final ReceiptService receiptService;
+
+    @GetMapping("/list")
+    public Page<ReceiptEntity> listReceipts(
+        Principal principal,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "25") int size
+    ) {
+
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No principal");
+        }
+
+        String username = principal.getName();
+
+        log.info("📄 [GET RECEIPTS LIST] user={} page={} size={}", username, page, size);
+
+        return receiptService.getReceipts(username, page, size);
+    }
+
 
     @GetMapping(produces = MediaType.APPLICATION_PDF_VALUE, path = "/{id}")
     public ResponseEntity<byte[]> getReceiptPfd(@PathVariable UUID id) {
@@ -72,7 +94,6 @@ public class ReceiptController {
         }
 
         log.info("🧾 [CREATE RECEIPT] Utworzono dokument sprzedaży: id={} dla user={}", receiptId, username);
-        // TODO notyfikacja do wyczyszczenia koszyka i przestawienia statusów telefonów na sprzedane.
 
         return receiptId;
     }

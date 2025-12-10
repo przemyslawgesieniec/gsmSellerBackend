@@ -67,6 +67,7 @@ public class ReceiptEntity {
     @JoinColumn(name = "receipt_id")
     private List<ReceiptItemEntity> items;
 
+    @Column(nullable = false)
     private String createdBy;
 
 }
