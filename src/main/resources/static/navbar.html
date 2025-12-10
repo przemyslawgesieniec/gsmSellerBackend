@@ -1,3 +1,4 @@
+<!-- NAVBAR DROPDOWN (pozostaje bez zmian poza ikonami) -->
 <ul id="dropdown-sprzedaz" class="dropdown-content custom-dropdown">
   <li>
     <a href="receipts.html" class="dropdown-item">
@@ -5,7 +6,6 @@
       Wystawione dokumenty
     </a>
   </li>
-
   <li class="divider"></li>
 
   <li>
@@ -16,66 +16,123 @@
   </li>
 </ul>
 
-
 <!-- NAVBAR -->
-<nav class="blue-grey darken-3">
-  <div class="nav-wrapper container">
-    <a href="#" class="brand-logo">Magazyn GSM</a>
+<nav class="custom-navbar">
+  <div class="nav-wrapper">
+    <a href="index.html" class="brand-logo">
+      <i class="material-icons left">store</i>
+      Magazyn GSM
+    </a>
+
     <a href="#" data-target="mobile-nav" class="sidenav-trigger right">
       <i class="material-icons">menu</i>
     </a>
 
     <ul class="right hide-on-med-and-down">
 
-      <li><a href="index.html">Stan magazynowy</a></li>
-      <li><a href="addPhones.html">Dodaj telefon</a></li>
+      <li><a href="index.html">
+        <i class="material-icons left">inventory_2</i> Stan magazynowy
+      </a></li>
 
-      <!-- DROPDOWN TRIGGER -->
+      <li><a href="addPhones.html">
+        <i class="material-icons left">add_circle</i> Dodaj telefon
+      </a></li>
+
       <li>
-        <a class="dropdown-trigger" href="#!" data-target="dropdown-sprzedaz" style="display:flex; align-items:center;">
-          Sprzedaż
-          <i class="material-icons right" style="margin-left:6px;">arrow_drop_down</i>
+        <a class="dropdown-trigger" href="#!" data-target="dropdown-sprzedaz">
+          <i class="material-icons left">sell</i> Sprzedaż
+          <i class="material-icons right">arrow_drop_down</i>
         </a>
       </li>
 
+      <li><a href="raporty.html">
+        <i class="material-icons left">bar_chart</i> Raporty
+      </a></li>
 
-      <li><a href="raporty.html">Raporty</a></li>
-      <li><a href="ustawienia.html">Ustawienia</a></li>
+      <li><a href="ustawienia.html">
+        <i class="material-icons left">settings</i> Ustawienia
+      </a></li>
 
       <li>
         <form action="/logout" method="post" style="margin:0;">
-          <button type="submit"
-                  class="btn-flat white-text waves-effect"
-                  style="height:64px; line-height:64px; display:flex; align-items:center; gap:4px;">
-            <i class="material-icons right">exit_to_app</i>
+          <button type="submit" class="btn-flat logout-btn">
+            <i class="material-icons left">exit_to_app</i>
             Wyloguj
           </button>
         </form>
       </li>
+
     </ul>
   </div>
 </nav>
 
-<!-- MOBILE NAV (bez dropdownów) -->
-<ul class="sidenav" id="mobile-nav">
+<!-- MOBILE NAV (z ikonami) -->
+  <ul class="sidenav" id="mobile-nav">
 
-  <li><a href="index.html"><i class="material-icons">inventory_2</i>Stan magazynowy</a></li>
-  <li><a href="addPhones.html"><i class="material-icons">add_circle_outline</i>Dodaj telefon</a></li>
+    <!-- MOBILE LOGO -->
+    <li class="mobile-logo">
+      <div class="mobile-logo-wrapper">
+        <i class="material-icons">store</i>
+        <span>Magazyn GSM</span>
+      </div>
+    </li>
 
-  <!-- WERSJA MOBILNA MENU SPRZEDAŻY -->
-  <li><a href="receipts.html"><i class="material-icons">description</i>Wystawione dokumenty</a></li>
-  <li><a href="invoice.html"><i class="material-icons">receipt</i>Wystaw dokument sprz.</a></li>
+    <li>
+      <a href="index.html">
+        <i class="material-icons">inventory_2</i>
+        Stan magazynowy
+      </a>
+    </li>
 
-  <li><a href="raporty.html"><i class="material-icons">bar_chart</i>Raporty</a></li>
-  <li><a href="ustawienia.html"><i class="material-icons">settings</i>Ustawienia</a></li>
+
+  <li>
+    <a href="addPhones.html">
+      <i class="material-icons">add_circle</i>
+      Dodaj telefon
+    </a>
+  </li>
+
+  <!-- NAGŁÓWEK SEKCJI SPRZEDAŻY -->
+  <li class="sidenav-section">
+    Sprzedaż
+  </li>
+
+  <!-- PODOPCJE Z WCIECIEM -->
+  <li class="mobile-subitem">
+    <a href="receipts.html">
+      <i class="material-icons">description</i>
+      Wystawione dokumenty
+    </a>
+  </li>
+
+  <li class="mobile-subitem">
+    <a href="invoice.html">
+      <i class="material-icons">receipt_long</i>
+      Wystaw dokument
+    </a>
+  </li>
+
+  <li>
+    <a href="raporty.html">
+      <i class="material-icons">bar_chart</i>
+      Raporty
+    </a>
+  </li>
+
+  <li>
+    <a href="ustawienia.html">
+      <i class="material-icons">settings</i>
+      Ustawienia
+    </a>
+  </li>
 
   <li>
     <form action="/logout" method="post" style="margin:0;">
-      <button type="submit"
-              class="btn-flat white-text waves-effect"
-              style="display:flex; align-items:center; gap:4px;">
-        <i class="material-icons">exit_to_app</i> Wyloguj
+      <button type="submit" class="btn-flat logout-btn">
+        <i class="material-icons left">exit_to_app</i>
+        Wyloguj
       </button>
     </form>
   </li>
+
 </ul>

@@ -100,18 +100,9 @@ function renderInvoice(cart) {
 /**
  * Opcjonalnie — dynamiczne ładowanie navbaru
  */
-async function loadNavbar() {
-    const navContainer = document.getElementById("navbar-container");
-    const res = await fetch("navbar.html"); // jeżeli trzymasz navbar w osobnym pliku
-    if (res.ok) {
-        navContainer.innerHTML = await res.text();
-        M.Sidenav.init(document.querySelectorAll('.sidenav'));
-    }
-}
+
 
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadNavbar();
-
     // init dropdown
     M.FormSelect.init(document.querySelectorAll('select'));
 

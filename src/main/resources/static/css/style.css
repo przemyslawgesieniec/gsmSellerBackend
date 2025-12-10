@@ -283,3 +283,155 @@ body {
     margin: 0 !important;
     background-color: #CFD8DC !important;  /* light grey line */
 }
+
+/* ===== CUSTOM NAVBAR ===== */
+.custom-navbar {
+    background-color: #263238 !important; /* blue-grey darken-4 */
+    height: 70px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+/* Logo */
+.custom-navbar .brand-logo {
+    font-size: 1.7rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+    display: flex;
+    align-items: center;
+}
+
+.custom-navbar .brand-logo i {
+    margin-right: 8px;
+    font-size: 28px;
+}
+
+/* Menu items */
+.custom-navbar ul li a {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px !important;
+    font-size: 15px !important;
+    font-weight: 400;
+}
+
+/* Ikony w menu */
+.custom-navbar ul li a i {
+    font-size: 20px !important;
+    opacity: 0.85;
+}
+
+/* Hover efekt */
+.custom-navbar ul li:hover {
+    background-color: rgba(255,255,255,0.08) !important;
+    border-radius: 4px;
+}
+
+/* Active link (opcjonalnie możemy dodać autodetekcję) */
+.nav-active {
+    background-color: rgba(255,255,255,0.15) !important;
+    border-radius: 4px;
+}
+
+/* Logout button */
+.logout-btn {
+    color: white !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px !important;
+    height: 64px !important;
+}
+
+.logout-btn i {
+    font-size: 20px !important;
+    margin-right: 4px;
+}
+/* Naprawa nakładania logo na pierwszy element */
+.custom-navbar .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* odstęp między ikoną a tekstem */
+}
+
+/* Powiększenie odstępu między logo a menu */
+.custom-navbar .nav-wrapper ul.right {
+    margin-left: 40px !important;  /* odstęp aby nic nie zachodziło na logo */
+}
+
+/* Wyrównanie ikony w logo */
+.custom-navbar .brand-logo i {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    line-height: 1 !important;
+}
+
+
+/* Nagłówek sekcji w mobile sidenav (np. "Sprzedaż") */
+.sidenav .sidenav-section {
+    padding: 8px 32px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #90A4AE; /* szarawy */
+}
+
+/* Podopcje "pod Sprzedażą" z wcięciem */
+.sidenav .mobile-subitem a {
+    padding-left: 56px !important;  /* większe wcięcie względem zwykłych pozycji */
+    display: flex !important;
+    align-items: center !important;
+}
+
+.sidenav .mobile-subitem i.material-icons {
+    margin-right: 16px;
+    font-size: 20px;
+}
+
+/* MOBILE SIDENAV LOGO */
+.mobile-logo {
+    padding: 24px 20px 12px !important;
+    border-bottom: 1px solid #ECEFF1;
+    margin-bottom: 8px !important;
+}
+
+.mobile-logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobile-logo-wrapper i {
+    font-size: 32px;
+    color: #455A64; /* blue-grey darken-2 */
+}
+
+.mobile-logo-wrapper span {
+    font-size: 20px;
+    font-weight: 600;
+    color: #455A64;
+}
+
+/* LOGO w NAVBARZE – maksymalnie do lewej */
+.custom-navbar .brand-logo {
+    left: 20px !important;   /* wypchnięcie do lewej */
+    transform: none !important;
+    margin-right: 40px;      /* odstęp od pierwszej pozycji menu */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Ikona w logo */
+.custom-navbar .brand-logo i {
+    font-size: 28px !important;
+    margin: 0 !important;
+}
+
+/* Pozycje menu po prawej */
+.custom-navbar .right {
+    margin-right: 25px !important;
+}
