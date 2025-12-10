@@ -6,10 +6,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.common.ItemType;
+import pl.gesieniec.gsmseller.event.ItemsSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.PhoneSoldHandler;
 import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
 import pl.gesieniec.gsmseller.receipt.model.DateAndPlace;
@@ -29,6 +31,8 @@ public class ReceiptService {
     private final ReceiptRepository receiptRepository;
     private final ReceiptMapper receiptMapper;
     private final PhoneSoldHandler phoneSoldHandler;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     /**
      * Pobiera PDF na podstawie UUID
@@ -83,16 +87,10 @@ public class ReceiptService {
         ReceiptEntity entity = receiptMapper.toEntity(receipt);
         receiptRepository.save(entity);
 
-        updateSoldPhones(items);
+        eventPublisher.publishEvent(new ItemsSoldEvent(username,receiptNumber,items));
         log.info("💾 Zapisano dokument sprzedaży {} przez użytkownika {}", receiptNumber, username);
 
         return entity.getTechnicalId();
-    }
-
-    private void updateSoldPhones(List<Item> items) {
-        items.stream()
-            .filter(e->e.getItemType().equals(ItemType.PHONE))
-            .forEach(e-> phoneSoldHandler.markPhoneSold(e.getTechnicalId(),e.getNettAmount()));
     }
 
 

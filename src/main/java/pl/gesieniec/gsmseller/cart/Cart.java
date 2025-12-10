@@ -73,4 +73,8 @@ public class Cart {
             .findFirst()
             .ifPresent(e->e.update(description, price));
     }
+
+    public void clear() {
+        items.clear();
+    }
 }

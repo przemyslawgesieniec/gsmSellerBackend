@@ -1,4 +1,4 @@
-package pl.gesieniec.gsmseller.cart;
+package pl.gesieniec.gsmseller.cart.service;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -8,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.gesieniec.gsmseller.cart.Cart;
+import pl.gesieniec.gsmseller.cart.CartItem;
+import pl.gesieniec.gsmseller.cart.CartItemDto;
+import pl.gesieniec.gsmseller.cart.CartRepository;
 import pl.gesieniec.gsmseller.common.ItemType;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
@@ -101,6 +105,18 @@ public class CartService {
     public List<CartItemDto> getMiscInCart(String username) {
         Cart cart = getOrCreateCart(username);
         return cart.getMicsItems();
+    }
+
+    @Transactional
+    public void clearCart(String username) {
+        Cart cart = getOrCreateCart(username);
+
+        if (cart.getItems().isEmpty()) {
+            log.info("🧹 [{}] Koszyk już był pusty – nic do czyszczenia", username);
+            return;
+        }
+        cart.clear();
+        log.info("🧹 [{}] Wyczyszczono koszyk ({} pozycji)", username, cart.getItems().size());
     }
 
 }
