@@ -70,7 +70,8 @@ public class ReceiptService {
             receiptNumber,
             items,
             seller,
-            new DateAndPlace("Łódź", LocalDate.now(), LocalDate.now())
+            new DateAndPlace("Łódź", LocalDate.now(), LocalDate.now()),
+            username
         );
 
         log.info("🧾 Mapped receipt: {}", receipt);

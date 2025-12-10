@@ -15,10 +15,11 @@ public class Receipt {
     private final List<Item> items;
     private final Seller seller;
     private final DateAndPlace dateAndPlace;
+    private final String createdBy;
 
-    public static Receipt of(String number, List<Item> items, Seller seller, DateAndPlace dateAndPlace) {
+    public static Receipt of(String number, List<Item> items, Seller seller, DateAndPlace dateAndPlace, String username) {
         UUID technicalId = UUID.randomUUID();
-        return new Receipt(number, technicalId, items, seller, dateAndPlace);
+        return new Receipt(number, technicalId, items, seller, dateAndPlace, username);
     }
 
     public BigDecimal getNetTotal() {
