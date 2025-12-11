@@ -199,7 +199,13 @@ function renderPhones(phones) {
             
               <ul id='dropdown-${phone.technicalId}' class='dropdown-content'>
                 <li><a href="#!" onclick="editPhone('${phone.technicalId}')">Edytuj</a></li>
-                <li><a href="#!" onclick="acceptPhone('${phone.technicalId}')">Przyjmij na sklep</a></li>
+                <li>
+                  <a href="#!"
+                     class="${phone.status !== 'WPROWADZONY' ? 'disabled-link' : ''}"
+                     onclick="${phone.status === 'WPROWADZONY' ? `acceptPhone('${phone.technicalId}')` : 'event.preventDefault()'}">
+                     Przyjmij na sklep
+                  </a>
+                </li>
                 <li class="red-text"><a href="#!" onclick="deletePhone('${phone.technicalId}')">Usuń</a></li>
               </ul>
             
@@ -228,9 +234,21 @@ function initDropdowns() {
 }
 
 function acceptPhone(technicalId) {
+    const card = document.querySelector(`.card[data-technical-id="${technicalId}"]`);
+    if (!card) return;
+
+    const status = card.querySelector(".status-badge")?.textContent.trim();
+
+    if (status !== "WPROWADZONY") {
+        M.toast({ html: "Telefon nie może zostać przyjęty na sklep", classes: "red" });
+        return;
+    }
+
+    // zapisz ID w modalowym przycisku TAK
     const confirmBtn = document.getElementById("confirmAcceptYes");
     confirmBtn.setAttribute("data-technical-id", technicalId);
 
+    // otwórz modal
     const modal = M.Modal.getInstance(document.getElementById("acceptConfirmModal"));
     modal.open();
 }

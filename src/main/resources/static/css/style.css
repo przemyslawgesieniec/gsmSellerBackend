@@ -427,3 +427,37 @@ body {
     padding-right: 12px !important;
 }
 
+/* Wyłączenie kliknięć */
+.dropdown-content a.disabled-link {
+    pointer-events: none !important;
+}
+
+/* Szary tekst */
+.dropdown-content a.disabled-link,
+.dropdown-content a.disabled-link:hover {
+    color: rgba(0,0,0,0.3) !important;  /* Wyraźnie szary */
+}
+
+/* Zmiana kursora */
+.dropdown-content a.disabled-link {
+    cursor: default !important;
+}
+
+/* Opcjonalnie — wizualne "wyłączenie" */
+.dropdown-content a.disabled-link {
+    opacity: 0.5 !important;
+}
+
+/* Ustaw czarny tekst w dropdownie */
+.dropdown-content li > a,
+.dropdown-content li > span {
+    color: rgba(0, 0, 0, 0.54) !important;
+}
+
+/* Styl dezaktywacji */
+.dropdown-content a.disabled-link {
+    pointer-events: none !important;
+    color: rgba(0,0,0,0.3) !important;
+    opacity: 0.5 !important;
+    cursor: default !important;
+}
