@@ -123,11 +123,6 @@ body {
     transition: background-color 0.3s, border-color 0.3s;
 }
 
-.drop-area.dragover {
-    background-color: #e0f7fa;
-    border-color: #00acc1;
-    color: #004d40;
-}
 
 /* Przyciski zamykania modala */
 .modal .modal-close {
@@ -264,7 +259,7 @@ body {
 
 /* ===== CUSTOM NAVBAR ===== */
 .custom-navbar {
-    background-color: #263238 !important; /* blue-grey darken-4 */
+    background-color: #000000 !important; /* blue-grey darken-4 */
     height: 70px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
@@ -460,4 +455,26 @@ body {
     color: rgba(0,0,0,0.3) !important;
     opacity: 0.5 !important;
     cursor: default !important;
+}
+
+.drop-area.dragover {
+    background-color: #00aed8;
+    border-color: #00aed8;
+    color: #004d40;
+}
+
+.btn.blue.darken-2,
+.btn-small.blue.darken-2,
+.btn,
+.btn-floating,
+.dropdown-trigger.btn-small.blue.darken-2 {
+    background-color: #00aed8 !important;
+    color: #fff !important;
+}
+
+.btn.blue.darken-2:hover,
+.btn-small.blue.darken-2:hover,
+.btn,
+.dropdown-trigger.btn-small.blue.darken-2:hover {
+    background-color: #0096b0 !important;
 }
