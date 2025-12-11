@@ -35,6 +35,7 @@ async function loadStock(page = 0) {
         }));
 
         renderPhones(phones);
+        initDropdowns();
         loadPagination(data.number, data.totalPages);
     } catch (error) {
         console.error("Błąd podczas pobierania danych:", error);
@@ -175,7 +176,7 @@ function renderPhones(phones) {
 
         const card = `
       <div class="col s12">
-        <div class="card z-depth-2">
+        <div class="card z-depth-2" data-technical-id="${phone.technicalId}">
           <div class="card-content phone-card">
             <div class="phone-left">
               <span class="card-title">${phone.name}</span>
@@ -191,14 +192,22 @@ function renderPhones(phones) {
               <span class="status-badge ${statusClass}">${phone.status}</span>
             </div>
           </div>
-          <div class="card-action right-align">
-           <button class="btn-small blue darken-2" id=${editButtonId} onclick="editPhone('${phone.technicalId}')">
-              <i class="material-icons left">edit</i>Edytuj
-            </button>
-            <button class="btn-small green darken-2 id=${sellButtonId} ${disableSellButton}" onclick="sellPhone('${phone.technicalId}')">
-              <i class="material-icons left">attach_money</i>Sprzedaj
-            </button>
-          </div>
+         <div class="card-action right-align">  
+              <a class='dropdown-trigger btn-small blue darken-2' href='#' data-target='dropdown-${phone.technicalId}'>
+                <i class="material-icons left">more_vert</i>Więcej
+              </a>
+            
+              <ul id='dropdown-${phone.technicalId}' class='dropdown-content'>
+                <li><a href="#!" onclick="editPhone('${phone.technicalId}')">Edytuj</a></li>
+                <li><a href="#!" onclick="acceptPhone('${phone.technicalId}')">Przyjmij na sklep</a></li>
+                <li class="red-text"><a href="#!" onclick="deletePhone('${phone.technicalId}')">Usuń</a></li>
+              </ul>
+            
+              <button class="btn-small green darken-2 ${disableSellButton}" id=${sellButtonId}
+                      onclick="sellPhone('${phone.technicalId}')">
+                <i class="material-icons left">attach_money</i>Sprzedaj
+              </button>
+        </div>
         </div>
       </div>
     `;
@@ -208,6 +217,24 @@ function renderPhones(phones) {
 
 let cartBtn = null;
 // const cartBtn = document.getElementById('cartBtn'); // jeśli taki masz
+
+function initDropdowns() {
+    const elems = document.querySelectorAll('.dropdown-trigger');
+    M.Dropdown.init(elems, {
+        constrainWidth: false,
+        coverTrigger: false,
+        alignment: 'right'
+    });
+}
+
+function acceptPhone(technicalId) {
+    const confirmBtn = document.getElementById("confirmAcceptYes");
+    confirmBtn.setAttribute("data-technical-id", technicalId);
+
+    const modal = M.Modal.getInstance(document.getElementById("acceptConfirmModal"));
+    modal.open();
+}
+
 
 async function sellPhone(technicalId) {
     try {
@@ -352,14 +379,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function editPhone(technicalId) {
     try {
-        const editButton = document.getElementById(editButtonIdPrefix + technicalId);
-        if (!editButton) {
-            console.error("Nie znaleziono przycisku edycji dla ID:", technicalId);
-            return;
-        }
-
-        // znajdź kartę (najbliższy .card)
-        const card = editButton.closest(".card");
+        // znajdź kartę
+        const card = document.querySelector(`.card[data-technical-id="${technicalId}"]`);
         if (!card) {
             console.error("Nie znaleziono karty telefonu dla ID:", technicalId);
             return;
@@ -373,17 +394,16 @@ function editPhone(technicalId) {
         const priceText = card.querySelector(".sellingPrice")?.textContent.replace("zł", "").trim() || "";
         const price = parseFloat(priceText) || 0;
 
-        // Wypełnij formularz w modalu
+        // Wypełnij formularz
         document.getElementById("editName").value = name;
         document.getElementById("editModel").value = model;
         document.getElementById("editColor").value = color;
         document.getElementById("editImei").value = imei;
         document.getElementById("editPrice").value = price;
 
-        // odśwież labelki Materialize
         M.updateTextFields();
 
-        // zapisz ID telefonu w przycisku Zapisz
+        // ustaw ID w przycisku zapisu
         const saveBtn = document.getElementById("saveEditBtn");
         saveBtn.setAttribute("data-technical-id", technicalId);
 
@@ -547,16 +567,10 @@ function renderFilterChips() {
     });
 }
 
-// Kliknięcie "Przyjmij na sklep"
-document.getElementById("acceptAtStoreBtn").addEventListener("click", () => {
-    const confirmModal = M.Modal.getInstance(document.getElementById("acceptConfirmModal"));
-    confirmModal.open();
-});
-
 // Kliknięcie "TAK" w potwierdzeniu
 document.getElementById("confirmAcceptYes").addEventListener("click", async () => {
     const technicalId = document
-        .getElementById("saveEditBtn")
+        .getElementById("confirmAcceptYes")
         .getAttribute("data-technical-id");
 
     try {
@@ -570,9 +584,8 @@ document.getElementById("confirmAcceptYes").addEventListener("click", async () =
 
         M.toast({html: "Telefon przyjęty na sklep", classes: "green"});
 
-        // Zamknięcie obu modali
+        // Zamknij modale
         M.Modal.getInstance(document.getElementById("acceptConfirmModal")).close();
-        M.Modal.getInstance(document.getElementById("editPhoneModal")).close();
 
         // Odśwież listę
         loadStock(currentPage);
@@ -582,6 +595,7 @@ document.getElementById("confirmAcceptYes").addEventListener("click", async () =
         M.toast({html: "Nie udało się przyjąć telefonu", classes: "red"});
     }
 });
+
 
 
 function debounce(fn, delay = 300) {
