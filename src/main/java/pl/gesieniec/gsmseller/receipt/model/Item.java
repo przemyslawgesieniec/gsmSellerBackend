@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 import pl.gesieniec.gsmseller.common.ItemType;
 
+@ToString
 @Getter
 @AllArgsConstructor
 public class Item {

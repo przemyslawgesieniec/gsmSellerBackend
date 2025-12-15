@@ -6,6 +6,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 import pl.gesieniec.gsmseller.common.ItemType;
+import pl.gesieniec.gsmseller.receipt.model.VatRate;
 
 @ToString
 @Entity
@@ -22,7 +23,8 @@ public class ReceiptItemEntity {
     private String name;
     private BigDecimal nettAmount;
 
-    private BigDecimal vatRate;
+    @Enumerated(EnumType.STRING)
+    private VatRate vatRate;
 
     private BigDecimal vatAmount;
     private BigDecimal grossAmount;

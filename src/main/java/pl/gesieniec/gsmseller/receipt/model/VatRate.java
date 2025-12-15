@@ -1,34 +1,57 @@
 package pl.gesieniec.gsmseller.receipt.model;
 
 import java.math.BigDecimal;
-import java.util.Map;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.util.Arrays;
+import java.math.RoundingMode;
 
-@Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class VatRate {
+public enum VatRate {
 
-    private BigDecimal value;
-    private String name;
+    VAT_23("23%", new BigDecimal("0.23")),
+    VAT_8 ("8%",  new BigDecimal("0.08")),
+    VAT_5 ("5%",  new BigDecimal("0.05")),
+    VAT_0 ("0%",  BigDecimal.ZERO),
+    VAT_EXEMPT("ZW", BigDecimal.ZERO);
 
-    public static final VatRate VAT_23 = new VatRate(BigDecimal.valueOf(0.23), "23%");
-    public static final VatRate VAT_8  = new VatRate(BigDecimal.valueOf(0.08), "8%");
-    public static final VatRate VAT_5  = new VatRate(BigDecimal.valueOf(0.05), "5%");
-    public static final VatRate VAT_0  = new VatRate(BigDecimal.valueOf(0), "0%");
-    public static final VatRate VAT_EXEMPT = new VatRate(BigDecimal.valueOf(0), "ZW");
+    private final String code;
+    private final BigDecimal rate;
 
-    private static final Map<String,VatRate> values = Map.of(
-        VAT_0.name,VAT_0,
-        VAT_8.name,VAT_8,
-        VAT_5.name,VAT_23,
-        VAT_23.name,VAT_23,
-        VAT_EXEMPT.name,VAT_EXEMPT);
+    VatRate(String code, BigDecimal rate) {
+        this.code = code;
+        this.rate = rate;
+    }
 
-    public static VatRate parse(String vatRate) {
-        return values.get(vatRate);
+    public String getName() {
+        return code;
+    }
+
+    public BigDecimal getValue() {
+        return rate;
+    }
+
+    public static VatRate parse(String value) {
+        return Arrays.stream(values())
+            .filter(v -> v.code.equalsIgnoreCase(value))
+            .findFirst()
+            .orElseThrow(() ->
+                new IllegalArgumentException("Nieznana stawka VAT: " + value)
+            );
+    }
+
+    // -----------------------------
+    //  OBLICZENIA
+    // -----------------------------
+
+    /** Kwota VAT = netto * stawka */
+    public BigDecimal vatAmount(BigDecimal net) {
+        return net
+            .multiply(rate)
+            .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Kwota brutto = netto + VAT */
+    public BigDecimal grossAmount(BigDecimal net) {
+        return net
+            .add(vatAmount(net))
+            .setScale(2, RoundingMode.HALF_UP);
     }
 }

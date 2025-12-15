@@ -131,24 +131,6 @@ public class ReceiptService {
 
 
     // ===============================
-    // 🔧 VAT Mapping
-    // ===============================
-
-    private VatRate mapVatRate(String vat) {
-        log.info("🔧 mapVatRate() – wejście: {}", vat);
-
-        return switch (vat) {
-            case "VAT_23" -> VatRate.VAT_23;
-            case "VAT_8" -> VatRate.VAT_8;
-            case "VAT_5" -> VatRate.VAT_5;
-            case "VAT_0" -> VatRate.VAT_0;
-            case "VAT_EXEMPT" -> VatRate.VAT_EXEMPT;
-            default -> throw new IllegalArgumentException("Nieznana stawka VAT: " + vat);
-        };
-    }
-
-
-    // ===============================
     // 🔢 Numerowanie dokumentów
     // ===============================
 
