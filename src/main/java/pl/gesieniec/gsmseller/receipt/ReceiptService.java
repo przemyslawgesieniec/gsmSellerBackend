@@ -71,11 +71,11 @@ public class ReceiptService {
 
         // TODO: docelowo dane sprzedawcy możesz brać z konfiguracji systemu
         Seller seller = new Seller(
-            "Adamowicz group",
-            "Aksamitna 123",
-            "93-543",
-            "Łódź",
-            "9467844787"
+            "Teleakcesoria Paweł Jarocki",
+            "Ul.Krótka 5A",
+            "95-010",
+            "Stryków",
+            "7331320587"
         );
 
         Receipt receipt = Receipt.of(

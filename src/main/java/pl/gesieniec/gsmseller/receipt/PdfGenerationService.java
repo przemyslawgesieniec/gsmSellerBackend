@@ -1,10 +1,12 @@
 package pl.gesieniec.gsmseller.receipt;
 
 import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.*;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -38,6 +40,12 @@ public class PdfGenerationService {
             "Identity-H", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
         document.setFont(font);
 
+// Stopka
+        pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new FooterHandler(document, font));
+
+// Nagłówek (logo)
+        pdfDoc.addEventHandler(PdfDocumentEvent.START_PAGE,
+            new HeaderHandler("src/main/resources/static/imgs/logo_gsm.png"));
 
         prepareHeader(document, receipt);
 
@@ -48,52 +56,12 @@ public class PdfGenerationService {
         prepareSummary(document, receipt);
 
         prepareRemarks(document, receipt);
+        document.setMargins(100, 40, 170, 40);
 
-        prepareSignatures(document, receipt);
+        pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new SignatureHandler());
 
         document.close();
         return out.toByteArray();
-    }
-
-    private void prepareSignatures(Document document, Receipt receipt) {
-
-        // Odstęp od poprzednich elementów
-        document.add(new Paragraph("\n\n"));
-
-        float[] columnWidths = {1f, 1f};
-        Table table = new Table(columnWidths);
-        table.setWidth(UnitValue.createPercentValue(100));
-
-        // ====== LEWA STRONA (kupujący) ======
-        Cell left = new Cell()
-            .setBorder(Border.NO_BORDER)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMinHeight(60);
-
-        left.add(new Paragraph(".............................................")
-            .setMarginBottom(3)
-            .setFontSize(10));
-        left.add(new Paragraph("Podpis kupującego")
-            .setFontSize(9));
-
-        // ====== PRAWA STRONA (sprzedawca) ======
-        Cell right = new Cell()
-            .setBorder(Border.NO_BORDER)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMinHeight(60);
-
-        right.add(new Paragraph(".............................................")
-            .setMarginBottom(3)
-            .setFontSize(10));
-        right.add(new Paragraph("Podpis i pieczątka sprzedawcy")
-            .setFontSize(9));
-
-        table.addCell(left);
-        table.addCell(right);
-
-        table.setMarginTop(50);
-
-        document.add(table);
     }
 
 
@@ -205,8 +173,10 @@ public class PdfGenerationService {
             .setBold()
             .setFontSize(14)
             .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(40)
             .setMarginBottom(40));
     }
+
 
     private void prepareRemarks(Document document, Receipt receipt) {
         boolean hasUsedItem = receipt.getItems().stream().anyMatch(Item::getUsed);
@@ -243,6 +213,5 @@ public class PdfGenerationService {
 
         document.add(wrapper);
     }
-
 
 }
