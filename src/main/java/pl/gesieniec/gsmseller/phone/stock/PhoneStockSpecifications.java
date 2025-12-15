@@ -62,11 +62,16 @@ public class PhoneStockSpecifications {
                 return null;
             }
 
+            if ("__NO_LOCATION__".equals(locationName)) {
+                return cb.isNull(root.get("location"));
+            }
+
             return cb.like(
                 cb.lower(root.join("location", JoinType.LEFT).get("name")),
                 "%" + locationName.toLowerCase() + "%"
             );
         };
     }
+
 
 }

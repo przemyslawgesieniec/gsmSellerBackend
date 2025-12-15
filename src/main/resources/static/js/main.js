@@ -514,8 +514,6 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     loadStock(0);
 });
 
-// === CHIPS SECTION === //
-const chipContainer = document.getElementById("activeChips");
 
 // tłumaczenia etykiet
 const filterLabels = {
@@ -529,6 +527,8 @@ const filterLabels = {
     locationName: "Lokalizacja"
 };
 
+// === CHIPS SECTION === //
+const chipContainer = document.getElementById("activeChips");
 
 // generowanie chipów
 function renderChips(filters) {
@@ -537,11 +537,18 @@ function renderChips(filters) {
     Object.entries(filters).forEach(([key, val]) => {
         if (!val) return;
 
+        // 👇 mapowanie technicznej wartości na nazwę dla UI
+        let displayValue = val;
+
+        if (key === "locationName" && val === "__NO_LOCATION__") {
+            displayValue = "Brak lokalizacji";
+        }
+
         const chip = document.createElement("div");
         chip.className = "chip";
 
         chip.innerHTML = `
-            ${filterLabels[key]}: <b>${val}</b>
+            ${filterLabels[key]}: <b>${displayValue}</b>
             <i class="close material-icons" data-filter="${key}">close</i>
         `;
 
@@ -552,17 +559,22 @@ function renderChips(filters) {
     chipContainer.querySelectorAll(".close").forEach(icon => {
         icon.addEventListener("click", () => {
             const filterKey = icon.dataset.filter;
-            document.getElementById("filter" + capitalize(filterKey)).value = "";
 
-            if (filterKey === "status") {
-                M.FormSelect.init(document.querySelectorAll('select'));
+            const inputId = "filter" + capitalize(filterKey);
+            const el = document.getElementById(inputId);
+
+            if (el) {
+                el.value = "";
+
+                // re-init selectów (status, lokalizacja)
+                if (el.tagName === "SELECT") {
+                    M.FormSelect.init(el);
+                }
             }
 
-            loadStock(0); // automatyczne odświeżenie
+            loadStock(0);
         });
     });
-
-
 }
 
 function capitalize(str) {
@@ -575,28 +587,46 @@ function renderFilterChips() {
     const container = document.getElementById("activeFiltersChips");
     container.innerHTML = "";
 
+    // jawne mapowanie key → inputId
+    const filterInputMap = {
+        name: "filterName",
+        model: "filterModel",
+        color: "filterColor",
+        imei: "filterImei",
+        priceMin: "filterPriceMin",
+        priceMax: "filterPriceMax",
+        status: "filterStatus",
+        locationName: "filterLocation"
+    };
+
     Object.entries(filters).forEach(([key, value]) => {
         if (!value) return;
 
-        const prettyName = {
-            name: "Nazwa",
-            model: "Model",
-            color: "Kolor",
-            imei: "IMEI",
-            priceMin: "Cena od",
-            priceMax: "Cena do",
-            status: "Status"
-        };
+        let displayValue = value;
+
+        // 📍 specjalny przypadek: brak lokalizacji
+        if (key === "locationName" && value === "__NO_LOCATION__") {
+            displayValue = "Nie przyjęty";
+        }
 
         const chip = document.createElement("div");
         chip.className = "chip";
-        chip.innerHTML = `${prettyName[key]}: ${value} <i class="close material-icons">close</i>`;
+        chip.innerHTML = `
+            ${filterLabels[key]}: ${displayValue}
+            <i class="close material-icons">close</i>
+        `;
 
         chip.querySelector("i").addEventListener("click", () => {
-            document.getElementById("filter" + key.charAt(0).toUpperCase() + key.slice(1)).value = "";
+            const inputId = filterInputMap[key];
+            const el = document.getElementById(inputId);
 
-            if (key === "status") {
-                M.FormSelect.init(document.querySelectorAll("select"));
+            if (el) {
+                el.value = "";
+
+                // re-init selectów
+                if (el.tagName === "SELECT") {
+                    M.FormSelect.init(el);
+                }
             }
 
             renderFilterChips();
@@ -650,6 +680,7 @@ async function loadLocationsFilter() {
             opt.textContent = name;
             select.appendChild(opt);
         });
+
 
         M.FormSelect.init(select);
 
