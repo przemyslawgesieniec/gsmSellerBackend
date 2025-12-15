@@ -57,7 +57,7 @@ public class CartItem {
     private UUID technicalId;
 
     public static CartItem fromPhone(PhoneStockDto phone) {
-        String description = String.format("(%s - RAM: %s GB, ROM: %s GB, KOLOR: %s, IMEI: %s",
+        String description = String.format("(%s - %s/%s GB, kolor: %s, IMEI: %s",
             phone.getName(), phone.getRam(), phone.getMemory(), phone.getColor(), phone.getImei());
 
         return new CartItem(description, phone.getSellingPrice(),
