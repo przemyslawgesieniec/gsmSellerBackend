@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.location;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,5 +30,12 @@ public class LocationController {
 
         return ResponseEntity.ok(locationService.updateLocation(technicalId, request));
     }
+
+    @GetMapping
+    public ResponseEntity<List<String>> getAllLocations() {
+        return ResponseEntity.ok(locationService.getAllLocationNames());
+    }
+
+
 }
 

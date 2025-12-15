@@ -37,6 +37,7 @@ public class PhoneStockService implements PhoneSoldHandler {
                                          String color,
                                          String imei,
                                          Status status,
+                                         String LocationName,
                                          BigDecimal priceMin,
                                          BigDecimal priceMax,
                                          int page,
@@ -47,6 +48,7 @@ public class PhoneStockService implements PhoneSoldHandler {
             .and(PhoneStockSpecifications.hasImeiLike(imei))
             .and(PhoneStockSpecifications.hasColor(color))
             .and(PhoneStockSpecifications.hasStatus(status))
+            .and(PhoneStockSpecifications.hasLocationName(LocationName))
             .and(PhoneStockSpecifications.hasPriceMin(priceMin))
             .and(PhoneStockSpecifications.hasPriceMax(priceMax));
 

@@ -24,4 +24,5 @@ public class PhoneStockDto {
     private Status status;
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
+    private String locationName;
 }

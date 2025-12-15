@@ -12,7 +12,8 @@ function getFilters() {
         imei: document.getElementById("filterImei").value.trim(),
         priceMin: document.getElementById("filterPriceMin").value.trim(),
         priceMax: document.getElementById("filterPriceMax").value.trim(),
-        status: document.getElementById("filterStatus").value.trim()
+        status: document.getElementById("filterStatus").value.trim(),
+        locationName: document.getElementById("filterLocation").value.trim() // 👈
     };
 }
 
@@ -31,8 +32,10 @@ async function loadStock(page = 0) {
             imei: phone.imei,
             sellingPrice: phone.sellingPrice,
             purchasePrice: phone.purchasePrice,
-            status: phone.status
+            status: phone.status,
+            locationName: phone.locationName
         }));
+
 
         renderPhones(phones);
         initDropdowns();
@@ -172,7 +175,6 @@ function renderPhones(phones) {
         const statusClass = phone.status;
         const disableSellButton = phone.status === ("SPRZEDANY" || "USUNIĘTY" || "ODDANY") ? "disabled" : "";
         const sellButtonId = sellButtonIdPrefix + phone.technicalId;
-        const editButtonId = editButtonIdPrefix + phone.technicalId;
 
         const card = `
       <div class="col s12">
@@ -183,6 +185,17 @@ function renderPhones(phones) {
               <p><b>Model:</b> ${phone.model}</p>
               <p><b>Kolor:</b> ${phone.color}</p>
               <p><b>IMEI:</b> ${phone.imei}</p>
+              ${
+            phone.locationName
+                ? `<p class="location">
+               <i class="material-icons tiny red-text">place</i>
+               <b>${phone.locationName}</b>
+             </p>`
+                : `<p class="location grey-text">
+               <i class="material-icons tiny">place</i>
+               Brak lokalizacji
+             </p>`
+        }
             </div>
             <div class="phone-right">
             <div class="price-wrapper col s12">
@@ -222,6 +235,7 @@ function renderPhones(phones) {
 }
 
 let cartBtn = null;
+
 // const cartBtn = document.getElementById('cartBtn'); // jeśli taki masz
 
 function initDropdowns() {
@@ -240,7 +254,7 @@ function acceptPhone(technicalId) {
     const status = card.querySelector(".status-badge")?.textContent.trim();
 
     if (status !== "WPROWADZONY") {
-        M.toast({ html: "Telefon nie może zostać przyjęty na sklep", classes: "red" });
+        M.toast({html: "Telefon nie może zostać przyjęty na sklep", classes: "red"});
         return;
     }
 
@@ -262,7 +276,7 @@ async function sellPhone(technicalId) {
             btn.disabled = true;
         }
 
-        const params = new URLSearchParams({ technicalId });
+        const params = new URLSearchParams({technicalId});
 
         const response = await fetch(`/api/v1/cart/add?${params.toString()}`, {
             method: 'POST',
@@ -290,7 +304,7 @@ async function sellPhone(technicalId) {
             cartCountBadge.textContent = cartCount;
         }
 
-        M.toast({ html: 'Telefon dodany do koszyka', classes: 'green' });
+        M.toast({html: 'Telefon dodany do koszyka', classes: 'green'});
 
         // opcjonalnie: zmień wygląd przycisku na „W koszyku”
         if (btn) {
@@ -301,7 +315,7 @@ async function sellPhone(technicalId) {
 
     } catch (e) {
         console.error('Error adding to cart:', e);
-        M.toast({ html: 'Nie udało się dodać do koszyka', classes: 'red' });
+        M.toast({html: 'Nie udało się dodać do koszyka', classes: 'red'});
 
         // przy błędzie pozwól znowu kliknąć
         const btn = document.querySelector(`button[data-technical-id="${technicalId}"]`);
@@ -313,7 +327,7 @@ async function sellPhone(technicalId) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const res = await fetch('/api/v1/cart', { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+        const res = await fetch('/api/v1/cart', {headers: {'X-Requested-With': 'XMLHttpRequest'}});
         if (res.ok) {
             const cart = await res.json();
             cartState = cart;
@@ -385,13 +399,16 @@ document.addEventListener("DOMContentLoaded", function () {
         "filterImei",
         "filterPriceMin",
         "filterPriceMax",
-        "filterStatus"
+        "filterStatus",
+        "filterLocation"
     ].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener("input", liveReload);
         el.addEventListener("change", liveReload);
     });
+
+    loadLocationsFilter();
 
 });
 
@@ -485,6 +502,9 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     document.getElementById("filterPriceMin").value = "";
     document.getElementById("filterPriceMax").value = "";
     document.getElementById("filterStatus").value = "";
+    document.getElementById("filterLocation").value = "";
+    M.FormSelect.init(document.querySelectorAll("select"));
+
 
     if (M && M.FormSelect) {
         M.FormSelect.init(document.querySelectorAll('select'));
@@ -505,8 +525,10 @@ const filterLabels = {
     imei: "IMEI",
     priceMin: "Cena od",
     priceMax: "Cena do",
-    status: "Status"
+    status: "Status",
+    locationName: "Lokalizacja"
 };
+
 
 // generowanie chipów
 function renderChips(filters) {
@@ -614,6 +636,27 @@ document.getElementById("confirmAcceptYes").addEventListener("click", async () =
     }
 });
 
+async function loadLocationsFilter() {
+    try {
+        const res = await fetch("/api/v1/locations");
+        if (!res.ok) return;
+
+        const locations = await res.json();
+        const select = document.getElementById("filterLocation");
+
+        locations.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            select.appendChild(opt);
+        });
+
+        M.FormSelect.init(select);
+
+    } catch (e) {
+        console.warn("Nie udało się pobrać lokalizacji", e);
+    }
+}
 
 
 function debounce(fn, delay = 300) {

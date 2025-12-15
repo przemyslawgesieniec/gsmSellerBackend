@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
+import jakarta.persistence.criteria.JoinType;
 import java.math.BigDecimal;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -54,4 +55,18 @@ public class PhoneStockSpecifications {
         return (root, query, cb) ->
             status == null ? null : cb.equal(root.get("status"), status);
     }
+
+    public static Specification<PhoneStock> hasLocationName(String locationName) {
+        return (root, query, cb) -> {
+            if (locationName == null || locationName.isBlank()) {
+                return null;
+            }
+
+            return cb.like(
+                cb.lower(root.join("location", JoinType.LEFT).get("name")),
+                "%" + locationName.toLowerCase() + "%"
+            );
+        };
+    }
+
 }

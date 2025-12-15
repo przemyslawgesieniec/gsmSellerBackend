@@ -3,7 +3,6 @@ package pl.gesieniec.gsmseller.configuration;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Component;
-import pl.gesieniec.gsmseller.cart.Cart;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.location.LocationRepository;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
@@ -24,7 +23,7 @@ public class ContentInit {
                           UserRepository userRepository,
                           LocationRepository locationRepository) {
 
-        LocationEntity locationEntity = new LocationEntity("Manu", "Drewnowska 13A");
+        LocationEntity locationEntity = new LocationEntity("Carrefour Kutno");
         locationRepository.save(locationEntity);
 
         User user1 = new User("devUser", "{noop}password1", "ROLE_SELLER");

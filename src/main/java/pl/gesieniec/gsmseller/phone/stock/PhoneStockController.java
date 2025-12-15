@@ -41,12 +41,13 @@ public class PhoneStockController {
         @RequestParam(required = false) String imei,
         @RequestParam(required = false) String color,
         @RequestParam(required = false) Status status,
+        @RequestParam(required = false) String locationName,
         @RequestParam(required = false) BigDecimal priceMin,
         @RequestParam(required = false) BigDecimal priceMax,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "50") int size
     ) {
-        return service.getPhones(name, model, color, imei, status, priceMin, priceMax, page, size);
+        return service.getPhones(name, model, color, imei, status,locationName, priceMin, priceMax, page, size);
     }
 
 

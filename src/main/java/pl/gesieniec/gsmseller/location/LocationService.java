@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.location;
 
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,7 @@ public class LocationService {
     private final LocationRepository locationRepository;
 
     public LocationEntity createLocation(LocationRequest request) {
-        LocationEntity locationEntity = new LocationEntity(request.getName(), request.getAddress());
+        LocationEntity locationEntity = new LocationEntity(request.getName());
         return locationRepository.save(locationEntity);
     }
 
@@ -19,7 +20,6 @@ public class LocationService {
         LocationEntity location = getLocationByTechnicalId(technicalId);
 
         location.setName(request.getName());
-        location.setAddress(request.getAddress());
 
         return locationRepository.save(location);
     }
@@ -28,4 +28,13 @@ public class LocationService {
         return locationRepository.findByTechnicalId(technicalId)
             .orElseThrow(() -> new RuntimeException("Location not found"));
     }
+
+    public List<String> getAllLocationNames() {
+        return locationRepository.findAll()
+            .stream()
+            .map(LocationEntity::getName)
+            .sorted()
+            .toList();
+    }
+
 }

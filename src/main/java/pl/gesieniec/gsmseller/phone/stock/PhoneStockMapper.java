@@ -1,9 +1,11 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
+import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 
 @Component
@@ -35,6 +37,8 @@ public class PhoneStockMapper {
             save.getSource(),
             save.getStatus(),
             save.getPurchasePrice(),
-            save.getSellingPrice());
+            save.getSellingPrice(),
+            Optional.ofNullable(save.getLocation())
+                .map(LocationEntity::getName).orElse(null));
     }
 }
