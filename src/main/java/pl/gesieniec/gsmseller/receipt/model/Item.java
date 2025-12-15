@@ -77,5 +77,12 @@ public class Item {
             ItemType.PHONE
         );
     }
+
+    public String getWarrantyMonthsFormatted(){
+        if(warrantyMonths == null || warrantyMonths == 0) {
+            return "";
+        }
+        return "Gwarancja " + warrantyMonths + " mies.";
+    }
 }
 

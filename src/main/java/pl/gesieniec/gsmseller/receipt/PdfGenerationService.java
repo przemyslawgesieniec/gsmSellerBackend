@@ -126,7 +126,7 @@ public class PdfGenerationService {
         table.addHeaderCell(new Cell().add(new Paragraph("Wartość brutto (PLN)")).setBackgroundColor(ColorConstants.LIGHT_GRAY));
 
         for (Item item : items) {
-            table.addCell(item.getName());
+            table.addCell(item.getName() + "\n" + item.getWarrantyMonthsFormatted());
             table.addCell("1")
                 .setTextAlignment(TextAlignment.RIGHT);
             table.addCell(String.format("%.2f",item.getNettAmount()))

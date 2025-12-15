@@ -55,22 +55,26 @@ public class FooterHandler implements IEventHandler {
         table.setFontSize(7);
 
         table.addCell(makeCell("Carrefour Kutno",
-            "Oporowska 6A, 99-300 Kutno",
+            "Oporowska 6A,",
+                "99-300 Kutno",
             "teleakcesoriakutno@gmail.com",
             "+48 736 810 390"));
 
         table.addCell(makeCell("Galeria Różana Kutno",
-            "Tadeusza Kościuszki 73, 99-300 Kutno",
+            "Tadeusza Kościuszki 73,",
+            "99-300 Kutno",
             "teleakcesoriarozana@gmail.com",
             "+48 579 900 005"));
 
         table.addCell(makeCell("M Park Piotrków Trybunalski",
-            "Władysława Sikorskiego 13/17, 97-300 Piotrków Trybunalski",
+            "Władysława Sikorskiego 13/17,",
+            "97-300 Piotrków Trybunalski",
             "teleakcesoriapiotrkow@gmail.com",
             "+48 579 900 070"));
 
         table.addCell(makeCell("Galeria Zgierska Zgierz",
-            "Armii Krajowej 10, 95-100 Zgierz",
+            "Armii Krajowej 10,",
+            "95-100 Zgierz",
             "teleakcesoriazgierz@gmail.com",
             "+48 579 900 050"));
 
@@ -78,10 +82,11 @@ public class FooterHandler implements IEventHandler {
         canvas.close();
     }
 
-    private Cell makeCell(String title, String address, String mail, String tel) {
+    private Cell makeCell(String title, String address, String postal, String mail, String tel) {
         Cell cell = new Cell().setBorder(Border.NO_BORDER);
         cell.add(new Paragraph(title).setBold());
         cell.add(new Paragraph(address));
+        cell.add(new Paragraph(postal));
         cell.add(new Paragraph(mail));
         cell.add(new Paragraph(tel));
         return cell;
