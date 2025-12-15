@@ -94,7 +94,15 @@ function renderInvoice(cart) {
         `;
     });
 
-    totalEl.textContent = total.toFixed(2);
+    const vatValue = getSelectedVatBackend();
+    const grossTotal = calculateGrossTotal(total, vatValue);
+
+    totalEl.textContent = grossTotal.toFixed(2);
+
+    document.getElementById("totalNet").textContent = total.toFixed(2);
+
+    const vatAmount = grossTotal - total;
+    document.getElementById("totalVat").textContent = vatAmount.toFixed(2);
 }
 
 /**
@@ -222,4 +230,34 @@ function openReceiptPdf(receiptUuid) {
     const url = `/api/v1/receipt/${receiptUuid}`;
     window.open(url, "_blank");
 }
+
+function parseVatRate(vatValue) {
+    if (!vatValue) return 0;
+
+    if (vatValue.endsWith("%")) {
+        return Number(vatValue.replace("%", "")) / 100;
+    }
+
+    // ZW lub inne → brak VAT
+    return 0;
+}
+
+function calculateGrossTotal(netTotal, vatValue) {
+    const vatRate = parseVatRate(vatValue);
+    return netTotal * (1 + vatRate);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    M.FormSelect.init(document.querySelectorAll('select'));
+
+    const cart = await fetchCart();
+    if (cart) {
+        renderInvoice(cart);
+
+        const vatSelect = document.getElementById("vatSelect");
+        vatSelect.addEventListener("change", () => {
+            renderInvoice(cart);
+        });
+    }
+});
 
