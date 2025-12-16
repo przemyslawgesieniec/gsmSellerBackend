@@ -131,20 +131,19 @@ async function saveAndPrint() {
         return;
     }
 
-    console.log("Koszyk zawiera : " + cart)
-
     const vat = getSelectedVatBackend();
     const items = collectInvoiceExtraData(cart);
+    const sellDate = getSellDate();
 
     const payload = {
         vatRate: vat,
+        sellDate: sellDate,
         items: items
     };
 
     console.log("📤 Wysyłam dane paragonu:", payload);
 
     try {
-        // 1️⃣ Tworzymy dokument
         const res = await fetch("/api/v1/receipt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -158,12 +157,13 @@ async function saveAndPrint() {
 
         M.toast({ html: "Dokument zapisany — otwieram podgląd...", classes: "green" });
 
-        // 2️⃣ Pobieramy PDF i otwieramy go użytkownikowi
         openReceiptPdf(receiptUuid);
 
     } catch (err) {
         console.error(err);
         M.toast({ html: "Błąd zapisywania dokumentu", classes: "red" });
+    } finally {
+        resetInvoiceForm();
     }
 }
 
@@ -247,17 +247,38 @@ function calculateGrossTotal(netTotal, vatValue) {
     return netTotal * (1 + vatRate);
 }
 
+function getSellDate() {
+    const dateVal = document.getElementById("sellDate").value;
+    return dateVal ? dateVal : null; // null oznacza dziś na backendzie
+}
+
+
 document.addEventListener("DOMContentLoaded", async () => {
+    // init dropdown
     M.FormSelect.init(document.querySelectorAll('select'));
 
-    const cart = await fetchCart();
-    if (cart) {
-        renderInvoice(cart);
+    // init datepicker
+    const today = new Date();
+    M.Datepicker.init(document.querySelectorAll('.datepicker'), {
+        format: 'yyyy-mm-dd',
+        defaultDate: today,
+        setDefaultDate: true,
+        autoClose: true
+    });
 
-        const vatSelect = document.getElementById("vatSelect");
-        vatSelect.addEventListener("change", () => {
-            renderInvoice(cart);
-        });
+    const cart = await fetchCart();
+    if (cart) renderInvoice(cart);
+
+    const vatSelect = document.getElementById("vatSelect");
+    if (vatSelect) {
+        vatSelect.addEventListener("change", () => renderInvoice(cart));
     }
 });
 
+function resetInvoiceForm() {
+    const datepickerInstance = M.Datepicker.getInstance(document.getElementById('sellDate'));
+    if (datepickerInstance) {
+        datepickerInstance.setDate(new Date());
+        datepickerInstance.gotoDate(new Date());
+    }
+}

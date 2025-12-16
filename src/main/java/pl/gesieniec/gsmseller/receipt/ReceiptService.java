@@ -71,7 +71,11 @@ public class ReceiptService {
     public Receipt generateReceipt(String username, ReceiptCreateRequest request) {
         log.info("🧾 [{}] Rozpoczynam generowanie dokumentu sprzedaży...", username);
 
-        String receiptNumber = prepareNumber();
+        LocalDate sellDate = request.getSellDate() != null
+            ? request.getSellDate()
+            : LocalDate.now();
+
+        String receiptNumber = prepareNumber(sellDate);
         log.info("🧾 Nadano numer dokumentu: {}", receiptNumber);
 
         VatRate vatRate = VatRate.parse(request.getVatRate());
@@ -93,7 +97,7 @@ public class ReceiptService {
             receiptNumber,
             items,
             seller,
-            new DateAndPlace("Łódź", LocalDate.now(), LocalDate.now()),
+            new DateAndPlace("Stryków", sellDate, sellDate), //TODO fix place
             username
         );
 
@@ -139,10 +143,10 @@ public class ReceiptService {
     // 🔢 Numerowanie dokumentów
     // ===============================
 
-    private String prepareNumber() {
+    private String prepareNumber(LocalDate sellDate) {
         return receiptRepository.findFirstByOrderByCreateDateDesc()
             .map(e -> incrementInvoiceNumber(e.getNumber()))
-            .orElse("001/" + LocalDate.now().getMonthValue() + "/" + LocalDate.now().getYear());
+            .orElse("001/" + sellDate.getMonthValue() + "/" + sellDate.getYear());
     }
 
 
@@ -188,10 +192,8 @@ public class ReceiptService {
             entity.getCreatedBy()
         );
 
-        // 3️⃣ Faktura serwisowa (VAT 23%)
         Receipt serviceReceipt = originalReceipt.withVat(VatRate.VAT_23);
 
-        // 4️⃣ Generowanie PDF (TA SAMA metoda)
         return pdfService.generateReceiptPdf(serviceReceipt);
     }
 
