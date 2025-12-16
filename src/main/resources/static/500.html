@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>500 – Błąd serwera</title>
+
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link href="css/style.css" rel="stylesheet">
+
+    <style>
+        .error-container {
+            margin-top: 80px;
+        }
+        .error-icon {
+            font-size: 90px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
+
+<div class="container error-container center-align">
+    <i class="material-icons error-icon orange-text text-darken-2">warning_amber</i>
+
+    <h3 class="blue-text text-darken-2">500</h3>
+    <h5>Wystąpił błąd serwera</h5>
+
+    <p class="grey-text">
+        Coś poszło nie tak po naszej stronie.<br>
+        Spróbuj ponownie za chwilę lub wróć do strony głównej.
+    </p>
+
+    <div style="margin-top: 30px;">
+        <a href="/" class="btn blue darken-2 waves-effect">
+            <i class="material-icons left">home</i>
+            Wróć do strony głównej
+        </a>
+    </div>
+</div>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    });
+</script>
+
+</body>
+</html>
