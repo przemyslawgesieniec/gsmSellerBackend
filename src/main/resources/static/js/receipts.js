@@ -37,24 +37,36 @@ function renderReceipts(pageData) {
             </div>
         `;
 
-        // 🔥 RENDEROWANIE POZYCJI FAKTURY ZGODNIE Z JSON
+        //  RENDEROWANIE POZYCJI FAKTURY ZGODNIE Z JSON
+        const VAT_MAP = {
+            VAT_EXEMPT: "ZW"
+        };
+
         const body = `
             <div class="collapsible-body">
                 <h6>Pozycje dokumentu:</h6>
-
+        
                 <ul class="collection">
-                    ${receipt.items.map(item => `
-                        <li class="collection-item">
-                            <div><strong>${item.name}</strong></div>
-
-                            <div class="grey-text">
-                                Typ: ${item.itemType} <br>
-                                Netto: ${item.nettAmount.toFixed(2)} zł <br>
-                                VAT: ${(item.vatRate * 100).toFixed(0)}% (${item.vatAmount.toFixed(2)} zł) <br>
-                                Brutto: <strong>${item.grossAmount.toFixed(2)} zł</strong>
-                            </div>
-                        </li>
-                    `).join("")}
+                    ${receipt.items.map(item => {
+                    const isVatNumeric = typeof item.vatRate === "number";
+        
+                    const vatLabel = isVatNumeric
+                        ? `${(item.vatRate * 100).toFixed(0)}% (${item.vatAmount.toFixed(2)} zł)`
+                        : (VAT_MAP[item.vatRate] || item.vatRate);
+        
+                    return `
+                            <li class="collection-item">
+                                <div><strong>${item.name}</strong></div>
+        
+                                <div class="grey-text">
+                                    Typ: ${item.itemType} <br>
+                                    Netto: ${item.nettAmount.toFixed(2)} zł <br>
+                                    VAT: ${vatLabel} <br>
+                                    Brutto: <strong>${item.grossAmount.toFixed(2)} zł</strong>
+                                </div>
+                            </li>
+                        `;
+                }).join("")}
                 </ul>
             </div>
         `;
