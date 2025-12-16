@@ -2,6 +2,7 @@ package pl.gesieniec.gsmseller.phone.stock;
 
 import jakarta.persistence.criteria.JoinType;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import org.springframework.data.jpa.domain.Specification;
 
 public class PhoneStockSpecifications {
@@ -73,5 +74,15 @@ public class PhoneStockSpecifications {
         };
     }
 
-
+    public static Specification<PhoneStock> soldBetween(
+        LocalDateTime from,
+        LocalDateTime to
+    ) {
+        return (root, query, cb) -> cb.and(
+            cb.equal(root.get("status"), Status.SPRZEDANY),
+            cb.between(root.get("soldAt"), from, to),
+            cb.isNotNull(root.get("soldFor")),
+            cb.isNotNull(root.get("purchasePrice"))
+        );
+    }
 }

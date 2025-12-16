@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class PhoneStock {
     private String source;
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
+    private LocalDateTime soldAt;
 
     @ManyToOne
     @JoinColumn(name = "location_id")
@@ -79,7 +81,9 @@ public class PhoneStock {
     public void sell(BigDecimal soldPrice) {
         this.status = Status.SPRZEDANY;
         this.soldFor = soldPrice;
+        this.soldAt = LocalDateTime.now();
     }
+
 
     public void acceptAtLocation(LocationEntity location) {
         this.status = Status.DOSTĘPNY;

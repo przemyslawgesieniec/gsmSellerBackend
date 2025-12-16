@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Raport sprzedaży</title>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
+
+<div class="container">
+  <h4 class="blue-text text-darken-2">Raport sprzedaży</h4>
+  <p class="grey-text">Podsumowanie obrotu, kosztów i zysku.</p>
+
+  <!-- FILTR -->
+  <div class="row">
+    <div class="input-field col s12 m4">
+      <select id="dateRange">
+        <option value="THIS_MONTH" selected>Ten miesiąc</option>
+        <option value="LAST_MONTH">Poprzedni miesiąc</option>
+        <option value="THIS_YEAR">Ten rok</option>
+        <option value="ALL_TIME">Od początku</option>
+      </select>
+      <label>Zakres czasu</label>
+    </div>
+  </div>
+
+  <!-- PODSUMOWANIE -->
+  <div class="row">
+    <div class="col s12 m4">
+      <div class="card">
+        <div class="card-content center-align">
+          <i class="material-icons large blue-text">shopping_cart</i>
+          <h6>Obrót</h6>
+          <h5 id="turnover">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card">
+        <div class="card-content center-align">
+          <i class="material-icons large orange-text">receipt</i>
+          <h6>Koszt</h6>
+          <h5 id="cost">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card">
+        <div class="card-content center-align">
+          <i class="material-icons large green-text">trending_up</i>
+          <h6>Zysk</h6>
+          <h5 id="profit">—</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/reports.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    M.FormSelect.init(document.querySelectorAll('select'));
+  });
+</script>
+
+</body>
+</html>

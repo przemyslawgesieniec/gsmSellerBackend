@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
+import pl.gesieniec.gsmseller.report.sales.SalesView;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 
@@ -134,6 +136,15 @@ public class PhoneStockService implements PhoneSoldHandler {
         }
 
         return phone;
+    }
+
+    public List<PhoneStock> findSoldBetween(
+        LocalDateTime from,
+        LocalDateTime to
+    ) {
+        return repository.findAll(
+            PhoneStockSpecifications.soldBetween(from, to)
+        );
     }
 
 }
