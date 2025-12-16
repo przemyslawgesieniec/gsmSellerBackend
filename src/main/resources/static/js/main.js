@@ -196,7 +196,7 @@ function renderPhones(phones) {
               ${
             phone.locationName
                 ? `<p class="location">
-               <i class="material-icons tiny red-text">place</i>
+               <i class="material-icons tiny blue-text">place</i>
                <b>${phone.locationName}</b>
              </p>`
                 : `<p class="location grey-text">

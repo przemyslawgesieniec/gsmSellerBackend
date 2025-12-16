@@ -2,6 +2,7 @@ package pl.gesieniec.gsmseller.receipt;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,8 @@ import pl.gesieniec.gsmseller.receipt.model.Receipt;
 import pl.gesieniec.gsmseller.receipt.model.ReceiptCreateRequest;
 import pl.gesieniec.gsmseller.receipt.model.Seller;
 import pl.gesieniec.gsmseller.receipt.model.VatRate;
+import pl.gesieniec.gsmseller.user.User;
+import pl.gesieniec.gsmseller.user.UserService;
 
 @Slf4j
 @Service
@@ -34,6 +37,7 @@ public class ReceiptService {
     private final ReceiptRepository receiptRepository;
     private final ReceiptMapper receiptMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserService userService;
 
     public Page<ReceiptEntity> getReceipts(String username, int page, int size) {
 
@@ -69,6 +73,8 @@ public class ReceiptService {
     }
 
     public Receipt generateReceipt(String username, ReceiptCreateRequest request) {
+        Optional<User> userByUsername = userService.getUserByUsername(username);
+
         log.info("🧾 [{}] Rozpoczynam generowanie dokumentu sprzedaży...", username);
 
         LocalDate sellDate = request.getSellDate() != null
@@ -97,7 +103,10 @@ public class ReceiptService {
             receiptNumber,
             items,
             seller,
-            new DateAndPlace("Stryków", sellDate, sellDate), //TODO fix place
+            new DateAndPlace(userByUsername
+                .map(e -> e.getLocation().getCity())
+                .orElse("Stryków"),
+                sellDate, sellDate),
             username
         );
 

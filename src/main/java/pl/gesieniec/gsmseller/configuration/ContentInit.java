@@ -23,7 +23,7 @@ public class ContentInit {
                           UserRepository userRepository,
                           LocationRepository locationRepository) {
 
-        LocationEntity locationEntity = new LocationEntity("Carrefour Kutno");
+        LocationEntity locationEntity = new LocationEntity("Carrefour Kutno","Kutno");
         locationRepository.save(locationEntity);
 
         User user1 = new User("devUser", "{noop}password1", "ROLE_SELLER");

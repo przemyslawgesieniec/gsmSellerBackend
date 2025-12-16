@@ -21,9 +21,11 @@ public class LocationEntity {
     @Column(nullable = false)
     private String name;
 
+    private String city;
 
-    public LocationEntity(String name) {
+    public LocationEntity(String name, String city) {
         this.technicalId = UUID.randomUUID();
         this.name = name;
+        this.city = city;
     }
 }

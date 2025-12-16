@@ -12,7 +12,7 @@ public class LocationService {
     private final LocationRepository locationRepository;
 
     public LocationEntity createLocation(LocationRequest request) {
-        LocationEntity locationEntity = new LocationEntity(request.getName());
+        LocationEntity locationEntity = new LocationEntity(request.getName(),request.getCity());
         return locationRepository.save(locationEntity);
     }
 
