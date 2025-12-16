@@ -44,4 +44,21 @@ public class Receipt {
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO);
     }
+
+    public Receipt withVat(VatRate vatRate) {
+
+        List<Item> newItems = this.items.stream()
+            .map(item -> item.withVat(vatRate))
+            .toList();
+
+        return new Receipt(
+            this.number,
+            this.technicalId,
+            newItems,
+            this.seller,
+            this.dateAndPlace,
+            this.createdBy
+        );
+    }
+
 }

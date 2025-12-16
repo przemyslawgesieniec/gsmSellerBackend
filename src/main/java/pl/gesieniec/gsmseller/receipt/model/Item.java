@@ -86,5 +86,27 @@ public class Item {
         }
         return "Gwarancja " + warrantyMonths + " mies.";
     }
+
+    public Item withVat(VatRate newVatRate) {
+
+        BigDecimal vatAmount = nettAmount
+            .multiply(newVatRate.getValue())
+            .setScale(2, BigDecimal.ROUND_HALF_EVEN);
+
+        BigDecimal grossAmount = nettAmount.add(vatAmount);
+
+        return new Item(
+            this.name,
+            this.nettAmount,
+            newVatRate,
+            vatAmount,
+            grossAmount,
+            this.technicalId,
+            this.warrantyMonths,
+            this.used,
+            this.itemType
+        );
+    }
+
 }
 

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
+import pl.gesieniec.gsmseller.receipt.model.Receipt;
 import pl.gesieniec.gsmseller.receipt.model.ReceiptCreateRequest;
 
 @Slf4j
@@ -97,5 +98,27 @@ public class ReceiptController {
 
         return receiptId;
     }
+
+    @GetMapping(
+        path = "/{id}/service-invoice",
+        produces = MediaType.APPLICATION_PDF_VALUE
+    )
+    public ResponseEntity<byte[]> getServiceInvoicePdf(@PathVariable UUID id) {
+
+        log.info("🧾 [GET SERVICE INVOICE PDF] id={}", id);
+
+        byte[] pdf = receiptService.buildServiceInvoice(id);
+
+        return ResponseEntity.ok()
+            .header(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "inline; filename=faktura_serwisowa.pdf"
+            )
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdf);
+    }
+
+
+
 
 }

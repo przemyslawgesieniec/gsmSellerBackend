@@ -57,7 +57,18 @@ public class ReceiptService {
 
     @Transactional
     public UUID generateAndSaveReceipt(String username, ReceiptCreateRequest request) {
+        Receipt receipt = generateReceipt(username, request);
 
+        ReceiptEntity entity = receiptMapper.toEntity(receipt);
+        receiptRepository.save(entity);
+
+        eventPublisher.publishEvent(new ItemsSoldEvent(username, receipt.getNumber(), receipt.getItems()));
+        log.info("💾 Zapisano dokument sprzedaży {} przez użytkownika {}", receipt.getNumber(), username);
+
+        return entity.getTechnicalId();
+    }
+
+    public Receipt generateReceipt(String username, ReceiptCreateRequest request) {
         log.info("🧾 [{}] Rozpoczynam generowanie dokumentu sprzedaży...", username);
 
         String receiptNumber = prepareNumber();
@@ -88,13 +99,7 @@ public class ReceiptService {
 
         log.info("🧾 Mapped receipt: {}", receipt);
 
-        ReceiptEntity entity = receiptMapper.toEntity(receipt);
-        receiptRepository.save(entity);
-
-        eventPublisher.publishEvent(new ItemsSoldEvent(username,receiptNumber,items));
-        log.info("💾 Zapisano dokument sprzedaży {} przez użytkownika {}", receiptNumber, username);
-
-        return entity.getTechnicalId();
+        return receipt;
     }
 
 
@@ -160,4 +165,34 @@ public class ReceiptService {
 
         return newNumber;
     }
+
+    @Transactional(readOnly = true)
+    public byte[] buildServiceInvoice(UUID receiptTechnicalId) {
+
+        // 1️⃣ Pobranie oryginalnego dokumentu
+        ReceiptEntity entity = receiptRepository
+            .findByTechnicalId(receiptTechnicalId)
+            .orElseThrow(() ->
+                new IllegalArgumentException("Nie znaleziono dokumentu sprzedaży")
+            );
+
+        // 2️⃣ Mapowanie encji → model PDF (ORYGINAŁ)
+        Receipt originalReceipt = new Receipt(
+            entity.getNumber(),
+            entity.getTechnicalId(),
+            entity.getItems().stream()
+                .map(receiptMapper::toModel)
+                .toList(),
+            receiptMapper.toModel(entity.getSeller()),
+            receiptMapper.toModel(entity.getDateAndPlace()),
+            entity.getCreatedBy()
+        );
+
+        // 3️⃣ Faktura serwisowa (VAT 23%)
+        Receipt serviceReceipt = originalReceipt.withVat(VatRate.VAT_23);
+
+        // 4️⃣ Generowanie PDF (TA SAMA metoda)
+        return pdfService.generateReceiptPdf(serviceReceipt);
+    }
+
 }
