@@ -36,21 +36,66 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // === WYSYŁANIE ===
     addBtn.addEventListener("click", async () => {
+        showProgressLoader();
 
-        showLoader();
-
-        console.log("Kliknięto Dodaj");
-
-        const formData = new FormData();
-        formData.append("name", document.getElementById("manualName").value);
-        formData.append("initialPrice", document.getElementById("manualInitialPrice").value);
-        formData.append("sellingPrice", document.getElementById("manualSellingPrice").value);
-        formData.append("source", document.getElementById("manualSource").value);
-
-
-        selectedFiles.forEach(f => formData.append("photos", f));
-
+        const totalSteps = selectedFiles.length * 2;
+        let currentStep = 0;
         try {
+            console.log("Kliknięto Dodaj");
+
+            const formData = new FormData();
+            formData.append("name", document.getElementById("manualName").value);
+            formData.append("initialPrice", document.getElementById("manualInitialPrice").value);
+            formData.append("sellingPrice", document.getElementById("manualSellingPrice").value);
+            formData.append("source", document.getElementById("manualSource").value);
+
+            for (const originalFile of selectedFiles) {
+
+                let file = originalFile;
+
+                if (
+                    file.type === "image/heic" ||
+                    file.type === "image/heif" ||
+                    file.name.toLowerCase().endsWith(".heic") ||
+                    file.name.toLowerCase().endsWith(".heif")
+                ) {
+
+                    updateProgress(
+                        Math.round((currentStep / totalSteps) * 100),
+                        `Konwersja HEIC: ${file.name}`
+                    );
+
+                    console.log("Konwersja HEIC:", file.name);
+
+                    await nextFrame();
+
+                    file = await convertHeicToJpeg(file);
+                    currentStep++;
+                }
+
+                const percent = Math.min(
+                    100,
+                    Math.round((currentStep / totalSteps) * 100)
+                );
+
+                updateProgress(
+                    percent,
+                    `Przetwarzanie: ${file.name}`
+                );
+
+                await nextFrame(); // też warto przed canvas
+
+                const compressed = await compressImage(file, {
+                    maxWidth: 1600,
+                    quality: 0.65,
+                    binary: true
+                });
+
+                formData.append("photos", compressed);
+                currentStep++;
+            }
+
+            // 🔹 Wysłanie do backendu
             const response = await fetch("/api/v1/phones", {
                 method: "POST",
                 body: formData
@@ -69,9 +114,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (err) {
             console.error("ERROR:", err);
-            M.toast({html: "Błąd podczas przetwarzania", classes: "red"});
+            M.toast({ html: "Błąd podczas przetwarzania", classes: "red" });
+
         } finally {
-            hideLoader();
+            hideProgressLoader();
         }
     });
 
@@ -168,14 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-function showLoader() {
-    document.getElementById("loadingOverlay").classList.remove("hide");
-}
-
-function hideLoader() {
-    document.getElementById("loadingOverlay").classList.add("hide");
-}
-
 function sendFinalPhones() {
     const phoneBlocks = document.querySelectorAll(".scan-item");
     const resultList = [];
@@ -210,6 +248,102 @@ function sendFinalPhones() {
         });
 }
 
+function compressImage(file, options = {}) {
+    const {
+        maxWidth = 1600,
+        quality = 0.7,
+        grayscale = true
+    } = options;
 
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
 
+        reader.onload = e => img.src = e.target.result;
+        reader.onerror = reject;
 
+        img.onload = () => {
+            let { width, height } = img;
+
+            if (width > maxWidth) {
+                height = height * (maxWidth / width);
+                width = maxWidth;
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            if (grayscale) {
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const data = imageData.data;
+
+                const threshold = 160;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const gray =
+                        data[i] * 0.299 +
+                        data[i + 1] * 0.587 +
+                        data[i + 2] * 0.114;
+
+                    const bw = gray > threshold ? 255 : 0;
+
+                    data[i] = data[i + 1] = data[i + 2] = bw;
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+
+            }
+
+            canvas.toBlob(
+                blob => {
+                    resolve(new File([blob], file.name, {
+                        type: "image/jpeg"
+                    }));
+                },
+                "image/jpeg",
+                quality
+            );
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+
+async function convertHeicToJpeg(file) {
+    const convertedBlob = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.8
+    });
+
+    return new File(
+        [convertedBlob],
+        file.name.replace(/\.heic$/i, ".jpg"),
+        { type: "image/jpeg" }
+    );
+}
+
+function showProgressLoader() {
+    document.getElementById("loadingOverlay").classList.remove("hide");
+    updateProgress(0, "Przygotowanie…");
+}
+
+function hideProgressLoader() {
+    document.getElementById("loadingOverlay").classList.add("hide");
+}
+
+function updateProgress(percent, text) {
+    document.getElementById("progressBar").style.width = percent + "%";
+    document.getElementById("progressPercent").innerText = percent + "%";
+
+    if (text) {
+        document.getElementById("loaderText").innerText = text;
+    }
+}
+function nextFrame() {
+    return new Promise(resolve => requestAnimationFrame(resolve));
+}

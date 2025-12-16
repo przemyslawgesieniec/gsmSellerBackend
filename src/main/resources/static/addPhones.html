@@ -72,20 +72,34 @@
     </div>
 </div>
 
-<div id="loadingOverlay" class="loading-overlay hide">
-    <div class="preloader-wrapper big active">
-        <div class="spinner-layer spinner-blue-only">
-            <div class="circle-clipper left"><div class="circle"></div></div>
-            <div class="gap-patch"><div class="circle"></div></div>
-            <div class="circle-clipper right"><div class="circle"></div></div>
+    <div id="loadingOverlay" class="loading-overlay hide">
+        <div class="card white z-depth-3" style="padding:24px; width:360px">
+            <h6 id="loaderText" class="blue-text text-darken-2">
+                Przetwarzanie zdjęć…
+            </h6>
+
+            <div class="progress" style="margin-top:20px">
+                <div
+                        id="progressBar"
+                        class="determinate blue"
+                        style="width: 0%">
+                </div>
+            </div>
+
+            <p id="progressPercent"
+               class="grey-text text-darken-1"
+               style="margin-top:10px">
+                0%
+            </p>
         </div>
     </div>
-</div>
+
 
 
 <!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="js/uploadFiles.js"></script>
+<script src="https://unpkg.com/heic2any/dist/heic2any.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -101,6 +115,7 @@
         localStorage.removeItem("phonesSaved");
     }
     });
+
 </script>
 </body>
 </html>
