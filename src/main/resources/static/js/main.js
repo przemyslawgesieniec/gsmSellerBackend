@@ -173,7 +173,15 @@ function renderPhones(phones) {
     listContainer.innerHTML = "";
     phones.forEach((phone) => {
         const statusClass = phone.status;
-        const disableSellButton = phone.status === ("SPRZEDANY" || "USUNIĘTY" || "ODDANY") ? "disabled" : "";
+        const inCart = isPhoneInCart(phone.technicalId);
+
+        const disableSellButton =
+            phone.status !== "DOSTĘPNY"
+            || !phone.locationName
+            || inCart
+                ? "disabled"
+                : "";
+
         const sellButtonId = sellButtonIdPrefix + phone.technicalId;
 
         const card = `
@@ -222,10 +230,13 @@ function renderPhones(phones) {
                 <li class="red-text"><a href="#!" onclick="deletePhone('${phone.technicalId}')">Usuń</a></li>
               </ul>
             
-              <button class="btn-small green darken-2 ${disableSellButton}" id=${sellButtonId}
-                      onclick="sellPhone('${phone.technicalId}')">
-                <i class="material-icons left">attach_money</i>Sprzedaj
+              <button class="btn-small green darken-2 ${disableSellButton}"
+                 onclick="sellPhone('${phone.technicalId}')"
+                ${disableSellButton ? "disabled" : ""}>
+                <i class="material-icons left">attach_money</i>
+                ${inCart ? "W koszyku" : "Sprzedaj"}
               </button>
+
         </div>
         </div>
       </div>
@@ -269,6 +280,18 @@ function acceptPhone(technicalId) {
 
 
 async function sellPhone(technicalId) {
+    // ⛔ ochrona przed double-click
+    if (isPhoneInCart(technicalId)) {
+        return;
+    }
+
+    const btn = document.getElementById("sellBtn" + technicalId);
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add("grey");
+        btn.innerText = "W koszyku";
+    }
+
     try {
         // opcjonalnie: zablokuj przycisk na czas requestu
         const btn = document.querySelector(`button[data-technical-id="${technicalId}"]`);
@@ -286,12 +309,28 @@ async function sellPhone(technicalId) {
             }
         });
 
+        if (response.status === 409) {
+            M.toast({ html: 'Telefon nie może być sprzedany', classes: 'red' });
+
+            // cofamy UI
+            const btn = document.getElementById("sellBtn" + technicalId);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "Sprzedaj";
+                btn.classList.remove("grey");
+            }
+            return;
+        }
+
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
 
+
         const updatedCart = await response.json();
         cartState = updatedCart;
+        loadStock(currentPage);
 
         // 🔢 aktualizacja liczby w koszyku – dostosuj do swojego modelu Cart
         // Zakładam np. że masz: cart.items albo cart.phones
@@ -689,6 +728,13 @@ async function loadLocationsFilter() {
     }
 }
 
+function isPhoneInCart(technicalId) {
+    if (!cartState || !cartState.items) return false;
+
+    return cartState.items.some(item =>
+        item.technicalId === technicalId && item.itemType === "PHONE"
+    );
+}
 
 function debounce(fn, delay = 300) {
     let timeout;
@@ -697,5 +743,7 @@ function debounce(fn, delay = 300) {
         timeout = setTimeout(() => fn(...args), delay);
     };
 }
+
+
 
 const liveReload = debounce(() => loadStock(0), 300);

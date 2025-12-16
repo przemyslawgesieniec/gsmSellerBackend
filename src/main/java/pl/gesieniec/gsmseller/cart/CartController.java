@@ -30,19 +30,20 @@ public class CartController {
     public ResponseEntity<Cart> addToCart(Principal principal, @RequestParam UUID technicalId) {
 
         if (principal == null) {
-            log.warn("⚠ Próba dodania telefonu do koszyka, ale Principal jest null!");
             return ResponseEntity.badRequest().build();
         }
 
-        String username = principal.getName();
-        log.info("✅ [{}] Dodaje telefon (technicalId={}) do koszyka", username, technicalId);
+        try {
+            Cart updated = cartService.addPhoneToCart(principal.getName(), technicalId);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException e) {
+            log.warn("⛔ [{}] Nie można dodać telefonu {} do koszyka: {}",
+                principal.getName(), technicalId, e.getMessage());
 
-        Cart updated = cartService.addPhoneToCart(username, technicalId);
-
-        log.info("✅ [{}] Koszyk po dodaniu zawiera {} elementów",
-            username, updated.getItems().size());
-
-        return ResponseEntity.ok(updated);
+            return ResponseEntity
+                .status(409)
+                .build();
+        }
     }
 
     @PostMapping("/add/misc")

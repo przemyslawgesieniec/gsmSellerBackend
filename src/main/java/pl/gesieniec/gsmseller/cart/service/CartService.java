@@ -13,6 +13,7 @@ import pl.gesieniec.gsmseller.cart.CartItem;
 import pl.gesieniec.gsmseller.cart.CartItemDto;
 import pl.gesieniec.gsmseller.cart.CartRepository;
 import pl.gesieniec.gsmseller.common.ItemType;
+import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 
@@ -30,15 +31,22 @@ public class CartService {
 
         if (cart.getTechnicalIds().contains(technicalId)) {
             log.info("ℹ [{}] Telefon {} już jest w koszyku", username, technicalId);
-            return null;
+            return cart;
         }
-        PhoneStockDto phone = phoneStockService.getByTechnicalId(technicalId);
 
-        cart.addItem(CartItem.fromPhone(phone));
+        // 🔒 TWARDY WARUNEK BIZNESOWY
+        PhoneStock phone = phoneStockService
+            .validateCanBeAddedToCart(technicalId, username);
+
+        cart.addItem(CartItem.fromPhone(
+            phoneStockService.getByTechnicalId(technicalId)
+        ));
+
         log.info("➕ [{}] Dodano telefon {} do koszyka", username, technicalId);
 
         return cartRepository.save(cart);
     }
+
 
     public Cart getCart(String username) {
         return getOrCreateCart(username);

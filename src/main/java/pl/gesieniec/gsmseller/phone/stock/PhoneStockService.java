@@ -109,5 +109,31 @@ public class PhoneStockService implements PhoneSoldHandler {
         repository.save(phone);
     }
 
+    public PhoneStock validateCanBeAddedToCart(UUID technicalId, String username) {
+
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        PhoneStock phone = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() -> new EntityNotFoundException("Phone not found: " + technicalId));
+
+        if (phone.getStatus() != Status.DOSTĘPNY) {
+            throw new IllegalStateException("Telefon nie jest dostępny do sprzedaży");
+        }
+
+        if (phone.getLocation() == null) {
+            throw new IllegalStateException("Telefon nie jest przypisany do lokalizacji");
+        }
+
+        if (user.getLocation() == null) {
+            throw new IllegalStateException("Użytkownik nie ma przypisanej lokalizacji");
+        }
+
+        if (!phone.getLocation().getId().equals(user.getLocation().getId())) {
+            throw new IllegalStateException("Telefon znajduje się w innej lokalizacji");
+        }
+
+        return phone;
+    }
 
 }
