@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.JoinType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.springframework.data.jpa.domain.Specification;
+import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
 public class PhoneStockSpecifications {
 

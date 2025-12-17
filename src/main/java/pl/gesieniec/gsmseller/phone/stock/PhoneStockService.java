@@ -6,16 +6,24 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
+import pl.gesieniec.gsmseller.phone.stock.event.PhoneRemovedEvent;
+import pl.gesieniec.gsmseller.phone.stock.handler.PhoneReturnHandler;
+import pl.gesieniec.gsmseller.phone.stock.handler.PhoneSoldHandler;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
+import pl.gesieniec.gsmseller.phone.stock.model.Status;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 
@@ -27,6 +35,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     private final PhoneStockRepository repository;
     private final PhoneStockMapper phoneStockMapper;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     public PhoneStockDto getByTechnicalId(UUID id) {
         return repository.findByTechnicalId(id)
@@ -163,5 +173,28 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             phone.returnPhone();
             log.info("Telefon zwrócony do sklepu: {}", phone);
         }
+    }
+
+    @Transactional
+    public void removePhone(UUID technicalId) {
+
+        PhoneStock phone = repository
+            .findByTechnicalId(technicalId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Phone not found"
+            ));
+
+        try {
+            phone.remove(); // logika domenowa → status = USUNIĘTY
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, e.getMessage()
+            );
+        }
+
+        // 🔔 EVENT
+        eventPublisher.publishEvent(
+            new PhoneRemovedEvent(technicalId)
+        );
     }
 }

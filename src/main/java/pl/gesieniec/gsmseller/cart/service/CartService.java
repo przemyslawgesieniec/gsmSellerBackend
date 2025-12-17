@@ -14,7 +14,7 @@ import pl.gesieniec.gsmseller.cart.CartItemDto;
 import pl.gesieniec.gsmseller.cart.CartRepository;
 import pl.gesieniec.gsmseller.common.ItemType;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
-import pl.gesieniec.gsmseller.phone.stock.PhoneStockDto;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 
 @Service
@@ -127,4 +127,19 @@ public class CartService {
         log.info("🧹 [{}] Wyczyszczono koszyk ({} pozycji)", username, cart.getItems().size());
     }
 
+    public void removePhoneFromCart(UUID phoneTechnicalId) {
+        List<Cart> carts = cartRepository.findAll();
+
+        carts.forEach(cart -> {
+            if (cart.remove(phoneTechnicalId)) {
+                log.info(
+                    "❌ [{}] Usunięto telefon {} z koszyka",
+                    cart.getUsername(),
+                    phoneTechnicalId
+                );
+            }
+        });
+
+        cartRepository.saveAll(carts);
+    }
 }

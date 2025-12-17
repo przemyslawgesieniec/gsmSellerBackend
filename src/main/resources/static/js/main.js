@@ -1,4 +1,4 @@
-const pageSize = 5;
+const pageSize = 20;
 let currentPage = 0;
 
 const backendPath = `http://${window.location.hostname}:8090`;
@@ -18,8 +18,9 @@ function getFilters() {
 }
 
 async function loadStock(page = 0) {
+    const filters = getFilters();
+
     try {
-        const filters = getFilters();
         renderFilterChips();
 
         const data = await fetchPhonesPage(page, filters);
@@ -182,6 +183,7 @@ function renderPhones(phones) {
                 ? "disabled"
                 : "";
 
+
         const sellButtonId = sellButtonIdPrefix + phone.technicalId;
 
         const card = `
@@ -227,7 +229,19 @@ function renderPhones(phones) {
                      Przyjmij na sklep
                   </a>
                 </li>
-                <li class="red-text"><a href="#!" onclick="deletePhone('${phone.technicalId}')">Usuń</a></li>
+                <li class="red-text">
+                  <a href="#!"
+                     class="${!['WPROWADZONY','DOSTĘPNY'].includes(phone.status)
+                            ? 'disabled-link'
+                            : ''}"
+                     onclick="${['WPROWADZONY','DOSTĘPNY'].includes(phone.status)
+                            ? `confirmDeletePhone('${phone.technicalId}')`
+                            : 'event.preventDefault()'}">
+                     Usuń
+                  </a>
+                </li>
+
+
               </ul>
             
               <button class="btn-small green darken-2 ${disableSellButton}"
@@ -246,8 +260,6 @@ function renderPhones(phones) {
 }
 
 let cartBtn = null;
-
-// const cartBtn = document.getElementById('cartBtn'); // jeśli taki masz
 
 function initDropdowns() {
     const elems = document.querySelectorAll('.dropdown-trigger');
@@ -571,6 +583,9 @@ const chipContainer = document.getElementById("activeChips");
 
 // generowanie chipów
 function renderChips(filters) {
+
+    if (!chipContainer) return;
+
     chipContainer.innerHTML = "";
 
     Object.entries(filters).forEach(([key, val]) => {
@@ -747,3 +762,45 @@ function debounce(fn, delay = 300) {
 
 
 const liveReload = debounce(() => loadStock(0), 300);
+
+
+let phoneToDelete = null;
+
+function confirmDeletePhone(technicalId) {
+    phoneToDelete = technicalId;
+    const modal = M.Modal.getInstance(
+        document.getElementById("deletePhoneModal")
+    );
+    modal.open();
+}
+
+document.getElementById("confirmDeletePhoneBtn")
+    .addEventListener("click", () => {
+        fetch(`/api/v1/phones/${phoneToDelete}`, {
+            method: "DELETE"
+        })
+            .then(resp => {
+                if (!resp.ok) {
+                    console.log("DELETE resp not ok: " + resp)
+                    return resp.text().then(t => { throw new Error(t); });
+                }
+
+                M.toast({
+                    html: "Telefon oznaczony jako usunięty",
+                    classes: "green"
+                });
+
+                loadStock(currentPage);
+            })
+            .catch(err => {
+                M.toast({
+                    html: "Nie można usunąć telefonu",
+                    classes: "red"
+                });
+            })
+            .finally(() => {
+                M.Modal.getInstance(
+                    document.getElementById("deletePhoneModal")
+                ).close();
+            })
+    });

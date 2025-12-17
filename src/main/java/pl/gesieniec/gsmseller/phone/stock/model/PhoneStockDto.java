@@ -1,4 +1,4 @@
-package pl.gesieniec.gsmseller.phone.stock;
+package pl.gesieniec.gsmseller.phone.stock.model;
 
 import java.math.BigDecimal;
 import java.util.UUID;

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.gesieniec.gsmseller.cart.service.CartService;
-import pl.gesieniec.gsmseller.phone.stock.PhoneStockDto;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 
 @RestController
 @RequestMapping("/api/v1/cart")

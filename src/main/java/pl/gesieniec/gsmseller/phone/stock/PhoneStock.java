@@ -9,6 +9,7 @@ import pl.gesieniec.gsmseller.location.LocationEntity;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -79,10 +80,15 @@ public class PhoneStock {
     }
 
     public void sell(BigDecimal soldPrice) {
+        if (this.status != Status.DOSTĘPNY) {
+            throw new IllegalStateException("Phone cannot be sold in status: " + status);
+        }
+
         this.status = Status.SPRZEDANY;
         this.soldFor = soldPrice;
         this.soldAt = LocalDateTime.now();
     }
+
 
     public void returnPhone() {
         this.status = Status.DOSTĘPNY;
@@ -94,4 +100,20 @@ public class PhoneStock {
         this.status = Status.DOSTĘPNY;
         this.location = location;
     }
+
+    public void remove() {
+        if (!canBeRemoved()) {
+            throw new IllegalStateException(
+                "Phone cannot be removed in status: " + this.status
+            );
+        }
+
+        this.status = Status.USUNIĘTY;
+    }
+
+    public boolean canBeRemoved() {
+        return this.status == Status.WPROWADZONY
+            || this.status == Status.DOSTĘPNY;
+    }
+
 }

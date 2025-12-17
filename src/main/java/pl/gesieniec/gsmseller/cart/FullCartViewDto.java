@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import pl.gesieniec.gsmseller.phone.stock.PhoneStockDto;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 
 @ToString
 @Getter

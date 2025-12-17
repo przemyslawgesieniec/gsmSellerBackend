@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 
 @Component
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
