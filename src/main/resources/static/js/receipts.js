@@ -23,15 +23,21 @@
         pageData.content.forEach(receipt => {
 
             const li = document.createElement("li");
+            const statusBadge = receipt.status === "WYCOFANA"
+                ? `<span class="new badge red" data-badge-caption="WYCOFANA"></span>`
+                : "";
 
             const header = `
-                <div class="collapsible-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="collapsible-header"
+                     style="display:flex; justify-content:space-between; align-items:center;">
                     <span>
-                        <strong>${receipt.number}</strong><br>
+                        <strong>${receipt.number}</strong>
+                        ${statusBadge}<br>
                         <small>${formatDate(receipt.createDate)}</small>
                     </span>
-    
-                    <button class="btn small blue" onclick="downloadPdf('${receipt.technicalId}')">
+                
+                    <button class="btn small blue"
+                        onclick="downloadPdf('${receipt.technicalId}')">
                         Pobierz PDF
                     </button>
                 </div>
@@ -69,12 +75,21 @@
             }).join("")}
         </ul>
 
-        <div style="margin-top:15px;">
+       <div style="margin-top:15px; display:flex; gap:10px;">
             <button class="btn green"
                 onclick="downloadServiceInvoice('${receipt.technicalId}')">
                 Pobierz fakturę serwisową
             </button>
+        
+            ${receipt.status === "AKTYWNA" ? `
+                <button class="btn red"
+                    onclick="confirmCancelReceipt('${receipt.technicalId}')">
+                    Anuluj sprzedaż
+                </button>
+            ` : ""}
         </div>
+
+        
     </div>
 `;
 
@@ -115,3 +130,41 @@
                 window.URL.revokeObjectURL(url);
             });
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        M.Modal.init(document.querySelectorAll('.modal'));
+    });
+
+    let receiptToCancel = null;
+
+    function confirmCancelReceipt(id) {
+        receiptToCancel = id;
+        const modal = M.Modal.getInstance(
+            document.getElementById("cancelModal")
+        );
+        modal.open();
+    }
+
+    document.getElementById("confirmCancelBtn")
+        .addEventListener("click", () => {
+
+            fetch(`/api/v1/receipt/${receiptToCancel}/cancel`, {
+                method: "POST"
+            })
+                .then(resp => {
+                    if (!resp.ok) throw new Error();
+                    M.toast({
+                        text: "Sprzedaż anulowana",
+                        classes: "green"
+                    });
+                    location.reload();
+                })
+                .catch(() => {
+                    M.toast({
+                        text: "Błąd anulowania sprzedaży",
+                        classes: "red"
+                    });
+                });
+        });
+
+

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,13 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
-import pl.gesieniec.gsmseller.report.sales.SalesView;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class PhoneStockService implements PhoneSoldHandler {
+public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
     private final PhoneStockRepository repository;
     private final PhoneStockMapper phoneStockMapper;
@@ -147,4 +148,20 @@ public class PhoneStockService implements PhoneSoldHandler {
         );
     }
 
+    @Override
+    @Transactional
+    public void returnPhones(List<UUID> phoneTechnicalIds) {
+
+        for (UUID phoneId : phoneTechnicalIds) {
+
+            PhoneStock phone = repository
+                .findByTechnicalId(phoneId)
+                .orElseThrow(() ->
+                    new IllegalStateException("Phone not found: " + phoneId)
+                );
+
+            phone.returnPhone();
+            log.info("Telefon zwrócony do sklepu: {}", phone);
+        }
+    }
 }

@@ -84,6 +84,11 @@ public class PhoneStock {
         this.soldAt = LocalDateTime.now();
     }
 
+    public void returnPhone() {
+        this.status = Status.DOSTĘPNY;
+        this.soldFor = null;
+        this.soldAt = null;
+    }
 
     public void acceptAtLocation(LocationEntity location) {
         this.status = Status.DOSTĘPNY;

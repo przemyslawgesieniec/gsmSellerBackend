@@ -6,7 +6,6 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.*;
-import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -19,6 +18,9 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import pl.gesieniec.gsmseller.receipt.handlers.FooterHandler;
+import pl.gesieniec.gsmseller.receipt.handlers.HeaderHandler;
+import pl.gesieniec.gsmseller.receipt.handlers.SignatureHandler;
 import pl.gesieniec.gsmseller.receipt.model.DateAndPlace;
 import pl.gesieniec.gsmseller.receipt.model.Item;
 import pl.gesieniec.gsmseller.receipt.model.Receipt;

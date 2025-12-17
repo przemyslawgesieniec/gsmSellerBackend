@@ -6,6 +6,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import pl.gesieniec.gsmseller.receipt.entity.ReceiptStatus;
 
 @ToString
 @AllArgsConstructor
@@ -14,6 +15,7 @@ public class Receipt {
 
     private final String number;
     private final UUID technicalId;
+    private final ReceiptStatus status;
     private final List<Item> items;
     private final Seller seller;
     private final DateAndPlace dateAndPlace;
@@ -21,7 +23,7 @@ public class Receipt {
 
     public static Receipt of(String number, List<Item> items, Seller seller, DateAndPlace dateAndPlace, String username) {
         UUID technicalId = UUID.randomUUID();
-        return new Receipt(number, technicalId, items, seller, dateAndPlace, username);
+        return new Receipt(number, technicalId, ReceiptStatus.AKTYWNA, items, seller, dateAndPlace, username);
     }
 
     public BigDecimal getNetTotal() {
@@ -38,13 +40,6 @@ public class Receipt {
             .orElse(BigDecimal.ZERO);
     }
 
-    public BigDecimal getVatTotal() {
-        return items.stream()
-            .map(Item::getVatAmount)
-            .reduce(BigDecimal::add)
-            .orElse(BigDecimal.ZERO);
-    }
-
     public Receipt withVat(VatRate vatRate) {
 
         List<Item> newItems = this.items.stream()
@@ -54,7 +49,20 @@ public class Receipt {
         return new Receipt(
             this.number,
             this.technicalId,
+            this.status,
             newItems,
+            this.seller,
+            this.dateAndPlace,
+            this.createdBy
+        );
+    }
+
+    public Receipt canceled() {
+        return new Receipt(
+            this.number,
+            this.technicalId,
+            ReceiptStatus.WYCOFANA,
+            this.items,
             this.seller,
             this.dateAndPlace,
             this.createdBy

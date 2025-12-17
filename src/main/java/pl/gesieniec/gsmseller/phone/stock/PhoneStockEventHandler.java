@@ -3,17 +3,23 @@ package pl.gesieniec.gsmseller.phone.stock;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import pl.gesieniec.gsmseller.common.ItemType;
 import pl.gesieniec.gsmseller.event.ItemsSoldEvent;
+import pl.gesieniec.gsmseller.event.ReceiptCanceledEvent;
 
 @Service
 @Slf4j
 public class PhoneStockEventHandler {
 
     private final PhoneSoldHandler phoneSoldHandler;
+    private final PhoneReturnHandler phoneReturnHandler;
 
-    public PhoneStockEventHandler(PhoneSoldHandler phoneSoldHandler) {
+    public PhoneStockEventHandler(PhoneSoldHandler phoneSoldHandler,
+                                  PhoneReturnHandler phoneReturnHandler) {
         this.phoneSoldHandler = phoneSoldHandler;
+        this.phoneReturnHandler = phoneReturnHandler;
     }
 
     @EventListener
@@ -26,5 +32,13 @@ public class PhoneStockEventHandler {
                 phoneSoldHandler.markPhoneSold(item.getTechnicalId(), item.getNettAmount());
                 log.info("📱 Telefon {} oznaczono jako sprzedany", item.getTechnicalId());
             });
+    }
+
+    @EventListener
+    public void handleReceiptCanceled(ReceiptCanceledEvent event) {
+        log.info("Obsługa telefonu w kontekscie anulowania paragonu: {}", event);
+        phoneReturnHandler.returnPhones(
+            event.phoneTechnicalIds()
+        );
     }
 }

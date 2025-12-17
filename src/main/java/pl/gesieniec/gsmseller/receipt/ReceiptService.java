@@ -12,12 +12,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.common.ItemType;
 import pl.gesieniec.gsmseller.event.ItemsSoldEvent;
+import pl.gesieniec.gsmseller.event.ReceiptCanceledEvent;
 import pl.gesieniec.gsmseller.receipt.entity.ReceiptEntity;
+import pl.gesieniec.gsmseller.receipt.entity.ReceiptItemEntity;
+import pl.gesieniec.gsmseller.receipt.entity.ReceiptStatus;
 import pl.gesieniec.gsmseller.receipt.model.DateAndPlace;
 import pl.gesieniec.gsmseller.receipt.model.Item;
 import pl.gesieniec.gsmseller.receipt.model.ItemRequest;
@@ -193,6 +198,7 @@ public class ReceiptService {
         Receipt originalReceipt = new Receipt(
             entity.getNumber(),
             entity.getTechnicalId(),
+            entity.getStatus(),
             entity.getItems().stream()
                 .map(receiptMapper::toModel)
                 .toList(),
@@ -206,4 +212,41 @@ public class ReceiptService {
         return pdfService.generateReceiptPdf(serviceReceipt);
     }
 
+
+    @Transactional
+    public void cancelReceipt(UUID receiptId, String username) {
+
+        ReceiptEntity receipt = receiptRepository
+            .findByTechnicalId(receiptId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Receipt not found"
+            ));
+
+        if (receipt.getStatus() == ReceiptStatus.WYCOFANA) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Receipt already canceled"
+            );
+        }
+
+        if (!receipt.getCreatedBy().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        receipt.setStatus(ReceiptStatus.WYCOFANA);
+
+        List<UUID> phoneIds = receipt.getItems().stream()
+            .map(ReceiptItemEntity::getTechnicalId)
+            .toList();
+
+        eventPublisher.publishEvent(
+            new ReceiptCanceledEvent(
+                receipt.getTechnicalId(),
+                phoneIds,
+                username
+            )
+        );
+    }
 }
+
+
+

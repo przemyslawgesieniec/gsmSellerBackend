@@ -1,4 +1,4 @@
-package pl.gesieniec.gsmseller.receipt;
+package pl.gesieniec.gsmseller.receipt.handlers;
 
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;

@@ -118,6 +118,22 @@ public class ReceiptController {
             .body(pdf);
     }
 
+    @PostMapping("/{id}/cancel")
+    @Transactional
+    public void cancelReceipt(
+        @PathVariable UUID id,
+        Principal principal
+    ) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        log.warn("🛑 [CANCEL RECEIPT] id={} user={}", id, principal.getName());
+
+        receiptService.cancelReceipt(id, principal.getName());
+    }
+
+
 
 
 
