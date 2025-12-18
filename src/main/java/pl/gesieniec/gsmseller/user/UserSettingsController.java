@@ -1,8 +1,10 @@
 package pl.gesieniec.gsmseller.user;
 
+import java.security.Principal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,12 +17,18 @@ public class UserSettingsController {
 
     private final UserService userService;
 
-    @PutMapping("/{username}/location/{technicalId}")
+    @PutMapping("/location/{technicalId}")
     public ResponseEntity<Void> assignLocation(
-        @PathVariable String username,
-        @PathVariable UUID technicalId
+        @PathVariable UUID technicalId,
+        Principal principal
     ) {
-        userService.assignUserToLocation(username, technicalId);
+        userService.assignUserToLocation(principal.getName(), technicalId);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/me")
+    public String me(Principal principal) {
+        return principal.getName();
+    }
+
 }

@@ -29,12 +29,16 @@ public class LocationService {
             .orElseThrow(() -> new RuntimeException("Location not found"));
     }
 
-    public List<String> getAllLocationNames() {
+    public List<LocationDto> getAllLocations() {
         return locationRepository.findAll()
             .stream()
-            .map(LocationEntity::getName)
-            .sorted()
+            .map(l -> new LocationDto(
+                l.getTechnicalId(),
+                l.getName(),
+                l.getCity()
+            ))
             .toList();
     }
+
 
 }

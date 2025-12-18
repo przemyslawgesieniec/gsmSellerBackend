@@ -322,7 +322,7 @@ async function sellPhone(technicalId) {
         });
 
         if (response.status === 409) {
-            M.toast({ html: 'Telefon nie może być sprzedany', classes: 'red' });
+            M.toast({ html: 'Telefon nie jest w twojej lokalizacji', classes: 'red' });
 
             // cofamy UI
             const btn = document.getElementById("sellBtn" + technicalId);

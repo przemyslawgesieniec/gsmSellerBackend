@@ -24,9 +24,16 @@ public class ContentInit {
                           LocationRepository locationRepository) {
 
         LocationEntity locationEntity = new LocationEntity("Carrefour Kutno","Kutno");
-        locationRepository.save(locationEntity);
+        LocationEntity locationEntity1 = new LocationEntity("Galeria Różana","Kutno");
+        LocationEntity locationEntity2 = new LocationEntity(" M Park","Piotrków Trybunalski");
+        LocationEntity locationEntity3 = new LocationEntity("Galeria Zgierska","Zgierz");
 
-        User user1 = new User("devUser", "{noop}password1", "ROLE_SELLER");
+        locationRepository.save(locationEntity);
+        locationRepository.save(locationEntity1);
+        locationRepository.save(locationEntity2);
+        locationRepository.save(locationEntity3);
+
+        User user1 = new User("seller1", "{noop}password1", "ROLE_SELLER");
         User user2 = new User("seller2", "{noop}password2", "ROLE_SELLER");
 
         user1.setLocation(locationEntity);

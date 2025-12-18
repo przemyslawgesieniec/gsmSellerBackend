@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+      <html lang="pl">
+      <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Ustawienia</title>
+
+  <!-- Materialize -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Nasze style -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
+
+<div class="container wide-layout">
+  <div class="row">
+    <div class="col s12 m10 l8 offset-m1 offset-l2">
+
+      <!-- CARD: USTAWIENIA LOKALIZACJI -->
+      <div class="card white">
+        <div class="card-content">
+          <h5 class="blue-text text-darken-2">
+            Ustawienia lokalizacji
+          </h5>
+
+          <p class="grey-text" style="margin-bottom: 20px;">
+            Wybierz lokalizację, do której przypisane będzie Twoje konto.
+          </p>
+
+          <div class="row">
+            <div class="input-field col s12">
+              <select id="locationSelect">
+                <option value="" disabled selected>
+                  Wybierz lokalizację
+                </option>
+              </select>
+              <label>Lokalizacja</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/userSettings.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+  });
+</script>
+
+</body>
+</html>
+</title>
+</head>
+<body>
+
+</body>
+</html>
