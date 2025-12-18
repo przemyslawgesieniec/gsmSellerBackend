@@ -185,14 +185,13 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             ));
 
         try {
-            phone.remove(); // logika domenowa → status = USUNIĘTY
+            phone.remove();
         } catch (IllegalStateException e) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST, e.getMessage()
             );
         }
 
-        // 🔔 EVENT
         eventPublisher.publishEvent(
             new PhoneRemovedEvent(technicalId)
         );

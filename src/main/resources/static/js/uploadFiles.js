@@ -1,3 +1,136 @@
+let manualMode = false;
+
+document.getElementById("manualToggle")
+    .addEventListener("change", e => {
+        manualMode = e.target.checked;
+        switchMode();
+    });
+
+function switchMode() {
+    const dropArea = document.getElementById("dropArea");
+    const scanResults = document.getElementById("scanResultsContainer");
+
+    scanResults.innerHTML = "";
+
+    if (manualMode) {
+        dropArea.style.display = "none";
+        renderManualContainer();
+    } else {
+        dropArea.style.display = "block";
+    }
+}
+function renderManualContainer() {
+    const container = document.getElementById("scanResultsContainer");
+
+    container.innerHTML = `
+        <div class="card">
+            <div class="card-content">
+                <h5 class="blue-text text-darken-2">Dodawanie manualne</h5>
+
+                <div id="manualPhones"></div>
+
+                <div style="margin-top:20px">
+                    <button class="btn grey" id="addManualPhoneBtn">
+                        <i class="material-icons left">add</i>
+                        Dodaj telefon
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-action right-align">
+                <button class="btn blue darken-2" id="savePhonesBtn">
+                    Zapisz telefony
+                </button>
+            </div>
+        </div>
+    `;
+
+    document
+        .getElementById("addManualPhoneBtn")
+        .addEventListener("click", addManualPhone);
+
+    document
+        .getElementById("savePhonesBtn")
+        .addEventListener("click", sendFinalPhones);
+
+    addManualPhone(); // pierwszy kafelek
+}
+
+function addManualPhone() {
+    const wrapper = document.getElementById("manualPhones");
+    const index = wrapper.children.length + 1;
+
+    const block = document.createElement("div");
+    block.className = "scan-item z-depth-1";
+    block.style = "padding:16px; border-radius:8px; margin-top:20px;";
+
+    block.innerHTML = `
+        <h6>Telefon #${index}</h6>
+
+        <div class="row">
+            <div class="input-field col s12 m4">
+                <input type="text"
+                       data-field="name"
+                       value="${document.getElementById("manualName").value}">
+                <label class="active">Nazwa</label>
+            </div>
+
+
+            <div class="input-field col s12 m4">
+                <input type="text" data-field="model">
+                <label>Model</label>
+            </div>
+
+            <div class="input-field col s12 m4">
+                <input type="text" data-field="imei">
+                <label>IMEI</label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-field col s12 m4">
+                <input type="text" data-field="ram">
+                <label>RAM</label>
+            </div>
+
+            <div class="input-field col s12 m4">
+                <input type="text" data-field="memory">
+                <label>Pamięć</label>
+            </div>
+
+            <div class="input-field col s12 m4">
+                <input type="text" data-field="color">
+                <label>Kolor</label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-field col s12 m4">
+                <input type="text" data-field="source"
+                       value="${document.getElementById("manualSource").value}">
+                <label class="active">Pochodzenie</label>
+            </div>
+
+            <div class="input-field col s12 m4">
+                <input type="number" data-field="initialPrice"
+                       value="${document.getElementById("manualInitialPrice").value}">
+                <label class="active">Cena zakupu</label>
+            </div>
+
+            <div class="input-field col s12 m4">
+                <input type="number" data-field="sellingPrice"
+                       value="${document.getElementById("manualSellingPrice").value}">
+                <label class="active">Cena sprzedaży</label>
+            </div>
+        </div>
+    `;
+
+    wrapper.appendChild(block);
+    M.updateTextFields();
+}
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const dropArea = document.getElementById("dropArea");
     const fileInput = document.getElementById("fileInput");
