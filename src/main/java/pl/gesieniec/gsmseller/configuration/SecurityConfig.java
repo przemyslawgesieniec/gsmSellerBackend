@@ -1,38 +1,41 @@
 package pl.gesieniec.gsmseller.configuration;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import pl.gesieniec.gsmseller.user.User;
+import pl.gesieniec.gsmseller.user.UserRepository;
+import pl.gesieniec.gsmseller.user.UserStatus;
 
 @Configuration
 @EnableMethodSecurity
 @Profile("!no-security")
 public class SecurityConfig {
 
-    @Bean
-    public UserDetailsService users(PasswordEncoder passwordEncoder) {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-
-        manager.createUser(User.withUsername("seller1")
-            .password(passwordEncoder.encode("password1"))
-            .roles("SELLER")
-            .build());
-
-        manager.createUser(User.withUsername("seller2")
-            .password(passwordEncoder.encode("password2"))
-            .roles("SELLER")
-            .build());
-
-        return manager;
-    }
+//    @Bean
+//    public UserDetailsService users(PasswordEncoder passwordEncoder) {
+//        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+//
+//        manager.createUser(User.withUsername("seller1")
+//            .password(passwordEncoder.encode("password1"))
+//            .roles("SELLER")
+//            .build());
+//
+//        manager.createUser(User.withUsername("seller2")
+//            .password(passwordEncoder.encode("password2"))
+//            .roles("SELLER")
+//            .build());
+//
+//        return manager;
+//    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -46,7 +49,8 @@ public class SecurityConfig {
             .headers(headers -> headers.frameOptions(frame -> frame.disable())) //TODO remove with H2
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/login",       // endpoint POST logowania
+                    "/login",// endpoint POST logowania
+                    "/api/v1/auth/register", // endpoint POST rejestracja
                     "/login.html",  // strona logowania
                     "/css/**",
                     "/js/**",
@@ -70,4 +74,22 @@ public class SecurityConfig {
 
         return http.build();
     }
+    @Bean
+    CommandLineRunner initAdmin(
+        UserRepository repo,
+        PasswordEncoder encoder
+    ) {
+        return args -> {
+            if (!repo.existsByUsername("przemyslaw.gesieniec@gmail.com")) {
+                User admin = new User(
+                    "przemyslaw.gesieniec@gmail.com",
+                    encoder.encode("admin123"),
+                    "ROLE_ADMIN"
+                );
+                admin.setStatus(UserStatus.ACTIVE);
+                repo.save(admin);
+            }
+        };
+    }
+
 }

@@ -55,3 +55,31 @@ function assignLocation(technicalId) {
             });
         });
 }
+
+fetch('/api/v1/admin/users/inactive', { credentials:'include' })
+    .then(r => r.ok ? r.json() : [])
+    .then(users => {
+        if (!users.length) return;
+
+        const adminCard = document.querySelector('.admin-only');
+        if (!adminCard) return;
+
+        adminCard.classList.remove('hide');
+
+        users.forEach(u => {
+            const li = document.createElement('li');
+            li.className = 'collection-item';
+            li.innerHTML = `
+        ${u.username}
+        <button class="btn-small right" onclick="activate(${u.id})">Aktywuj</button>
+      `;
+            inactiveUsers.appendChild(li);
+        });
+    });
+
+function activate(id) {
+    fetch(`/api/v1/admin/users/${id}/activate`, {
+        method:'PUT',
+        credentials:'include'
+    }).then(() => location.reload());
+}

@@ -33,12 +33,12 @@ public class ContentInit {
         locationRepository.save(locationEntity2);
         locationRepository.save(locationEntity3);
 
-        User user1 = new User("seller1", "{noop}password1", "ROLE_SELLER");
-        User user2 = new User("seller2", "{noop}password2", "ROLE_SELLER");
-
-        user1.setLocation(locationEntity);
-
-        userRepository.saveAll(List.of(user1, user2));
+//        User user1 = new User("seller1", "{noop}password1", "ROLE_SELLER");
+//        User user2 = new User("seller2", "{noop}password2", "ROLE_SELLER");
+//
+//        user1.setLocation(locationEntity);
+//
+//        userRepository.saveAll(List.of(user1, user2));
 
 
         phoneStockRepository

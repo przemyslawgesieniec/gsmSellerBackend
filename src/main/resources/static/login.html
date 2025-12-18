@@ -74,7 +74,47 @@
       </p>
     </div>
   </form>
+  <div class="divider" style="margin: 20px 0;"></div>
+
+  <button
+          type="button"
+          class="btn-flat blue-text modal-trigger"
+          data-target="registerModal"
+          id="showRegister"
+  >
+    Zarejestruj się
+  </button>
+
+
 </div>
+
+<!--modal rejestracji-->
+<div id="registerModal" class="modal">
+  <div class="modal-content">
+    <h5>Rejestracja</h5>
+
+    <div class="input-field">
+      <input id="regEmail" type="email">
+      <label for="regEmail">Email</label>
+    </div>
+
+    <div class="input-field">
+      <input id="regPass1" type="password">
+      <label>Hasło</label>
+    </div>
+
+    <div class="input-field">
+      <input id="regPass2" type="password">
+      <label>Powtórz hasło</label>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn blue" id="registerBtn">Zarejestruj</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
 <script>
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -99,8 +139,37 @@
       M.toast({ html: 'Błędny login lub hasło', classes: 'red' });
     }
   });
+
+  M.Modal.init(document.querySelectorAll('.modal'));
+
+document.getElementById('registerBtn').onclick = async () => {
+    const body = {
+      email: document.getElementById('regEmail').value,
+      password: document.getElementById('regPass1').value,
+      confirmPassword: document.getElementById('regPass2').value
+    };
+
+    const res = await fetch('/api/v1/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+      M.toast({html:'Konto utworzone – czeka na aktywację', classes:'green'});
+
+    } else {
+      M.toast({html:'Błąd rejestracji', classes:'red'});
+    }
+  };
+
+document.addEventListener('DOMContentLoaded', function () {
+  const elems = document.querySelectorAll('.modal');
+  M.Modal.init(elems);
+});
+
+
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
 </html>

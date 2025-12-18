@@ -4,12 +4,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import pl.gesieniec.gsmseller.cart.Cart;
 import pl.gesieniec.gsmseller.location.LocationEntity;
-
 @Entity
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @Table(name = "app_user")
 public class User {
@@ -19,16 +20,17 @@ public class User {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String username;
+    private String username; // email
 
     @Column(nullable = false)
     private String password;
 
-    private String role;
+    @Column(nullable = false)
+    private String role; // ROLE_ADMIN / ROLE_SELLER
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status;
 
     @OneToOne
     @JoinColumn(name = "location_id")
@@ -38,5 +40,6 @@ public class User {
         this.username = username;
         this.password = password;
         this.role = role;
+        this.status = UserStatus.INACTIVE; // ⬅️ domyślnie NIEAKTYWNY
     }
 }
