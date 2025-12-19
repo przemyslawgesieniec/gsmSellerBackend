@@ -3,7 +3,6 @@
 // ===========================
 
 let cartState = null;
-const manualSaveTimeouts = {};
 
 /**
  * Pobiera pełny widok koszyka (telefony + misc)
@@ -75,16 +74,43 @@ function renderCartCard(data) {
 
                 <div style="display:flex; flex-direction:column; align-items:flex-end;">
                     <div class="input-field" style="margin-top:12px; max-width:130px;">
-                        <input type="number" 
-                               id="price-${phone.technicalId}"
+                       <div class="price-edit">
+                        <input type="number"
+                               class="price-input"
+                               data-technical-id="${phone.technicalId}"
                                value="${phone.sellingPrice}"
-                               class="validate">
+                               step="0.01"
+                               min="0">
+                    </div>
                         <label class="active" for="price-${phone.technicalId}">Cena (zł)</label>
                     </div>
 
-                    <button class="btn-small red" onclick="removeFromCart('${phone.technicalId}')">
-                        <i class="material-icons">close</i>
+                   <div class="cart-item-actions" style="display:flex; gap:6px;">
+
+                    <button class="btn-small blue save-item-btn hidden"
+                            data-technical-id="ID"
+                            data-type="PHONE">
+                        <i class="material-icons">save</i>
                     </button>
+                
+                    <div style="display:flex; gap:6px;">
+                    
+                        <button class="btn-small blue save-item-btn hidden"
+                                data-technical-id="${phone.technicalId}"
+                                data-type="PHONE">
+                            <i class="material-icons">save</i>
+                        </button>
+                    
+                        <button class="btn-small red"
+                                onclick="removeFromCart('${phone.technicalId}')">
+                            <i class="material-icons">close</i>
+                        </button>
+                    
+                    </div>
+
+                
+                </div>
+
                 </div>
             </div>
         `;
@@ -97,32 +123,54 @@ function renderCartCard(data) {
              style="padding: 12px; border-radius: 8px; margin-bottom: 15px;
                     display:flex; justify-content:space-between; align-items:flex-start;">
 
-            <div style="flex-grow:1; margin-right:15px;">
+            <!-- LEWA STRONA -->
+            <div style="flex-grow:1; margin-right:15px; line-height:1.4;">
                 <div class="input-field" style="margin-top:12px;">
-                    <input type="text" 
-                           id="desc-${item.technicalId}" 
-                           value="${item.description}"
-                           class="validate">
-                    <label class="active" for="desc-${item.technicalId}">Opis</label>
+                    <input type="text"
+                           class="desc-input"
+                           data-technical-id="${item.technicalId}"
+                           data-type="MISC"
+                           value="${item.description}">
+                    <label class="active">Opis</label>
                 </div>
             </div>
 
+            <!-- PRAWA STRONA -->
             <div style="display:flex; flex-direction:column; align-items:flex-end;">
+
                 <div class="input-field" style="margin-top:12px; max-width:130px;">
-                    <input type="number" 
-                           id="price-${item.technicalId}" 
+                    <input type="number"
+                           class="price-input"
+                           data-technical-id="${item.technicalId}"
+                           data-type="MISC"
                            value="${item.price}"
-                           class="validate">
-                    <label class="active" for="price-${item.technicalId}">Cena (zł)</label>
+                           step="0.01"
+                           min="0">
+                    <label class="active">Cena (zł)</label>
                 </div>
 
-                <button class="btn-small red" onclick="removeFromCart('${item.technicalId}')">
-                    <i class="material-icons">close</i>
-                </button>
+                <div class="cart-item-actions"
+                     style="display:flex; gap:6px;">
+
+                    <button class="btn-small blue save-item-btn hidden"
+                            data-technical-id="${item.technicalId}"
+                            data-type="MISC">
+                        <i class="material-icons">save</i>
+                    </button>
+
+                    <button class="btn-small red"
+                            onclick="removeFromCart('${item.technicalId}')">
+                        <i class="material-icons">close</i>
+                    </button>
+
+                </div>
+
             </div>
         </div>
     `;
     });
+
+
 
     // -- Dodawanie MISC ręcznie --
     html += `
@@ -141,7 +189,7 @@ function renderCartCard(data) {
 
     // Podpinanie eventów do aktualizacji sumy
     setTimeout(() => {
-        const priceInputs = document.querySelectorAll("input[id^='price-']");
+        const priceInputs = document.querySelectorAll(".price-input");
         priceInputs.forEach(input => input.addEventListener("input", updateCartTotal));
         updateCartTotal();
     }, 0);
@@ -178,27 +226,52 @@ function addManualItem() {
     const tempId = generateUUID();
 
     const html = `
-        <div class="z-depth-1 manual-item"
+        <div class="z-depth-1"
              id="${tempId}"
              style="padding: 12px; border-radius: 8px; margin-bottom: 15px;
-                    display:flex; justify-content:space-between;">
+                    display:flex; justify-content:space-between; align-items:flex-start;">
 
-            <div style="flex-grow:1; margin-right: 15px;">
+            <!-- LEWA -->
+            <div style="flex-grow:1; margin-right:15px;">
                 <div class="input-field" style="margin-top:12px;">
-                    <input type="text" id="desc-${tempId}" class="validate">
-                    <label class="active" for="desc-${tempId}">Opis</label>
+                    <input type="text"
+                           class="desc-input"
+                           data-technical-id="${tempId}"
+                           data-type="MISC">
+                    <label class="active">Opis</label>
                 </div>
             </div>
 
-            <div style="display:flex; flex-direction:column;">
+            <!-- PRAWA -->
+            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+
                 <div class="input-field" style="margin-top:12px; max-width:130px;">
-                    <input type="number" id="price-${tempId}" class="validate">
-                    <label class="active" for="price-${tempId}">Cena (zł)</label>
+                    <input type="number"
+                           class="price-input"
+                           data-technical-id="${tempId}"
+                           data-type="MISC"
+                           step="0.01"
+                           min="0">
+                    <label class="active">Cena (zł)</label>
                 </div>
 
-                <button class="btn-small red" onclick="removeManualItem('${tempId}')">
-                    <i class="material-icons">close</i>
-                </button>
+                <div class="cart-item-actions"
+                     style="display:flex; gap:6px;">
+
+                    <!-- SAVE OD RAZU -->
+                    <button class="btn-small blue save-item-btn"
+                            data-technical-id="${tempId}"
+                            data-type="MISC">
+                        <i class="material-icons">save</i>
+                    </button>
+
+                    <button class="btn-small red"
+                            onclick="removeManualItem('${tempId}')">
+                        <i class="material-icons">close</i>
+                    </button>
+
+                </div>
+
             </div>
         </div>
     `;
@@ -209,80 +282,8 @@ function addManualItem() {
         addBtn
     );
 
-    const descInput = document.getElementById(`desc-${tempId}`);
-    const priceInput = document.getElementById(`price-${tempId}`);
-
-    // aktualizacja sumy
-    priceInput.addEventListener("input", updateCartTotal);
-
-    // debounced auto-save
-    descInput.addEventListener("input", () => saveManualItemDebounced(tempId));
-    priceInput.addEventListener("input", () => saveManualItemDebounced(tempId));
-
     updateCartTotal();
 }
-
-async function saveManualItem(tempId) {
-
-    const desc = document.getElementById(`desc-${tempId}`).value.trim();
-    const price = parseFloat(document.getElementById(`price-${tempId}`).value);
-
-    if (!desc || isNaN(price) || price <= 0) {
-        console.warn("⏳ Manual item not ready to send:", desc, price);
-        return;
-    }
-
-    console.log("📤 Wysyłam MISC do backendu:", tempId, desc, price);
-
-    try {
-        const res = await fetch("/api/v1/cart/add/misc", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                description: desc,
-                price: price,
-                technicalId: tempId // backend może użyć albo wygenerować nowy UUID
-            })
-        });
-
-        if (!res.ok) throw new Error("Błąd zapisu MISC");
-
-        const updatedCart = await res.json();
-
-        // znajdź prawdziwy technicalId nadany przez backend
-        const realItem = updatedCart.items.find(i => i.description === desc && i.price == price);
-        if (!realItem) {
-            console.warn("⚠ Nie znaleziono nowego MISC w koszyku po zapisie");
-            return;
-        }
-
-        const newId = realItem.technicalId;
-
-        console.log("✅ Zapisano MISC, prawdziwy ID:", newId);
-
-        // aktualizacja elementów DOM
-        const el = document.getElementById(tempId);
-        el.id = newId;
-
-        document.getElementById(`desc-${tempId}`).id = `desc-${newId}`;
-        document.getElementById(`price-${tempId}`).id = `price-${newId}`;
-
-        // zmiana onclick w przycisku usuwania
-        const deleteBtn = el.querySelector("button");
-        deleteBtn.setAttribute("onclick", `removeFromCart('${newId}')`);
-
-        // usuwamy timeout z cache
-        delete manualSaveTimeouts[tempId];
-
-        updateCartTotal();
-        M.toast({ html: "Zapisano pozycję", classes: "green" });
-
-    } catch (err) {
-        console.error(err);
-        M.toast({ html: "Błąd zapisu pozycji", classes: "red" });
-    }
-}
-
 
 function removeManualItem(id) {
     const el = document.getElementById(id);
@@ -293,7 +294,8 @@ function removeManualItem(id) {
 function updateCartTotal() {
     let sum = 0;
 
-    const priceInputs = document.querySelectorAll("input[id^='price-']");
+    const priceInputs = document.querySelectorAll(".price-input");
+
     priceInputs.forEach(input => {
         const value = parseFloat(input.value);
         if (!isNaN(value)) sum += value;
@@ -305,14 +307,8 @@ function updateCartTotal() {
     }
 }
 
-function saveManualItemDebounced(tempId) {
-    if (manualSaveTimeouts[tempId]) {
-        clearTimeout(manualSaveTimeouts[tempId]);
-    }
 
-    // ustaw nowy timeout
-    manualSaveTimeouts[tempId] = setTimeout(() => saveManualItem(tempId), 2000);
-}
+
 
 // ===========================
 //  INICJALIZACJA
@@ -342,4 +338,155 @@ function goToInvoice() {
     window.location.href = "invoice.html";
 }
 
+document.addEventListener("input", (e) => {
+    if (!e.target.classList.contains("price-input")) return;
 
+    const technicalId = e.target.dataset.technicalId;
+
+    const btn = document.querySelector(
+        `.save-price-btn[data-technical-id="${technicalId}"]`
+    );
+
+    if (btn) {
+        btn.classList.remove("hidden");
+    }
+
+    updateCartTotal(); // suma dalej liczona live
+});
+
+document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("save-price-btn")) return;
+
+    const technicalId = e.target.dataset.technicalId;
+
+    const input = document.querySelector(
+        `.price-input[data-technical-id="${technicalId}"]`
+    );
+
+    const price = parseFloat(input.value);
+
+    if (!price || price <= 0) {
+        M.toast({ html: "Niepoprawna cena", classes: "red" });
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/v1/cart/item/${technicalId}/price`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ price })
+        });
+
+        if (!res.ok) throw new Error();
+
+        cartState = await res.json();
+
+        e.target.classList.add("hidden");
+
+        M.toast({ html: "Cena zapisana", classes: "green" });
+
+    } catch (err) {
+        console.error(err);
+        M.toast({ html: "Błąd zapisu ceny", classes: "red" });
+    }
+});
+
+
+document.addEventListener("input", (e) => {
+    const el = e.target;
+
+    if (
+        !el.classList.contains("price-input") &&
+        !el.classList.contains("desc-input")
+    ) return;
+
+    const technicalId = el.dataset.technicalId;
+
+    const saveBtn = document.querySelector(
+        `.save-item-btn[data-technical-id="${technicalId}"]`
+    );
+
+    if (saveBtn) {
+        saveBtn.classList.remove("hidden");
+    }
+
+    updateCartTotal();
+});
+
+document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".save-item-btn");
+    if (!btn) return;
+
+    const technicalId = btn.dataset.technicalId;
+    const type = btn.dataset.type;
+
+    try {
+        if (type === "PHONE") {
+            const price = parseFloat(
+                document.querySelector(
+                    `.price-input[data-technical-id="${technicalId}"]`
+                ).value
+            );
+
+            if (!price || price <= 0) {
+                M.toast({ html: "Niepoprawna cena", classes: "red" });
+                return;
+            }
+
+            await updateCartItemPrice(technicalId, price);
+        }
+
+        if (type === "MISC") {
+            const desc = document.querySelector(
+                `.desc-input[data-technical-id="${technicalId}"]`
+            ).value.trim();
+
+            const price = parseFloat(
+                document.querySelector(
+                    `.price-input[data-technical-id="${technicalId}"]`
+                ).value
+            );
+
+            if (!desc || !price || price <= 0) {
+                M.toast({ html: "Uzupełnij opis i cenę", classes: "red" });
+                return;
+            }
+
+            await saveOrUpdateMiscItem(technicalId, desc, price);
+        }
+
+        btn.classList.add("hidden");
+        M.toast({ html: "Zapisano zmiany", classes: "green" });
+
+    } catch (err) {
+        console.error(err);
+        M.toast({ html: "Błąd zapisu", classes: "red" });
+    }
+});
+
+async function updateCartItemPrice(technicalId, price) {
+    const res = await fetch(`/api/v1/cart/item/${technicalId}/price`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price })
+    });
+
+    if (!res.ok) throw new Error();
+
+    cartState = await res.json();
+}
+async function saveOrUpdateMiscItem(technicalId, desc, price) {
+    const res = await fetch("/api/v1/cart/add/misc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            technicalId,
+            description: desc,
+            price
+        })
+    });
+
+    if (!res.ok) throw new Error();
+
+    cartState = await res.json();
+}

@@ -18,6 +18,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import pl.gesieniec.gsmseller.common.ItemType;
 import pl.gesieniec.gsmseller.receipt.handlers.FooterHandler;
 import pl.gesieniec.gsmseller.receipt.handlers.HeaderHandler;
 import pl.gesieniec.gsmseller.receipt.handlers.SignatureHandler;
@@ -38,7 +39,7 @@ public class PdfGenerationService {
         Document document = new Document(pdfDoc, PageSize.A4);
         document.setMargins(40, 40, 40, 40);
 
-        PdfFont font = PdfFontFactory.createFont("src/main/resources/static/Fira_Sans/FiraSans-Regular.ttf",
+        PdfFont font = PdfFontFactory.createFont("/fonts/Fira_Sans/FiraSans-Regular.ttf",
             "Identity-H", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
         document.setFont(font);
 
@@ -181,7 +182,10 @@ public class PdfGenerationService {
 
 
     private void prepareRemarks(Document document, Receipt receipt) {
-        boolean hasUsedItem = receipt.getItems().stream().anyMatch(Item::getUsed);
+        boolean hasUsedItem = receipt.getItems()
+            .stream()
+            .filter(e->e.getItemType().equals(ItemType.PHONE))
+            .anyMatch(Item::getUsed);
 
         if (!hasUsedItem) {
             return;

@@ -60,7 +60,7 @@ async function fetchPhonesPage(page = 0, filters = {}) {
             }
         });
 
-        const response = await fetch(`${backendPath}/api/v1/phones?${params.toString()}`);
+        const response = await fetch(`/api/v1/phones?${params.toString()}`);
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);

@@ -1,28 +1,30 @@
 package pl.gesieniec.gsmseller.phone.scan;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.vision.v1.AnnotateImageRequest;
-import com.google.cloud.vision.v1.AnnotateImageResponse;
-import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
-import com.google.cloud.vision.v1.Feature;
-import com.google.cloud.vision.v1.Image;
-import com.google.cloud.vision.v1.ImageAnnotatorClient;
-import com.google.cloud.vision.v1.ImageAnnotatorSettings;
+import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GoogleCloudVision {
 
+    @Value("${google.vision.credentials}")
+    private String credentialsJson;
+
     @SneakyThrows
     public String detect(byte[] photo) {
 
         GoogleCredentials credentials = GoogleCredentials
-            .fromStream(new FileInputStream(
-                "/Users/przemyslawgesieniec/privateDev/kluczeGoogle/gsm-seller-478711-f061eaeea1b8.json"))
+            .fromStream(
+                new ByteArrayInputStream(
+                    credentialsJson.getBytes(StandardCharsets.UTF_8)
+                )
+            )
             .createScoped("https://www.googleapis.com/auth/cloud-platform");
 
         ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
@@ -50,17 +52,12 @@ public class GoogleCloudVision {
             AnnotateImageResponse response = batchResponse.getResponses(0);
 
             if (response.hasError()) {
-                System.err.println("Error: " + response.getError().getMessage());
-                return "";
+                throw new IllegalStateException(response.getError().getMessage());
             }
 
-            String fullText = response.getFullTextAnnotation().getText();
-            System.out.println("=== Odczytany tekst ===\n" + fullText);
-
-            return fullText;
-
+            return response
+                .getFullTextAnnotation()
+                .getText();
         }
     }
-
-
 }

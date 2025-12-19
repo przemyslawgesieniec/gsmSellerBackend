@@ -142,4 +142,21 @@ public class CartService {
 
         cartRepository.saveAll(carts);
     }
+
+    @Transactional
+    public Cart updateItemPrice(String username, UUID technicalId, BigDecimal price) {
+        Cart cart = getOrCreateCart(username);
+
+        CartItem item = cart.getItems().stream()
+            .filter(i -> i.getTechnicalId().equals(technicalId))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Item not found in cart"));
+
+        item.setPrice(price);
+
+        log.info("💰 [{}] Zmieniono cenę pozycji {} na {}", username, technicalId, price);
+
+        return cartRepository.save(cart);
+    }
+
 }

@@ -497,3 +497,30 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+.hidden {
+    display: none;
+}
+.save-item-btn {
+    transition: opacity 0.2s;
+}
+
+.save-item-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.hidden {
+    display: none;
+}
+
+.price-edit {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.price-input {
+    max-width: 120px;
+}
+

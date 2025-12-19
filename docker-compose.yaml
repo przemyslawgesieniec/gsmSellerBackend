@@ -1,13 +1,29 @@
-version: '3.9'
+version: "3.9"
 
 services:
-  app:
-#    build: .
-    image: pgesieniec/gsmseller:0.0.3-amd64
-    container_name: gsmseller
-    ports:
-      - "40157:8080"
+  postgres:
+    image: postgres:16
+    container_name: gsm-postgres
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-#      SPRING_PROFILES_ACTIVE: docker
-    restart: always
+      POSTGRES_DB: gsm_seller
+      POSTGRES_USER: gsm_user
+      POSTGRES_PASSWORD: gsm_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: gsm-app
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -102,6 +103,30 @@ public class CartController {
 
         return ResponseEntity.ok(cart);
     }
+
+    @PatchMapping("/item/{technicalId}/price")
+    public ResponseEntity<Cart> updateItemPrice(
+        Principal principal,
+        @PathVariable UUID technicalId,
+        @RequestBody UpdateCartItemPriceRequest req
+    ) {
+        if (principal == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (req.price() == null || req.price().compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Cart updated = cartService.updateItemPrice(
+            principal.getName(),
+            technicalId,
+            req.price()
+        );
+
+        return ResponseEntity.ok(updated);
+    }
+
 
     @DeleteMapping("/{technicalId}")
     public ResponseEntity<Cart> removeFromCart(Principal principal, @PathVariable UUID technicalId) {

@@ -235,6 +235,7 @@ public class ReceiptService {
         receipt.setStatus(ReceiptStatus.WYCOFANA);
 
         List<UUID> phoneIds = receipt.getItems().stream()
+            .filter(e->e.getItemType().equals(ItemType.PHONE))
             .map(ReceiptItemEntity::getTechnicalId)
             .toList();
 
