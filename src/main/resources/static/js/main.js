@@ -219,29 +219,33 @@ function renderPhones(phones) {
                 <i class="material-icons left">more_vert</i>Więcej
               </a>
             
-              <ul id='dropdown-${phone.technicalId}' class='dropdown-content'>
-                <li><a href="#!" onclick="editPhone('${phone.technicalId}')">Edytuj</a></li>
-                <li>
-                  <a href="#!"
-                     class="${phone.status !== 'WPROWADZONY' ? 'disabled-link' : ''}"
-                     onclick="${phone.status === 'WPROWADZONY' ? `acceptPhone('${phone.technicalId}')` : 'event.preventDefault()'}">
-                     Przyjmij na sklep
-                  </a>
-                </li>
-                <li class="red-text">
-                  <a href="#!"
-                     class="${!['WPROWADZONY','DOSTĘPNY'].includes(phone.status)
-                            ? 'disabled-link'
-                            : ''}"
-                     onclick="${['WPROWADZONY','DOSTĘPNY'].includes(phone.status)
-                            ? `confirmDeletePhone('${phone.technicalId}')`
-                            : 'event.preventDefault()'}">
-                     Usuń
-                  </a>
-                </li>
-
-
-              </ul>
+            <ul id="dropdown-${phone.technicalId}" class="dropdown-content">
+              <li>
+                <a href="#!" data-action="edit" data-id="${phone.technicalId}">
+                  Edytuj
+                </a>
+              </li>
+            
+              <li>
+                <a href="#!"
+                   data-action="accept"
+                   data-id="${phone.technicalId}"
+                   class="${phone.status !== 'WPROWADZONY' ? 'disabled-link' : ''}">
+                  Przyjmij na sklep
+                </a>
+              </li>
+            
+              <li class="red-text">
+                <a href="#!"
+                   data-action="delete"
+                   data-id="${phone.technicalId}"
+                   class="${!['WPROWADZONY','DOSTĘPNY'].includes(phone.status)
+                        ? 'disabled-link'
+                        : ''}">
+                  Usuń
+                </a>
+              </li>
+            </ul>
             
               <button class="btn-small green darken-2 ${disableSellButton}"
                  onclick="sellPhone('${phone.technicalId}')"
@@ -256,6 +260,13 @@ function renderPhones(phones) {
     `;
         listContainer.innerHTML += card;
     });
+
+    M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+        closeOnClick: false,
+        constrainWidth: false,
+        coverTrigger: false
+    });
+
 }
 
 let cartBtn = null;
@@ -803,3 +814,61 @@ document.getElementById("confirmDeletePhoneBtn")
                 ).close();
             })
     });
+//
+// document.addEventListener("click", function (e) {
+//     const actionEl = e.target.closest("a[data-action]");
+//     if (!actionEl) return;
+//
+//     e.preventDefault();
+//     e.stopPropagation(); // 🔑 KLUCZOWE NA MOBILE
+//
+//     if (actionEl.classList.contains("disabled-link")) return;
+//
+//     const action = actionEl.dataset.action;
+//     const id = actionEl.dataset.id;
+//
+//     switch (action) {
+//         case "edit":
+//             editPhone(id);
+//             break;
+//         case "accept":
+//             acceptPhone(id);
+//             break;
+//         case "delete":
+//             confirmDeletePhone(id);
+//             break;
+//     }
+// });
+document.addEventListener("touchstart", handleDropdownAction, { passive: false });
+document.addEventListener("click", handleDropdownAction);
+
+
+function handleDropdownAction(e) {
+    const el = e.target.closest("a[data-action]");
+    if (!el) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation(); // 🔥 WAŻNE
+
+    const action = el.dataset.action;
+    const id = el.dataset.id;
+
+    // ręcznie zamykamy dropdown
+    const dropdown = el.closest(".dropdown-content");
+    const instance = M.Dropdown.getInstance(
+        document.querySelector(`[data-target="${dropdown.id}"]`)
+    );
+    if (instance) instance.close();
+
+    switch (action) {
+        case "edit":
+            editPhone(id);
+            break;
+        case "accept":
+            acceptPhone(id);
+            break;
+        case "delete":
+            confirmDeletePhone(id);
+            break;
+    }
+}
