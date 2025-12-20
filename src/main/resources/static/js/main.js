@@ -1,7 +1,6 @@
 const pageSize = 20;
 let currentPage = 0;
 
-const backendPath = `http://${window.location.hostname}:8090`;
 const listContainer = document.getElementById("phone-list");
 
 function getFilters() {
