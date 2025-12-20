@@ -1,12 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-    //sprawdzenie istnienia użytkownika
     fetch("/api/v1/users/me")
         .then(r => r.text())
         .then(console.log);
 
     loadLocations();
-
 });
 
 function loadLocations() {
@@ -15,12 +12,21 @@ function loadLocations() {
         .then(locations => {
             const select = document.getElementById("locationSelect");
 
+            select.innerHTML = `
+              <option value="" disabled selected>Wybierz lokalizację</option>
+            `;
+
             locations.forEach(loc => {
                 const option = document.createElement("option");
                 option.value = loc.technicalId;
-                option.textContent = `${loc.name}${loc.city ? " – " + loc.city : ""}`;
+                option.textContent =
+                    `${loc.name}${loc.city ? " – " + loc.city : ""}`;
                 select.appendChild(option);
             });
+
+            // 🔥 FIX MOBILE
+            const instance = M.FormSelect.getInstance(select);
+            if (instance) instance.destroy();
 
             M.FormSelect.init(select);
 
@@ -37,10 +43,9 @@ function loadLocations() {
 }
 
 function assignLocation(technicalId) {
-
-        fetch(`/api/v1/users/location/${technicalId}`, {
-            method: "PUT"
-        })
+    fetch(`/api/v1/users/location/${technicalId}`, {
+        method: "PUT"
+    })
         .then(res => {
             if (!res.ok) throw new Error();
             M.toast({
@@ -54,32 +59,4 @@ function assignLocation(technicalId) {
                 classes: "red"
             });
         });
-}
-
-fetch('/api/v1/admin/users/inactive', { credentials:'include' })
-    .then(r => r.ok ? r.json() : [])
-    .then(users => {
-        if (!users.length) return;
-
-        const adminCard = document.querySelector('.admin-only');
-        if (!adminCard) return;
-
-        adminCard.classList.remove('hide');
-
-        users.forEach(u => {
-            const li = document.createElement('li');
-            li.className = 'collection-item';
-            li.innerHTML = `
-        ${u.username}
-        <button class="btn-small right" onclick="activate(${u.id})">Aktywuj</button>
-      `;
-            inactiveUsers.appendChild(li);
-        });
-    });
-
-function activate(id) {
-    fetch(`/api/v1/admin/users/${id}/activate`, {
-        method:'PUT',
-        credentials:'include'
-    }).then(() => location.reload());
 }

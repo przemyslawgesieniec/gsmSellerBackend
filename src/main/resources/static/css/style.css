@@ -524,3 +524,54 @@ body {
     max-width: 120px;
 }
 
+/* =========================
+   INVOICE TABLE – MOBILE SAFE
+========================= */
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* 🔥 kluczowe */
+}
+
+.invoice-table th,
+.invoice-table td {
+    padding: 8px 6px;
+    vertical-align: top;
+    word-wrap: break-word;
+    white-space: normal;   /* 🔥 łamanie tekstu */
+    overflow-wrap: break-word;
+}
+
+/* kolumna # */
+.invoice-table th:nth-child(1),
+.invoice-table td:nth-child(1) {
+    width: 32px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* kolumna cena */
+.invoice-table th:nth-child(3),
+.invoice-table td:nth-child(3) {
+    width: 80px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* opis – bierze resztę */
+.invoice-table th:nth-child(2),
+.invoice-table td:nth-child(2) {
+    width: auto;
+}
+
+/* MOBILE – jeszcze ciaśniej */
+@media (max-width: 600px) {
+    .invoice-table th {
+        font-size: 12px;
+    }
+
+    .invoice-table td {
+        font-size: 13px;
+    }
+}

@@ -2,18 +2,24 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Faktura | Magazyn GSM</title>
 
-  <!-- Materialize -->
-  <link rel="stylesheet" href="css/materialize.min.css">
+  <!-- Materialize CSS -->
+  <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+  >
 
-  <!-- MATERIAL ICONS – WYMAGANE -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Icons -->
+  <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet"
+  >
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/style.css">
-
-  <script src="js/materialize.min.js"></script>
 </head>
 
 <body>
@@ -22,10 +28,12 @@
 <div id="navbar"></div>
 <script src="js/loadNavbar.js"></script>
 
-<div class="container wide-layout">
-  <div class="container" style="margin-top: 40px;">
+<div class="container">
+  <div class="section">
     <h4>Dokument sprzedaży</h4>
-    <div class="section" style="margin-top:20px; margin-bottom:30px;">
+
+    <!-- VAT -->
+    <div class="section">
       <h6><b>Stawka VAT</b></h6>
 
       <div class="input-field" style="max-width:250px;">
@@ -40,40 +48,46 @@
       </div>
     </div>
 
+    <!-- DATA -->
     <div class="input-field">
       <input type="text" id="sellDate" class="datepicker">
       <label for="sellDate">Data sprzedaży</label>
     </div>
 
+    <!-- TABELA -->
+    <div class="section">
+      <table class="highlight invoice-table">
+        <thead>
+        <tr>
+          <th>#</th>
+          <th>Opis</th>
+          <th>Cena (zł)</th>
+        </tr>
+        </thead>
+        <tbody id="invoiceItems"></tbody>
+      </table>
+    </div>
 
-    <table class="highlight">
-      <thead>
-      <tr>
-        <th>#</th>
-        <th>Opis</th>
-        <th>Cena (zł)</th>
-      </tr>
-      </thead>
-      <tbody id="invoiceItems"></tbody>
-    </table>
-
-    <h6 class="right-align">
+    <!-- PODSUMOWANIE -->
+    <div class="section right-align">
       Netto: <span id="totalNet">0.00</span> zł<br>
       VAT: <span id="totalVat">0.00</span> zł<br>
       <b>Brutto: <span id="invoiceTotal">0.00</span> zł</b>
-    </h6>
+    </div>
 
+    <!-- PRZYCISK -->
+    <div class="section right-align">
+      <button class="btn-large green waves-effect waves-light" onclick="saveAndPrint()">
+        <i class="material-icons left">print</i>
+        Zapisz i drukuj
+      </button>
+    </div>
   </div>
-
-  <div class="section" style="margin-top:40px; text-align:right;">
-    <button class="btn-large green" onclick="saveAndPrint()">
-      <i class="material-icons left">print</i>
-      Zapisz i drukuj
-    </button>
-  </div>
-
 </div>
+
+<!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="js/invoice.js"></script>
+
 </body>
 </html>
