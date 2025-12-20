@@ -727,10 +727,10 @@ async function loadLocationsFilter() {
         const locations = await res.json();
         const select = document.getElementById("filterLocation");
 
-        locations.forEach(name => {
+        locations.forEach(location => {
             const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
+            opt.value = location.name;
+            opt.textContent = location.name;
             select.appendChild(opt);
         });
 
