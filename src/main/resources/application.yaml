@@ -3,7 +3,7 @@ spring:
     name: gsm-seller
 
   datasource:
-    url: jdbc:${DATABASE_PUBLIC_URL}?sslmode=require
+    url: jdbc:${DATABASE_URL}?sslmode=require
 
   jpa:
     hibernate:
