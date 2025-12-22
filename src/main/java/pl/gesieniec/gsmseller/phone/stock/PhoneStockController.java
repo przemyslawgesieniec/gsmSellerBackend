@@ -79,5 +79,14 @@ public class PhoneStockController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{technicalId}/remove-from-location")
+    public ResponseEntity<Void> removePhoneFromLocation(
+        @PathVariable UUID technicalId
+    ) {
+        service.removePhoneFromLocation(technicalId);
+        return ResponseEntity.ok().build();
+    }
+
+
 
 }

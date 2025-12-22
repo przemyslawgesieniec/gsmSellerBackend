@@ -116,4 +116,18 @@ public class PhoneStock {
             || this.status == Status.DOSTĘPNY;
     }
 
+    public void removeFromLocation() {
+        if (!canBeRemovedFromLocation()) {
+            throw new IllegalStateException(
+                "Phone cannot be removed in status: " + this.status
+            );
+        }
+        this.location = null;
+        this.status = Status.WPROWADZONY;
+    }
+
+    private boolean canBeRemovedFromLocation() {
+        return this.status == Status.DOSTĘPNY;
+    }
+
 }

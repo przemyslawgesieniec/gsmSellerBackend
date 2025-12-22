@@ -220,6 +220,7 @@ function renderPhones(phones) {
               </a>
             
             <ul id="dropdown-${phone.technicalId}" class="dropdown-content">
+            
               <li>
                 <a href="#!" data-action="edit" data-id="${phone.technicalId}">
                   Edytuj
@@ -235,6 +236,17 @@ function renderPhones(phones) {
                 </a>
               </li>
             
+             <li>
+              <a href="#!"
+                 data-action="remove-from-location"
+                 data-id="${phone.technicalId}"
+                 class="${phone.locationName && phone.status === 'DOSTĘPNY'
+                        ? ''
+                        : 'disabled-link'}">
+                Usuń ze sklepu
+              </a>
+            </li>
+
               <li class="red-text">
                 <a href="#!"
                    data-action="delete"
@@ -245,6 +257,7 @@ function renderPhones(phones) {
                   Usuń
                 </a>
               </li>
+            
             </ul>
             
               <button class="btn-small green darken-2 ${disableSellButton}"
@@ -814,31 +827,7 @@ document.getElementById("confirmDeletePhoneBtn")
                 ).close();
             })
     });
-//
-// document.addEventListener("click", function (e) {
-//     const actionEl = e.target.closest("a[data-action]");
-//     if (!actionEl) return;
-//
-//     e.preventDefault();
-//     e.stopPropagation(); // 🔑 KLUCZOWE NA MOBILE
-//
-//     if (actionEl.classList.contains("disabled-link")) return;
-//
-//     const action = actionEl.dataset.action;
-//     const id = actionEl.dataset.id;
-//
-//     switch (action) {
-//         case "edit":
-//             editPhone(id);
-//             break;
-//         case "accept":
-//             acceptPhone(id);
-//             break;
-//         case "delete":
-//             confirmDeletePhone(id);
-//             break;
-//     }
-// });
+
 document.addEventListener("touchstart", handleDropdownAction, { passive: false });
 document.addEventListener("click", handleDropdownAction);
 
@@ -864,11 +853,31 @@ function handleDropdownAction(e) {
         case "edit":
             editPhone(id);
             break;
+
         case "accept":
             acceptPhone(id);
             break;
+
+        case "remove-from-location":
+            removePhoneFromLocation(id);
+            break;
+
         case "delete":
             confirmDeletePhone(id);
             break;
     }
 }
+
+function removePhoneFromLocation(technicalId) {
+    fetch(`/api/v1/phones/${technicalId}/remove-from-location`, {
+        method: "POST"
+    })
+        .then(res => {
+            if (!res.ok) throw new Error("Błąd usuwania ze sklepu");
+            return loadStock(currentPage);
+        })
+        .catch(err => {
+            M.toast({ html: err.message });
+        });
+}
+

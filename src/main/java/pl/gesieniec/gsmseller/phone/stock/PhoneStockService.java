@@ -196,4 +196,15 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             new PhoneRemovedEvent(technicalId)
         );
     }
+
+    public void removePhoneFromLocation(UUID technicalId) {
+
+        PhoneStock phone = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() -> new RuntimeException("Phone not found"));
+
+        phone.removeFromLocation();
+
+        repository.save(phone);
+    }
+
 }
