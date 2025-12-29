@@ -1,4 +1,16 @@
-document.addEventListener("DOMContentLoaded", loadReport);
+
+document.addEventListener("DOMContentLoaded", function () {
+    M.Sidenav.init(document.querySelectorAll('.sidenav'));
+    loadReport();
+    new TomSelect('#dateRange', {
+        controlInput: null,
+        create: false,
+        searchField: [],
+        shouldSort: false,
+        hideSelected: true,
+        closeAfterSelect: true
+    });
+});
 
 function loadReport() {
     fetch("/api/reports/sales-summary")

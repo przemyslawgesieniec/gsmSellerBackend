@@ -233,10 +233,6 @@ function resetInvoiceForm() {
  */
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // SELECT
-    const selects = document.querySelectorAll("select");
-    M.FormSelect.init(selects);
-
     // DATEPICKER (MOBILE SAFE)
     M.Datepicker.init(document.querySelectorAll(".datepicker"), {
         format: "yyyy-mm-dd",
@@ -256,3 +252,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderInvoice(CURRENT_CART);
         });
 });
+
+new TomSelect('#vatSelect', {
+    controlInput: null,
+    create: false,
+    allowEmptyOption: false
+});
+

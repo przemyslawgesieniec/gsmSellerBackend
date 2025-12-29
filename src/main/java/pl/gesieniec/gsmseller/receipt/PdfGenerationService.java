@@ -48,7 +48,7 @@ public class PdfGenerationService {
 
 // Nagłówek (logo)
         pdfDoc.addEventHandler(PdfDocumentEvent.START_PAGE,
-            new HeaderHandler("src/main/resources/static/imgs/logo_gsm.png"));
+            new HeaderHandler("/imgs/logo_gsm.png"));
 
         prepareHeader(document, receipt);
 

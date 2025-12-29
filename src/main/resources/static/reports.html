@@ -4,11 +4,14 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Raport sprzedaży</title>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
 <body>
 
 <div id="navbar"></div>
@@ -20,15 +23,16 @@
 
   <!-- FILTR -->
   <div class="row">
-    <div class="input-field col s12 m4">
+    <div class="col s12 m4">
+      <label class="active" for="dateRange">Zakres czasu</label>
       <select id="dateRange">
         <option value="THIS_MONTH" selected>Ten miesiąc</option>
         <option value="LAST_MONTH">Poprzedni miesiąc</option>
         <option value="THIS_YEAR">Ten rok</option>
         <option value="ALL_TIME">Od początku</option>
       </select>
-      <label>Zakres czasu</label>
     </div>
+
   </div>
 
   <!-- PODSUMOWANIE -->
@@ -68,12 +72,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="js/reports.js"></script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    M.Sidenav.init(document.querySelectorAll('.sidenav'));
-    M.FormSelect.init(document.querySelectorAll('select'));
-  });
-</script>
 
 </body>
 </html>

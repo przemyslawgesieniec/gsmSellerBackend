@@ -1,14 +1,16 @@
 package pl.gesieniec.gsmseller.receipt.handlers;
 
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
+
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Image;
-import com.itextpdf.io.image.ImageDataFactory;
+import java.io.InputStream;
 
 public class HeaderHandler implements IEventHandler {
 
@@ -21,30 +23,30 @@ public class HeaderHandler implements IEventHandler {
     @Override
     public void handleEvent(Event event) {
         PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
-        PdfDocument pdf = docEvent.getDocument();
         PdfPage page = docEvent.getPage();
-
         Rectangle pageSize = page.getPageSize();
 
-        // Obszar nagłówka
         Rectangle headerArea = new Rectangle(
             pageSize.getLeft() + 40,
-            pageSize.getTop() - 70,  // wysokość od góry
+            pageSize.getTop() - 70,
             200,
             50
         );
 
-        Canvas canvas = new Canvas(page, headerArea);
+        try (Canvas canvas = new Canvas(page, headerArea)) {
 
-        try {
-            Image logo = new Image(ImageDataFactory.create(logoPath));
-            logo.scaleToFit(120, 50); // dopasuj rozmiar
+            InputStream is = getClass().getResourceAsStream(logoPath);
+            if (is == null) {
+                throw new RuntimeException("Nie znaleziono zasobu: " + logoPath);
+            }
+
+            ImageData imageData = ImageDataFactory.create(is.readAllBytes());
+            Image logo = new Image(imageData);
+            logo.scaleToFit(120, 50);
+
             canvas.add(logo);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        canvas.close();
     }
 }
-

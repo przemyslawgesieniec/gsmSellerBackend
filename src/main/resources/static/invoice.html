@@ -11,6 +11,7 @@
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
   >
+  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
 
   <!-- Icons -->
   <link
@@ -21,6 +22,7 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/style.css">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 
 <body>
 
@@ -36,7 +38,8 @@
     <div class="section">
       <h6><b>Stawka VAT</b></h6>
 
-      <div class="input-field" style="max-width:250px;">
+      <div style="max-width:250px;">
+        <label for="vatSelect">Stawka VAT</label>
         <select id="vatSelect">
           <option value="ZW">ZW</option>
           <option value="0%">0%</option>
@@ -44,7 +47,8 @@
           <option value="8%">8%</option>
           <option value="23%">23%</option>
         </select>
-        <label>Wybierz stawkę VAT</label>
+
+<!--        <label>Wybierz stawkę VAT</label>-->
       </div>
     </div>
 
