@@ -274,23 +274,23 @@ function renderPhones(phones) {
         listContainer.innerHTML += card;
     });
 
-    M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
-        closeOnClick: false,
-        constrainWidth: false,
-        coverTrigger: false
-    });
+    // M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+    //     closeOnClick: false,
+    //     constrainWidth: false,
+    //     coverTrigger: false
+    // });
 
 }
 
 let cartBtn = null;
 
 function initDropdowns() {
-    const elems = document.querySelectorAll('.dropdown-trigger');
-    M.Dropdown.init(elems, {
-        constrainWidth: false,
-        coverTrigger: false,
-        alignment: 'right'
-    });
+    // const elems = document.querySelectorAll('.dropdown-trigger');
+    // M.Dropdown.init(elems, {
+    //     constrainWidth: false,
+    //     coverTrigger: false,
+    //     alignment: 'right'
+    // });
 }
 
 function acceptPhone(technicalId) {
@@ -434,8 +434,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // Inicjalizacja modali
     loadStock(0);
 
-    M.Modal.init(document.querySelectorAll('.modal'));
-
     const dropArea = document.getElementById('dropArea');
     const fileInput = document.getElementById('fileInput');
 
@@ -484,6 +482,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     loadLocationsFilter();
 
+    initSimpleSelect('#filterStatus');
+    initSimpleSelect('#filterLocation');
 });
 
 function editPhone(technicalId) {
@@ -575,14 +575,12 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     document.getElementById("filterImei").value = "";
     document.getElementById("filterPriceMin").value = "";
     document.getElementById("filterPriceMax").value = "";
-    document.getElementById("filterStatus").value = "";
-    document.getElementById("filterLocation").value = "";
-    M.FormSelect.init(document.querySelectorAll("select"));
 
+    const statusSelect = TomSelect.getInstance('#filterStatus');
+    const locationSelect = TomSelect.getInstance('#filterLocation');
 
-    if (M && M.FormSelect) {
-        M.FormSelect.init(document.querySelectorAll('select'));
-    }
+    statusSelect?.clear();
+    locationSelect?.clear();
 
     renderFilterChips();
     loadStock(0);
@@ -643,10 +641,10 @@ function renderChips(filters) {
             if (el) {
                 el.value = "";
 
-                // re-init selectów (status, lokalizacja)
-                if (el.tagName === "SELECT") {
-                    M.FormSelect.init(el);
-                }
+                // // re-init selectów (status, lokalizacja)
+                // if (el.tagName === "SELECT") {
+                //     M.FormSelect.init(el);
+                // }
             }
 
             loadStock(0);
@@ -700,10 +698,10 @@ function renderFilterChips() {
             if (el) {
                 el.value = "";
 
-                // re-init selectów
-                if (el.tagName === "SELECT") {
-                    M.FormSelect.init(el);
-                }
+                // // re-init selectów
+                // if (el.tagName === "SELECT") {
+                //     M.FormSelect.init(el);
+                // }
             }
 
             renderFilterChips();
@@ -751,15 +749,29 @@ async function loadLocationsFilter() {
         const locations = await res.json();
         const select = document.getElementById("filterLocation");
 
-        locations.forEach(location => {
-            const opt = document.createElement("option");
-            opt.value = location.name;
-            opt.textContent = location.name;
-            select.appendChild(opt);
+        if (!select || !select.tomselect) {
+            console.warn("Tom Select nie jest jeszcze zainicjalizowany");
+            return;
+        }
+
+        const ts = select.tomselect;
+
+        // czyścimy opcje (tylko dynamiczne)
+        ts.clearOptions();
+
+        // opcje bazowe
+        ts.addOption({ value: "", text: "Dowolna" });
+        ts.addOption({ value: "__NO_LOCATION__", text: "Brak lokalizacji" });
+
+        // opcje z backendu
+        locations.forEach(loc => {
+            ts.addOption({
+                value: loc.name,
+                text: loc.name
+            });
         });
 
-
-        M.FormSelect.init(select);
+        ts.refreshOptions(false);
 
     } catch (e) {
         console.warn("Nie udało się pobrać lokalizacji", e);
@@ -881,3 +893,17 @@ function removePhoneFromLocation(technicalId) {
         });
 }
 
+function initSimpleSelect(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+
+    new TomSelect(el, {
+        controlInput: null,
+        create: false,
+        searchField: [],
+        shouldSort: false,
+        hideSelected: true,
+        closeAfterSelect: true,
+        allowEmptyOption: true
+    });
+}

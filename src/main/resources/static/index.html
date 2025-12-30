@@ -6,12 +6,15 @@
   <title>Stan magazynowy - Telefony</title>
 
   <!-- Materialize CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <!-- Nasze style -->
   <link href="css/style.css" rel="stylesheet">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
 <body>
 
 
@@ -65,6 +68,7 @@
           </div>
 
           <div class="input-field col s12">
+            <label for="filterStatus" class="active" >Status</label>
             <select id="filterStatus">
               <option value="" selected>Dowolny</option>
               <option value="DOSTĘPNY">DOSTĘPNY</option>
@@ -73,9 +77,9 @@
               <option value="USUNIĘTY">USUNIĘTY</option>
               <option value="ODDANY">ODDANY</option>
             </select>
-            <label>Status</label>
           </div>
           <div class="input-field col s12">
+            <label for="filterLocation" class="active" >Lokalizacja</label>
             <select id="filterLocation">
               <option value="" selected>Dowolna</option>
               <option value="__NO_LOCATION__">Brak lokalizacji</option>
@@ -225,7 +229,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     M.Sidenav.init(document.querySelectorAll('.sidenav'));
-    M.FormSelect.init(document.querySelectorAll('select'));
+    // M.FormSelect.init(document.querySelectorAll('select'));
   });
 </script>
 </body>
