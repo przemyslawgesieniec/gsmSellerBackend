@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("/api/v1/users/me")
         .then(r => r.text())
         .then(console.log);
-
+    initLocationSelect();
     loadLocations();
 });
 
@@ -10,29 +10,35 @@ function loadLocations() {
     fetch("/api/v1/locations")
         .then(res => res.json())
         .then(locations => {
+
             const select = document.getElementById("locationSelect");
+            if (!select || !select.tomselect) return;
 
-            select.innerHTML = `
-              <option value="" disabled selected>Wybierz lokalizację</option>
-            `;
+            const ts = select.tomselect;
 
+            // czyścimy wszystko
+            ts.clearOptions();
+
+            // opcja domyślna
+            ts.addOption({
+                value: "",
+                text: "Wybierz lokalizację"
+            });
+
+            // backend
             locations.forEach(loc => {
-                const option = document.createElement("option");
-                option.value = loc.technicalId;
-                option.textContent =
-                    `${loc.name}${loc.city ? " – " + loc.city : ""}`;
-                select.appendChild(option);
+                ts.addOption({
+                    value: loc.technicalId,
+                    text: `${loc.name}${loc.city ? " – " + loc.city : ""}`
+                });
             });
 
-            // 🔥 FIX MOBILE
-            const instance = M.FormSelect.getInstance(select);
-            if (instance) instance.destroy();
+            ts.refreshOptions(false);
 
-            M.FormSelect.init(select);
-
-            select.addEventListener("change", () => {
+            // zmiana lokalizacji
+            select.onchange = () => {
                 assignLocation(select.value);
-            });
+            };
         })
         .catch(() => {
             M.toast({
@@ -59,4 +65,17 @@ function assignLocation(technicalId) {
                 classes: "red"
             });
         });
+}
+function initLocationSelect() {
+    const select = document.getElementById('locationSelect');
+    if (!select) return;
+
+    new TomSelect(select, {
+        controlInput: null,
+        create: false,
+        searchField: [],
+        shouldSort: false,
+        closeAfterSelect: true,
+        placeholder: "Wybierz lokalizację"
+    });
 }

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
 
   <title>Ustawienia</title>
 
@@ -19,6 +20,7 @@
   <!-- Twoje style -->
   <link href="css/style.css" rel="stylesheet">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 
 <body>
 
@@ -33,19 +35,19 @@
       <!-- CARD: USTAWIENIA LOKALIZACJI -->
       <div class="card">
         <div class="card-content">
-          <span class="card-title blue-text text-darken-2">
-            Ustawienia lokalizacji
-          </span>
+          <div class="row">
+            <span class="card-title blue-text text-darken-2">
+              Ustawienia lokalizacji
+            </span>
 
-          <p class="grey-text">
-            Wybierz lokalizację, do której przypisane będzie Twoje konto.
-          </p>
+            <p class="grey-text">
+              Wybierz lokalizację, do której przypisane będzie Twoje konto.
+            </p>
 
-          <div class="input-field">
-            <select id="locationSelect">
-              <option value="" disabled selected>Wybierz lokalizację</option>
-            </select>
-            <label>Lokalizacja</label>
+            <div class="col l12 s12">
+              <label for="locationSelect" class="active">Lokalizacja</label>
+              <select id="locationSelect"></select>
+            </div>
           </div>
         </div>
       </div>

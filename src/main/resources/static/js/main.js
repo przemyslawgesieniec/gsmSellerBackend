@@ -274,23 +274,23 @@ function renderPhones(phones) {
         listContainer.innerHTML += card;
     });
 
-    // M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
-    //     closeOnClick: false,
-    //     constrainWidth: false,
-    //     coverTrigger: false
-    // });
+    M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+        closeOnClick: false,
+        constrainWidth: false,
+        coverTrigger: false
+    });
 
 }
 
 let cartBtn = null;
 
 function initDropdowns() {
-    // const elems = document.querySelectorAll('.dropdown-trigger');
-    // M.Dropdown.init(elems, {
-    //     constrainWidth: false,
-    //     coverTrigger: false,
-    //     alignment: 'right'
-    // });
+    const elems = document.querySelectorAll('.dropdown-trigger');
+    M.Dropdown.init(elems, {
+        constrainWidth: false,
+        coverTrigger: false,
+        alignment: 'right'
+    });
 }
 
 function acceptPhone(technicalId) {
@@ -315,7 +315,6 @@ function acceptPhone(technicalId) {
 
 
 async function sellPhone(technicalId) {
-    // ⛔ ochrona przed double-click
     if (isPhoneInCart(technicalId)) {
         return;
     }
