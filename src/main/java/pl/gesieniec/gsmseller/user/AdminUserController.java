@@ -17,13 +17,13 @@ public class AdminUserController {
 
     private final UserService userService;
 
-    @GetMapping("/inactive")
-    public List<UserDto> inactiveUsers() {
-        return userService.getInactiveUsers();
+    @GetMapping
+    public List<UserDto> allUsers() {
+        return userService.getAllUsers();
     }
 
-    @PutMapping("/{id}/activate")
-    public void activate(@PathVariable Long id) {
-        userService.activateUser(id);
+    @PutMapping("/{id}/toggle-status")
+    public void toggleStatus(@PathVariable Long id) {
+        userService.toggleUserStatus(id);
     }
 }

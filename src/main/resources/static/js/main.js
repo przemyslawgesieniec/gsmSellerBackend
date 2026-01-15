@@ -304,7 +304,6 @@ function acceptPhone(technicalId) {
         return;
     }
 
-    // zapisz ID w modalowym przycisku TAK
     const confirmBtn = document.getElementById("confirmAcceptYes");
     confirmBtn.setAttribute("data-technical-id", technicalId);
 

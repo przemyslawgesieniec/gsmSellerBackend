@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,9 +27,17 @@ public class UserSettingsController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/me")
-    public String me(Principal principal) {
-        return principal.getName();
-    }
+    @GetMapping("/auth/me")
+    public UserDto me(Authentication auth) {
 
+        User user = userService.getUserByUsername(auth.getName())
+            .orElseThrow();
+
+        return new UserDto(
+            user.getId(),
+            user.getUsername(),
+            user.getStatus(),
+            user.getRole()
+        );
+    }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 
 @ControllerAdvice
@@ -60,6 +61,15 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, Object> handleIllegalState(IllegalStateException ex) {
+        return Map.of(
+            "message", ex.getMessage()
+        );
+    }
+
 
     // =========================
     // helper

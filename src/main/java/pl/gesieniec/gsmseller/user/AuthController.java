@@ -19,4 +19,11 @@ public class AuthController {
         userService.register(req);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody RegisterRequest req) {
+        userService.resetPassword(req);
+        return ResponseEntity.ok().build();
+    }
+
 }

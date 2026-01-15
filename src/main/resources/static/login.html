@@ -75,15 +75,29 @@
 <!--    </div>-->
   </form>
   <div class="divider" style="margin: 20px 0;"></div>
+  <div class="row" style="margin-top: 10px;">
+    <div class="col s6 center-align">
+      <button
+              type="button"
+              class="btn-flat blue-text modal-trigger"
+              data-target="registerModal"
+      >
+        Zarejestruj się
+      </button>
+    </div>
 
-  <button
-          type="button"
-          class="btn-flat blue-text modal-trigger"
-          data-target="registerModal"
-          id="showRegister"
-  >
-    Zarejestruj się
-  </button>
+    <div class="col s6 center-align">
+      <button
+              type="button"
+              class="btn-flat grey-text modal-trigger"
+              data-target="resetModal"
+              id="showReset"
+      >
+        Zapomniałem hasła
+      </button>
+    </div>
+  </div>
+
 
 
 </div>
@@ -114,9 +128,71 @@
   </div>
 </div>
 
+<!--modal reset hasła-->
+<div id="resetModal" class="modal">
+  <div class="modal-content">
+    <h5>Reset hasła</h5>
+
+    <div class="input-field">
+      <input id="resetEmail" type="email" required>
+      <label for="resetEmail">Email (login)</label>
+    </div>
+
+    <div class="input-field">
+      <input id="resetPass1" type="password" required>
+      <label>Nowe hasło</label>
+    </div>
+
+    <div class="input-field">
+      <input id="resetPass2" type="password" required>
+      <label>Powtórz nowe hasło</label>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn blue" id="resetPasswordBtn">
+      Resetuj hasło
+    </button>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
 <script>
+
+  document.getElementById('showReset').addEventListener('click', () => {
+  const loginValue = document.getElementById('username').value;
+  if (loginValue) {
+    const emailInput = document.getElementById('resetEmail');
+    emailInput.value = loginValue;
+    M.updateTextFields();
+  }
+});
+
+document.getElementById('resetPasswordBtn').onclick = async () => {
+  const body = {
+    email: document.getElementById('resetEmail').value,
+    password: document.getElementById('resetPass1').value,
+    confirmPassword: document.getElementById('resetPass2').value
+  };
+
+  const res = await fetch('/api/v1/auth/reset-password', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+
+  if (res.ok) {
+    M.toast({html:'Hasło zmienione. Konto wymaga ponownej aktywacji.', classes:'green'});
+    const modal = M.Modal.getInstance(document.getElementById('resetModal'));
+    modal.close();
+  } else {
+    const msg = await res.text();
+    M.toast({html: msg || 'Błąd resetu hasła', classes:'red'});
+  }
+};
+
+
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 

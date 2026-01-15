@@ -65,11 +65,71 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<UserDto> getInactiveUsers() {
-        return userRepository.findByStatus(UserStatus.INACTIVE)
+
+    @Transactional
+    public void resetPassword(RegisterRequest req) {
+
+        if (!req.password().equals(req.confirmPassword())) {
+            throw new IllegalArgumentException("Hasła nie są takie same");
+        }
+
+        User user = userRepository.findByUsername(req.email())
+            .orElseThrow(() -> new IllegalStateException("Użytkownik nie istnieje"));
+
+        user.setPassword(passwordEncoder.encode(req.password()));
+        user.setStatus(UserStatus.INACTIVE);
+
+        userRepository.save(user);
+
+        log.info("Hasło użytkownika {} zostało zresetowane. Konto dezaktywowane.", user.getUsername());
+    }
+
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll()
             .stream()
-            .map(u -> new UserDto(u.getId(), u.getUsername()))
+            .map(u -> new UserDto(
+                u.getId(),
+                u.getUsername(),
+                u.getStatus(),
+                u.getRole()
+            ))
             .toList();
     }
+
+    @Transactional
+    public void setUserStatus(Long id, UserStatus status) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        user.setStatus(status);
+        userRepository.save(user);
+
+        log.info("Status użytkownika {} zmieniony na {}", user.getUsername(), status);
+    }
+
+
+    @Transactional
+    public void toggleUserStatus(Long id) {
+
+        User targetUser = userRepository.findById(id)
+            .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        if ("ROLE_ADMIN".equals(targetUser.getRole())
+            && targetUser.getStatus() == UserStatus.ACTIVE) {
+
+            throw new IllegalStateException(
+                "Nie można dezaktywować innego administratora"
+            );
+        }
+
+        if (targetUser.getStatus() == UserStatus.ACTIVE) {
+            targetUser.setStatus(UserStatus.INACTIVE);
+        } else {
+            targetUser.setStatus(UserStatus.ACTIVE);
+        }
+
+        userRepository.save(targetUser);
+    }
+
 
 }

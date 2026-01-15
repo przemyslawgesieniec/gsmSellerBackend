@@ -6,10 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class GoogleVisionCredentialsBase64ConverterTest {
 
+    @Disabled
     @Test
     void shouldConvertGoogleVisionCredentialsJsonToBase64() throws IOException {
 

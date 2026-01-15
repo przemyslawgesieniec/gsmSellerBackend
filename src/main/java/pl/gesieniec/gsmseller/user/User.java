@@ -32,7 +32,7 @@ public class User {
     @Column(nullable = false)
     private UserStatus status;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id")
     private LocationEntity location;
 

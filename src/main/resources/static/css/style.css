@@ -575,3 +575,36 @@ body {
         font-size: 13px;
     }
 }
+
+.users-collection .collection-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-email {
+    flex: 1;
+    font-weight: 500;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.status-active {
+    background-color: #4caf50;
+}
+
+.status-inactive {
+    background-color: #9e9e9e;
+}

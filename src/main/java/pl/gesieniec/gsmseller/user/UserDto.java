@@ -8,4 +8,6 @@ import lombok.Getter;
 public class UserDto {
     private Long id;
     private String username;
+    private UserStatus status;
+    private String role;
 }
