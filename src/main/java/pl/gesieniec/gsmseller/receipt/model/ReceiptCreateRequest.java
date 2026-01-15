@@ -1,5 +1,7 @@
 package pl.gesieniec.gsmseller.receipt.model;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.AccessLevel;
@@ -13,7 +15,13 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReceiptCreateRequest {
+
+    @NotNull(message = "Data sprzedaży jest wymagana")
     private LocalDate sellDate;
+
+    @NotNull(message = "Stawka VAT jest wymagana")
     private String vatRate;
+
+    @NotEmpty(message = "Lista przedmiotów nie może być pusta")
     private List<ItemRequest> items;
 }

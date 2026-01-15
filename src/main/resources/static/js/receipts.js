@@ -146,25 +146,43 @@
     }
 
     document.getElementById("confirmCancelBtn")
-        .addEventListener("click", () => {
+        .addEventListener("click", async () => {
 
-            fetch(`/api/v1/receipt/${receiptToCancel}/cancel`, {
-                method: "POST"
-            })
-                .then(resp => {
-                    if (!resp.ok) throw new Error();
-                    M.toast({
-                        text: "Sprzedaż anulowana",
-                        classes: "green"
-                    });
-                    location.reload();
-                })
-                .catch(() => {
-                    M.toast({
-                        text: "Błąd anulowania sprzedaży",
-                        classes: "red"
-                    });
+            try {
+                const resp = await fetch(
+                    `/api/v1/receipt/${receiptToCancel}/cancel`,
+                    { method: "POST" }
+                );
+
+                if (!resp.ok) {
+                    // ⬇️ SPRÓBUJ WYCIĄGNĄĆ KOMUNIKAT Z BACKENDU
+                    let message = "Błąd anulowania sprzedaży";
+
+                    try {
+                        const data = await resp.json();
+                        if (data.message) {
+                            message = data.message;
+                        }
+                    } catch {
+                        // backend mógł zwrócić plain text albo pustą odpowiedź
+                    }
+
+                    throw new Error(message);
+                }
+
+                M.toast({
+                    html: "Sprzedaż anulowana",
+                    classes: "green"
                 });
+
+                location.reload();
+
+            } catch (err) {
+                M.toast({
+                    html: err.message || "Błąd anulowania sprzedaży",
+                    classes: "red"
+                });
+            }
         });
 
 

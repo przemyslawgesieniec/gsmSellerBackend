@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.receipt;
 
+import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -74,7 +75,7 @@ public class ReceiptController {
     @PostMapping
     @Transactional
     public UUID createReceipt(Principal principal,
-                              @RequestBody ReceiptCreateRequest request) {
+                              @Valid @RequestBody ReceiptCreateRequest request) {
 
         log.info("🧾 [CREATE RECEIPT] Wejście do endpointu createReceipt");
 
