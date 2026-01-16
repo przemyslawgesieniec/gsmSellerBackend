@@ -13,7 +13,6 @@ import pl.gesieniec.gsmseller.common.ItemType;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-
 public class ItemRequest {
     private UUID technicalId;
     private ItemType itemType;

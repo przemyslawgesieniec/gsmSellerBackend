@@ -16,7 +16,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReceiptCreateRequest {
 
-    @NotNull(message = "Data sprzedaży jest wymagana")
     private LocalDate sellDate;
 
     @NotNull(message = "Stawka VAT jest wymagana")

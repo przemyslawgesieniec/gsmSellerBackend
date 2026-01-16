@@ -180,14 +180,15 @@ async function saveAndPrint() {
 function collectInvoiceExtraData(cart) {
     return cart.items.map(item => {
         const price = Number(item.sellingPrice ?? item.price ?? 0);
+        const descTmp = item.description ??
+                `${item.name ?? ""} ${item.model ?? ""}`.trim();
+        console.log("Item: " + item)
 
         if (item.itemType !== "PHONE") {
             return {
                 itemType: "MISC",
                 technicalId: null,
-                description:
-                    item.description ??
-                    `${item.name ?? ""} ${item.model ?? ""}`.trim(),
+                description:descTmp,
                 price,
                 warrantyMonths: null,
                 used: null
@@ -197,8 +198,7 @@ function collectInvoiceExtraData(cart) {
         return {
             itemType: "PHONE",
             technicalId: item.technicalId,
-            description:
-                `${item.name ?? ""} ${item.model ?? ""}`.trim(),
+            description: descTmp,
             price,
             warrantyMonths:
                 Number(document.getElementById(`gw-${item.technicalId}-num`)?.value ?? 0),
