@@ -69,6 +69,8 @@ public class UserService {
     @Transactional
     public void resetPassword(RegisterRequest req) {
 
+        log.info("Hasło użytkownika {} jest resetowane...", req.email());
+
         if (!req.password().equals(req.confirmPassword())) {
             throw new IllegalArgumentException("Hasła nie są takie same");
         }

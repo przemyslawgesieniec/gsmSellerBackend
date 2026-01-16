@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/login",// endpoint POST logowania
                     "/api/v1/auth/register", // endpoint POST rejestracja
+                    "/api/v1/auth/reset-password",
                     "/login.html",  // strona logowania
                     "/css/**",
                     "/js/**",
@@ -73,23 +74,6 @@ public class SecurityConfig {
             );
 
         return http.build();
-    }
-    @Bean
-    CommandLineRunner initAdmin(
-        UserRepository repo,
-        PasswordEncoder encoder
-    ) {
-        return args -> {
-            if (!repo.existsByUsername("przemyslaw.gesieniec@gmail.com")) {
-                User admin = new User(
-                    "przemyslaw.gesieniec@gmail.com",
-                    encoder.encode("admin123"),
-                    "ROLE_ADMIN"
-                );
-                admin.setStatus(UserStatus.ACTIVE);
-                repo.save(admin);
-            }
-        };
     }
 
 }
