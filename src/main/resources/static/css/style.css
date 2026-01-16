@@ -608,3 +608,6 @@ body {
 .status-inactive {
     background-color: #9e9e9e;
 }
+.ts-wrapper .ts-control {
+    padding-top: 12px; /* lub 14px – dopasuj wizualnie */
+}

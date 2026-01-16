@@ -7,6 +7,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     initLocationSelect();
     loadLocations();
+
+    document.getElementById("currentLocationLabel").textContent =
+        CURRENT_USER.location ?? "Nie masz przypisanej lokalizacji";
 });
 
 
@@ -20,16 +23,9 @@ function loadLocations() {
 
             const ts = select.tomselect;
 
-            // czyścimy wszystko
+            ts.clear();
             ts.clearOptions();
 
-            // opcja domyślna
-            ts.addOption({
-                value: "",
-                text: "Wybierz lokalizację"
-            });
-
-            // backend
             locations.forEach(loc => {
                 ts.addOption({
                     value: loc.technicalId,
@@ -39,15 +35,17 @@ function loadLocations() {
 
             ts.refreshOptions(false);
 
-            // zmiana lokalizacji
-            select.onchange = () => {
-                assignLocation(select.value);
-            };
-        })
-        .catch(() => {
-            M.toast({
-                html: "Błąd ładowania lokalizacji",
-                classes: "red"
+            if (CURRENT_USER?.location) {
+                ts.setValue(CURRENT_USER.location);
+            } else {
+                ts.clear(); // ⬅️ to zostawia pole puste, ale placeholder działa
+            }
+
+            ts.off("change");
+            ts.on("change", value => {
+                if (value) {
+                    assignLocation(value);
+                }
             });
         });
 }
@@ -75,14 +73,12 @@ function initLocationSelect() {
     if (!select) return;
 
     new TomSelect(select, {
-        controlInput: null,
         create: false,
-        searchField: [],
         shouldSort: false,
-        closeAfterSelect: true,
-        placeholder: "Wybierz lokalizację"
+        placeholder: "Wybierz inną lokalizację"
     });
 }
+
 
 async function loadAllUsers() {
     if (!IS_ADMIN) return;
@@ -147,13 +143,14 @@ async function toggleUserStatus(userId) {
     loadAllUsers();
 }
 
-
 async function loadCurrentUser() {
     const res = await fetch('/api/v1/users/auth/me');
     if (!res.ok) return;
 
     CURRENT_USER = await res.json();
     IS_ADMIN = CURRENT_USER.role === 'ROLE_ADMIN';
+
+    console.log("CURRENT_USER", CURRENT_USER); // ⬅️ MUSI BYĆ location
 
     if (IS_ADMIN) {
         document

@@ -26,13 +26,13 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private String role; // ROLE_ADMIN / ROLE_SELLER
+    private String role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "location_id")
     private LocationEntity location;
 
@@ -40,6 +40,6 @@ public class User {
         this.username = username;
         this.password = password;
         this.role = role;
-        this.status = UserStatus.INACTIVE; // ⬅️ domyślnie NIEAKTYWNY
+        this.status = UserStatus.INACTIVE;
     }
 }

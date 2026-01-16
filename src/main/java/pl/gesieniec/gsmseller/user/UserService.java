@@ -91,7 +91,8 @@ public class UserService {
                 u.getId(),
                 u.getUsername(),
                 u.getStatus(),
-                u.getRole()
+                u.getRole(),
+                u.getLocation().getName()
             ))
             .toList();
     }

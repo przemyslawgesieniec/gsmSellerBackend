@@ -10,4 +10,5 @@ public class UserDto {
     private String username;
     private UserStatus status;
     private String role;
+    private String location;
 }

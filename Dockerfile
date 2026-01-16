@@ -2,10 +2,18 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /build
+
+# 1️⃣ tylko pom.xml
 COPY pom.xml .
+
+# 2️⃣ cache zależności
+RUN mvn -B dependency:go-offline
+
+# 3️⃣ dopiero źródła
 COPY src ./src
 
-RUN mvn -B clean package -DskipTests
+# 4️⃣ build
+RUN mvn -B package -DskipTests
 
 
 # ---------- RUNTIME STAGE ----------

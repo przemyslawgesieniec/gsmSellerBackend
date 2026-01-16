@@ -37,7 +37,8 @@ public class UserSettingsController {
             user.getId(),
             user.getUsername(),
             user.getStatus(),
-            user.getRole()
+            user.getRole(),
+            user.getLocation().getName()
         );
     }
 }
