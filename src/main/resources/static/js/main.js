@@ -33,7 +33,8 @@ async function loadStock(page = 0) {
             sellingPrice: phone.sellingPrice,
             purchasePrice: phone.purchasePrice,
             status: phone.status,
-            locationName: phone.locationName
+            locationName: phone.locationName,
+            purchaseType: phone.purchaseType
         }));
 
 
@@ -169,6 +170,11 @@ function loadPagination(currentPage, totalPages) {
 const sellButtonIdPrefix = "sellBtn";
 const editButtonIdPrefix = "editBtn";
 
+const PURCHASE_TYPE_LABELS = {
+    VAT_INVOICE: "Faktura VAT",
+    CASH: "Gotówka"
+};
+
 function renderPhones(phones) {
     listContainer.innerHTML = "";
     phones.forEach((phone) => {
@@ -183,8 +189,6 @@ function renderPhones(phones) {
                 : "";
 
 
-        const sellButtonId = sellButtonIdPrefix + phone.technicalId;
-
         const card = `
       <div class="col s12">
         <div class="card z-depth-2" data-technical-id="${phone.technicalId}">
@@ -193,6 +197,7 @@ function renderPhones(phones) {
               <span class="card-title">${phone.name}</span>
               <p><b>Model:</b> ${phone.model}</p>
               <p><b>Kolor:</b> ${phone.color}</p>
+              <p><b>Froma zakupu:</b> ${PURCHASE_TYPE_LABELS[phone.purchaseType] ?? "—"}
               <p><b>IMEI:</b> ${phone.imei}</p>
               ${
             phone.locationName
@@ -241,8 +246,8 @@ function renderPhones(phones) {
                  data-action="remove-from-location"
                  data-id="${phone.technicalId}"
                  class="${phone.locationName && phone.status === 'DOSTĘPNY'
-                        ? ''
-                        : 'disabled-link'}">
+            ? ''
+            : 'disabled-link'}">
                 Usuń ze sklepu
               </a>
             </li>
@@ -252,8 +257,8 @@ function renderPhones(phones) {
                    data-action="delete"
                    data-id="${phone.technicalId}"
                    class="${!['WPROWADZONY','DOSTĘPNY'].includes(phone.status)
-                        ? 'disabled-link'
-                        : ''}">
+            ? 'disabled-link'
+            : ''}">
                   Usuń
                 </a>
               </li>
@@ -271,6 +276,8 @@ function renderPhones(phones) {
         </div>
       </div>
     `;
+
+        const sellButtonId = sellButtonIdPrefix + phone.technicalId;
         listContainer.innerHTML += card;
     });
 

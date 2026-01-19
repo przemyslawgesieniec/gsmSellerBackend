@@ -25,4 +25,5 @@ public class PhoneStockDto {
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
     private String locationName;
+    private PurchaseType purchaseType;
 }

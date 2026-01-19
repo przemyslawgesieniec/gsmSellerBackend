@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 
 @ToString
 @Getter
@@ -23,6 +24,8 @@ public class PhoneScanDto {
     private String sellingPrice;
     @Setter
     private String name;
+    @Setter
+    private PurchaseType purchaseType;
 
     public PhoneScanDto(String model, String ram, String memory, String color, String imei) {
         this.model = model;

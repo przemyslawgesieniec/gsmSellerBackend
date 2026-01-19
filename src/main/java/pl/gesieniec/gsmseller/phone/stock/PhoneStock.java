@@ -9,6 +9,7 @@ import pl.gesieniec.gsmseller.location.LocationEntity;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -41,9 +42,12 @@ public class PhoneStock {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Enumerated(EnumType.STRING)
+    private PurchaseType purchaseType;
+
     public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei,
                       String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
-                      LocationEntity location, Status status) {
+                      LocationEntity location, Status status, PurchaseType purchaseType) {
 
         this.technicalId = technicalId;
         this.model = model;
@@ -57,13 +61,14 @@ public class PhoneStock {
         this.sellingPrice = sellingPrice;
         this.location = location;
         this.status = status;
+        this.purchaseType = purchaseType;
     }
 
     public static PhoneStock create(String model, String ram, String memory, String color, String imei,
-                                    String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice) {
+                                    String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice, PurchaseType purchaseType) {
 
         return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name,
-            source, purchasePrice, sellingPrice, null, Status.WPROWADZONY);
+            source, purchasePrice, sellingPrice, null, Status.WPROWADZONY, purchaseType);
     }
 
     public void update(String model, String ram, String memory, String color,

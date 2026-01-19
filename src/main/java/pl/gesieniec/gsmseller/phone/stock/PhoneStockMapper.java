@@ -23,7 +23,8 @@ public class PhoneStockMapper {
             phoneScanDto.getName(),
             phoneScanDto.getSource(),
             new BigDecimal(phoneScanDto.getSellingPrice()),
-            new BigDecimal(phoneScanDto.getInitialPrice()));
+            new BigDecimal(phoneScanDto.getInitialPrice()),
+            phoneScanDto.getPurchaseType());
     }
 
     public PhoneStockDto toDto(PhoneStock save) {
@@ -40,6 +41,7 @@ public class PhoneStockMapper {
             save.getPurchasePrice(),
             save.getSellingPrice(),
             Optional.ofNullable(save.getLocation())
-                .map(LocationEntity::getName).orElse(null));
+                .map(LocationEntity::getName).orElse(null),
+            save.getPurchaseType());
     }
 }

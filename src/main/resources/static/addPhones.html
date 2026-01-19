@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Hurtowe dodawanie telefonów</title>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
 
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
@@ -12,6 +13,8 @@
     <!-- Nasze style -->
     <link href="css/style.css" rel="stylesheet">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
 <body>
 
 <!-- Navbar -->
@@ -40,25 +43,35 @@
                 <!-- Ręczne pola -->
                 <div class="row" style="margin-top: 25px;">
 
-                    <div class="input-field col s12 m3">
+                    <div class="input-field col s12 m4">
                         <input type="number" id="manualInitialPrice">
                         <label for="manualInitialPrice">Cena zakupu</label>
                     </div>
 
-                    <div class="input-field col s12 m3">
+                    <div class="input-field col s12 m4">
                         <input type="number" id="manualSellingPrice">
                         <label for="manualSellingPrice">Cena sprzedaży</label>
                     </div>
 
-                    <div class="input-field col s12 m3">
+                    <div class="input-field col s12 m4">
                         <input type="text" id="manualSource">
                         <label for="manualSource">Pochodzenie</label>
                     </div>
 
-                    <div class="input-field col s12 m3">
+                    <div class="input-field col s12 m8">
                         <input type="text" id="manualName">
                         <label for="manualName">Nazwa</label>
                     </div>
+
+                    <div class="input-field col s12 m4">
+                        <select id="manualPurchaseType">
+                            <option value="" disabled selected>Wybierz</option>
+                            <option value="VAT_INVOICE">Faktura VAT</option>
+                            <option value="CASH">Gotówka</option>
+                        </select>
+                        <label>Forma zakupu</label>
+                    </div>
+
                 </div>
 
                 <div class="switch" style="margin-top: 20px;">
@@ -117,7 +130,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         M.Sidenav.init(document.querySelectorAll('.sidenav'));
-        M.FormSelect.init(document.querySelectorAll('select'));
     });
 
         document.addEventListener("DOMContentLoaded", () => {

@@ -36,7 +36,6 @@ function renderManualContainer() {
                     </button>
                 </div>
             </div>
-
             <div class="card-action right-align">
                 <button class="btn blue darken-2" id="savePhonesBtn">
                     Zapisz telefony
@@ -111,21 +110,37 @@ function addManualPhone() {
                 <label class="active">Pochodzenie</label>
             </div>
 
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <input type="number" data-field="initialPrice"
                        value="${document.getElementById("manualInitialPrice").value}">
                 <label class="active">Cena zakupu</label>
             </div>
 
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <input type="number" data-field="sellingPrice"
                        value="${document.getElementById("manualSellingPrice").value}">
                 <label class="active">Cena sprzedaży</label>
+            </div>
+            
+            <div class="input-field col s12 m2">
+                <select data-field="purchaseType" class="purchase-type-select">
+                    <option value="VAT_INVOICE">Faktura VAT</option>
+                    <option value="CASH">Gotówka</option>
+                </select>
+                <label class="active">Forma zakupu</label>
             </div>
         </div>
     `;
 
     wrapper.appendChild(block);
+    const selectEl = block.querySelector(".purchase-type-select");
+
+    const ts = new TomSelect(selectEl, {
+        create: false
+    });
+
+    selectEl.tomselect = ts;
+
     M.updateTextFields();
 }
 
@@ -181,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append("initialPrice", document.getElementById("manualInitialPrice").value);
             formData.append("sellingPrice", document.getElementById("manualSellingPrice").value);
             formData.append("source", document.getElementById("manualSource").value);
-
+            formData.append("purchaseType", document.getElementById("manualPurchaseType").value);
             for (const originalFile of selectedFiles) {
 
                 let file = originalFile;
@@ -352,12 +367,19 @@ function sendFinalPhones() {
     const resultList = [];
 
     phoneBlocks.forEach(block => {
-        const inputs = block.querySelectorAll("input[data-field]");
+        const fields = block.querySelectorAll("[data-field]");
         const phone = {};
-        inputs.forEach(input => {
-            const key = input.getAttribute("data-field");
-            phone[key] = input.value;
+
+        fields.forEach(el => {
+            const key = el.getAttribute("data-field");
+
+            if (el.tagName === "SELECT" && el.tomselect) {
+                phone[key] = el.tomselect.getValue();
+            } else {
+                phone[key] = el.value;
+            }
         });
+
         resultList.push(phone);
     });
 
@@ -368,11 +390,7 @@ function sendFinalPhones() {
     })
         .then(res => {
             if (!res.ok) throw new Error("Błąd");
-
-            // Zapisz flagę do localStorage
             localStorage.setItem("phonesSaved", "true");
-
-            // Przeładuj stronę
             location.reload();
         })
         .catch(err => {
@@ -480,3 +498,16 @@ function updateProgress(percent, text) {
 function nextFrame() {
     return new Promise(resolve => requestAnimationFrame(resolve));
 }
+
+let purchaseTypeSelect;
+
+document.addEventListener("DOMContentLoaded", () => {
+    purchaseTypeSelect = new TomSelect("#manualPurchaseType", {
+        create: false,
+        sortField: {
+            field: "text",
+            direction: "asc"
+        }
+    });
+
+});
