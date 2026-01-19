@@ -32,9 +32,9 @@ public class PhoneStockController {
     }
 
     @PostMapping
-    public void addPhones(@RequestBody List<PhoneScanDto> phoneScanDtoList) {
-        log.info("Teleofny otrzymane do zapisu:  {} ", phoneScanDtoList);
-        service.saveAllPhone(phoneScanDtoList);
+    public void addPhones(@RequestBody List<PhoneScanDto> phoneScanDtoList, Principal principal) {
+        log.info("Teleofny otrzymane przez {} do zapisu:  {} ", principal, phoneScanDtoList);
+        service.saveAllPhone(phoneScanDtoList, principal.getName());
     }
 
     @GetMapping

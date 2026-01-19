@@ -92,10 +92,20 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     }
 
     @Transactional
-    public void saveAllPhone(List<PhoneScanDto> phoneScanDtoList) {
+    public void saveAllPhone(List<PhoneScanDto> phoneScanDtoList, String username) {
+
+        LocationEntity locationEntity = userRepository.findByUsername(username)
+            .map(User::getLocation)
+            .orElse(null);
+
         phoneScanDtoList.stream()
             .map(phoneStockMapper::toPhoneStock)
-            .forEach(repository::save);
+            .forEach(entity -> {
+                if (locationEntity != null) {
+                    entity.acceptAtLocation(locationEntity);
+                }
+                repository.save(entity);
+            });
     }
 
     @Override
@@ -206,5 +216,6 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
         repository.save(phone);
     }
+
 
 }
