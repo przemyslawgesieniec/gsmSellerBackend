@@ -124,8 +124,9 @@ function addManualPhone() {
             
             <div class="input-field col s12 m2">
                 <select data-field="purchaseType" class="purchase-type-select">
-                    <option value="VAT_INVOICE">Faktura VAT</option>
                     <option value="CASH">Gotówka</option>
+                    <option value="VAT_23">Faktura VAT (23%)</option>
+                    <option value="VAT_EXEMPT">Faktura marża (ZW)</option>
                 </select>
                 <label class="active">Forma zakupu</label>
             </div>
@@ -331,15 +332,29 @@ document.addEventListener("DOMContentLoaded", () => {
                     <label class="active">Pochodzenie</label>
                 </div>
 
-                <div class="input-field col s12 m4">
+                <div class="input-field col s12 m3">
                     <input type="number" value="${p.initialPrice || ''}" data-field="initialPrice">
                     <label class="active">Cena zakupu</label>
                 </div>
 
-                <div class="input-field col s12 m4">
+                <div class="input-field col s12 m3">
                     <input type="number" value="${p.sellingPrice || ''}" data-field="sellingPrice">
                     <label class="active">Cena sprzedaży</label>
                 </div>
+                
+             <div class="input-field col s12 m2">
+                <select
+                    id="purchaseType-${i}"
+                    name="purchaseType"
+                    data-field="purchaseType"
+                    class="purchase-type-select">
+                    <option value="CASH">Gotówka</option>
+                    <option value="VAT_23">Faktura VAT (23%)</option>
+                    <option value="VAT_EXEMPT">Faktura marża (ZW)</option>
+                </select>
+                <label for="purchaseType-${i}" class="active">Forma zakupu</label>
+            </div>
+
             </div>
         </div>`;
         });
@@ -506,7 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
         create: false,
         sortField: {
             field: "text",
-            direction: "asc"
+            direction: "desc"
         }
     });
 

@@ -171,8 +171,9 @@ const sellButtonIdPrefix = "sellBtn";
 const editButtonIdPrefix = "editBtn";
 
 const PURCHASE_TYPE_LABELS = {
-    VAT_INVOICE: "Faktura VAT",
-    CASH: "Gotówka"
+    CASH: "Gotówka",
+    VAT_23: "Faktura marża (ZW)",
+    VAT_EXEMPT: "Faktura VAT (23%)"
 };
 
 function renderPhones(phones) {
