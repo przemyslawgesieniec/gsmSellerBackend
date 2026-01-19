@@ -98,57 +98,28 @@ public class UserService {
             .toList();
     }
 
-    @Transactional
-    public void setUserStatus(Long id, UserStatus status) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalStateException("User not found"));
-
-        user.setStatus(status);
-        userRepository.save(user);
-
-        log.info("Status użytkownika {} zmieniony na {}", user.getUsername(), status);
-    }
-
 
     @Transactional
-    public void toggleUserStatus(Long id) {
+    public void setUserActive(Long id, boolean active) {
+        User user = userRepository.findById(id).orElseThrow();
 
-        User targetUser = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalStateException("User not found"));
-
-        if ("ROLE_ADMIN".equals(targetUser.getRole())
-            && targetUser.getStatus() == UserStatus.ACTIVE) {
-
-            throw new IllegalStateException(
-                "Nie można dezaktywować innego administratora"
-            );
-        }
-
-        if (targetUser.getStatus() == UserStatus.ACTIVE) {
-            targetUser.setStatus(UserStatus.INACTIVE);
+        if (active) {
+            user.activate();
         } else {
-            targetUser.setStatus(UserStatus.ACTIVE);
+            user.deactivate();
         }
-
-        userRepository.save(targetUser);
     }
 
 
-    public void toggleDynamicLocationRole(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow();
+    @Transactional
+    public void setDynamicLocation(Long id, boolean enabled) {
+        User user = userRepository.findById(id).orElseThrow();
 
-        switch (user.getRole()) {
-            case "ROLE_SELLER" ->
-                user.setRole("ROLE_DYNAMIC_LOCATION_SELLER");
-
-            case "ROLE_DYNAMIC_LOCATION_SELLER" ->
-                user.setRole("ROLE_SELLER");
-
-            default ->
-                throw new IllegalStateException("Nieobsługiwana rola: " + user.getRole());
+        if (enabled) {
+            user.enableDynamicLocation();
+        } else {
+            user.disableDynamicLocation();
         }
-
-        userRepository.save(user);
     }
 
 }

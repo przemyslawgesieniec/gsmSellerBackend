@@ -42,4 +42,25 @@ public class User {
         this.role = role;
         this.status = UserStatus.INACTIVE;
     }
+
+    public void activate() {
+        this.status = UserStatus.ACTIVE;
+    }
+
+    public void deactivate() {
+        if ("ROLE_ADMIN".equals(this.role)) {
+            throw new IllegalStateException("Nie można dezaktywować administratora");
+        }
+        this.status = UserStatus.INACTIVE;
+    }
+
+    public void enableDynamicLocation() {
+        if (!"ROLE_SELLER".equals(this.role)) return;
+        this.role = "ROLE_DYNAMIC_LOCATION_SELLER";
+    }
+
+    public void disableDynamicLocation() {
+        if (!"ROLE_DYNAMIC_LOCATION_SELLER".equals(this.role)) return;
+        this.role = "ROLE_SELLER";
+    }
 }

@@ -4,17 +4,40 @@ let IS_ADMIN = false;
 document.addEventListener("DOMContentLoaded", async () => {
     await loadCurrentUser();
 
-    // ⬅️ widoczność sekcji lokalizacji MUSI być po loadCurrentUser
+    // CARD zawsze widoczny
+    showLocationCard();
 
+    // Zawsze ustaw aktualną lokalizację
+    setCurrentLocationLabel();
+
+    // Combobox tylko dla dynamicznej lokalizacji
     if (canUseLocationSelect()) {
-        handleLocationSettingsVisibility();
+        showLocationSelect();
         initLocationSelect();
         loadLocations();
-
-        document.getElementById("currentLocationLabel").textContent =
-            CURRENT_USER.location ?? "Nie masz przypisanej lokalizacji";
     }
 });
+
+function showLocationCard() {
+    document
+        .querySelectorAll('.location-settings')
+        .forEach(el => el.classList.remove('hide'));
+}
+
+function setCurrentLocationLabel() {
+    const label = document.getElementById("currentLocationLabel");
+    if (!label) return;
+
+    label.textContent =
+        CURRENT_USER?.location ?? "Nie masz przypisanej lokalizacji";
+}
+
+function showLocationSelect() {
+    document
+        .querySelectorAll('.location-select-wrapper')
+        .forEach(el => el.classList.remove('hide'));
+}
+
 
 /* =======================
    USER / ROLE LOGIC
@@ -114,88 +137,46 @@ async function loadAllUsers() {
 
     users.forEach(u => {
         const tr = document.createElement('tr');
-
-        const isActive = u.status === 'ACTIVE';
-        const isAdmin = u.role === 'ROLE_ADMIN';
-        const isDynamic = u.role === 'ROLE_DYNAMIC_LOCATION_SELLER';
+        //
+        // const isActive = u.status === 'ACTIVE';
+        // const isAdmin = u.role === 'ROLE_ADMIN';
+        // const isDynamic = u.role === 'ROLE_DYNAMIC_LOCATION_SELLER';
 
         tr.innerHTML = `
-          <td><b>${u.username}</b></td>
+  <td><b>${u.username}</b></td>
 
-          <td>${u.location ?? '<span class="grey-text">—</span>'}</td>
+  <td>${u.location ?? '<span class="grey-text">—</span>'}</td>
 
-          <td>
-            <div class="switch">
-              <label>
-                Off
-               <input type="checkbox"
-                   ${isDynamic ? 'checked' : ''}
-                   ${isAdmin ? 'disabled' : ''}
-                   onchange="toggleDynamicLocation(this, ${u.id})">
-                <span class="lever"></span>
-                On
-              </label>
-            </div>
-          </td>
+  <td>
+    <div class="switch">
+      <label>
+        Nieaktywny
+        <input type="checkbox"
+               ${u.status === 'ACTIVE' ? 'checked' : ''}
+               ${u.role === 'ROLE_ADMIN' ? 'disabled' : ''}
+               onchange="setUserActive(this, ${u.id})">
+        <span class="lever"></span>
+        Aktywny
+      </label>
+    </div>
+  </td>
 
-       <td>
-          <div class="switch">
-            <label>
-              Statyczna
-              <input type="checkbox"
-                     ${isDynamic ? 'checked' : ''}
-                     ${isAdmin ? 'disabled' : ''}
-                     onchange="toggleDynamicLocation(this, ${u.id})">
-              <span class="lever"></span>
-              Dynamiczna
-            </label>
-          </div>
-        </td>
-
-        `;
+  <td>
+    <div class="switch">
+      <label>
+        Statyczna
+        <input type="checkbox"
+               ${u.role === 'ROLE_DYNAMIC_LOCATION_SELLER' ? 'checked' : ''}
+               ${u.role === 'ROLE_ADMIN' ? 'disabled' : ''}
+               onchange="setDynamicLocation(this, ${u.id})">
+        <span class="lever"></span>
+        Dynamiczna
+      </label>
+    </div>
+  </td>
+`;
 
         tbody.appendChild(tr);
-    });
-}
-
-async function toggleUserStatus(userId) {
-    if (!IS_ADMIN) return;
-
-    const res = await fetch(`/api/v1/admin/users/${userId}/toggle-status`, {
-        method: 'PUT'
-    });
-
-    if (!res.ok) {
-        M.toast({ html: 'Nie można zmienić statusu', classes: 'red' });
-        return;
-    }
-
-    M.toast({ html: 'Status użytkownika zmieniony', classes: 'green' });
-    loadAllUsers();
-}
-
-async function toggleDynamicLocation(checkbox, userId) {
-    if (checkbox.disabled) return;
-
-    const previousState = checkbox.checked;
-
-    const res = await fetch(
-        `/api/v1/admin/users/${userId}/toggle-dynamic-location`,
-        { method: 'PUT' }
-    );
-
-    if (!res.ok) {
-        checkbox.checked = !previousState;
-        M.toast({
-            html: 'Nie udało się zmienić trybu lokalizacji',
-            classes: 'red'
-        });
-        return;
-    }
-
-    M.toast({
-        html: 'Tryb lokalizacji zmieniony',
-        classes: 'green'
     });
 }
 
@@ -217,4 +198,54 @@ async function loadCurrentUser() {
 
         await loadAllUsers();
     }
+}
+async function setUserActive(checkbox, userId) {
+    const active = checkbox.checked;
+
+    const res = await fetch(`/api/v1/admin/users/${userId}/active`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ active })
+    });
+
+    if (!res.ok) {
+        checkbox.checked = !active;
+        M.toast({
+            html: 'Nie udało się zmienić statusu użytkownika',
+            classes: 'red'
+        });
+        return;
+    }
+
+    M.toast({
+        html: 'Status użytkownika zapisany',
+        classes: 'green'
+    });
+}
+async function setDynamicLocation(checkbox, userId) {
+    const enabled = checkbox.checked;
+
+    const res = await fetch(`/api/v1/admin/users/${userId}/dynamic-location`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ enabled })
+    });
+
+    if (!res.ok) {
+        checkbox.checked = !enabled;
+        M.toast({
+            html: 'Nie udało się zmienić trybu lokalizacji',
+            classes: 'red'
+        });
+        return;
+    }
+
+    M.toast({
+        html: 'Tryb lokalizacji zapisany',
+        classes: 'green'
+    });
 }
