@@ -22,8 +22,8 @@ public class PhoneStockMapper {
             phoneScanDto.getImei(),
             phoneScanDto.getName(),
             phoneScanDto.getSource(),
-            new BigDecimal(phoneScanDto.getSellingPrice()),
             new BigDecimal(phoneScanDto.getInitialPrice()),
+            new BigDecimal(phoneScanDto.getSellingPrice()),
             phoneScanDto.getPurchaseType());
     }
 
