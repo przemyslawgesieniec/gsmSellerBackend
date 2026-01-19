@@ -515,7 +515,7 @@ function editPhone(technicalId) {
         const name = card.querySelector(".card-title")?.textContent.trim() || "";
         const model = card.querySelector("p:nth-of-type(1)")?.textContent.replace("Model:", "").trim() || "";
         const color = card.querySelector("p:nth-of-type(2)")?.textContent.replace("Kolor:", "").trim() || "";
-        const imei = card.querySelector("p:nth-of-type(3)")?.textContent.replace("IMEI:", "").trim() || "";
+        const imei = card.querySelector("p:nth-of-type(4)")?.textContent.replace("IMEI:", "").trim() || "";
         const priceText = card.querySelector(".sellingPrice")?.textContent.replace("zł", "").trim() || "";
         const price = parseFloat(priceText) || 0;
 

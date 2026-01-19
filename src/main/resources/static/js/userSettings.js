@@ -38,7 +38,6 @@ function showLocationSelect() {
         .forEach(el => el.classList.remove('hide'));
 }
 
-
 /* =======================
    USER / ROLE LOGIC
    ======================= */
