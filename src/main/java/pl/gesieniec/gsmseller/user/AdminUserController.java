@@ -26,4 +26,10 @@ public class AdminUserController {
     public void toggleStatus(@PathVariable Long id) {
         userService.toggleUserStatus(id);
     }
+
+    @PutMapping("/{id}/toggle-dynamic-location")
+    public void toggleDynamicLocation(@PathVariable Long id) {
+        userService.toggleDynamicLocationRole(id);
+    }
+
 }

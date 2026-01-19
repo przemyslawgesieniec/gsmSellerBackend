@@ -20,23 +20,6 @@ import pl.gesieniec.gsmseller.user.UserStatus;
 @Profile("!no-security")
 public class SecurityConfig {
 
-//    @Bean
-//    public UserDetailsService users(PasswordEncoder passwordEncoder) {
-//        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-//
-//        manager.createUser(User.withUsername("seller1")
-//            .password(passwordEncoder.encode("password1"))
-//            .roles("SELLER")
-//            .build());
-//
-//        manager.createUser(User.withUsername("seller2")
-//            .password(passwordEncoder.encode("password2"))
-//            .roles("SELLER")
-//            .build());
-//
-//        return manager;
-//    }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

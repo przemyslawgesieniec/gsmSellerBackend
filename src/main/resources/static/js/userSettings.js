@@ -1,23 +1,57 @@
 let CURRENT_USER = null;
 let IS_ADMIN = false;
 
-
 document.addEventListener("DOMContentLoaded", async () => {
     await loadCurrentUser();
 
-    initLocationSelect();
-    loadLocations();
+    // ⬅️ widoczność sekcji lokalizacji MUSI być po loadCurrentUser
 
-    document.getElementById("currentLocationLabel").textContent =
-        CURRENT_USER.location ?? "Nie masz przypisanej lokalizacji";
+    if (canUseLocationSelect()) {
+        handleLocationSettingsVisibility();
+        initLocationSelect();
+        loadLocations();
+
+        document.getElementById("currentLocationLabel").textContent =
+            CURRENT_USER.location ?? "Nie masz przypisanej lokalizacji";
+    }
 });
 
+/* =======================
+   USER / ROLE LOGIC
+   ======================= */
+
+function canUseLocationSelect() {
+    return (
+        CURRENT_USER.role === 'ROLE_ADMIN' ||
+        CURRENT_USER.role === 'ROLE_DYNAMIC_LOCATION_SELLER'
+    );
+}
+
+function handleLocationSettingsVisibility() {
+        document
+            .querySelectorAll('.location-settings')
+            .forEach(el => el.classList.remove('hide'));
+}
+
+/* =======================
+   LOCATION
+   ======================= */
+
+function initLocationSelect() {
+    const select = document.getElementById('locationSelect');
+    if (!select) return;
+
+    new TomSelect(select, {
+        create: false,
+        shouldSort: false,
+        placeholder: "Wybierz inną lokalizację"
+    });
+}
 
 function loadLocations() {
     fetch("/api/v1/locations")
         .then(res => res.json())
         .then(locations => {
-
             const select = document.getElementById("locationSelect");
             if (!select || !select.tomselect) return;
 
@@ -38,14 +72,12 @@ function loadLocations() {
             if (CURRENT_USER?.location) {
                 ts.setValue(CURRENT_USER.location);
             } else {
-                ts.clear(); // ⬅️ to zostawia pole puste, ale placeholder działa
+                ts.clear();
             }
 
             ts.off("change");
             ts.on("change", value => {
-                if (value) {
-                    assignLocation(value);
-                }
+                if (value) assignLocation(value);
             });
         });
 }
@@ -56,29 +88,16 @@ function assignLocation(technicalId) {
     })
         .then(res => {
             if (!res.ok) throw new Error();
-            M.toast({
-                html: "Lokalizacja została zapisana",
-                classes: "green"
-            });
+            M.toast({ html: "Lokalizacja została zapisana", classes: "green" });
         })
         .catch(() => {
-            M.toast({
-                html: "Nie udało się zapisać lokalizacji",
-                classes: "red"
-            });
+            M.toast({ html: "Nie udało się zapisać lokalizacji", classes: "red" });
         });
 }
-function initLocationSelect() {
-    const select = document.getElementById('locationSelect');
-    if (!select) return;
 
-    new TomSelect(select, {
-        create: false,
-        shouldSort: false,
-        placeholder: "Wybierz inną lokalizację"
-    });
-}
-
+/* =======================
+   ADMIN
+   ======================= */
 
 async function loadAllUsers() {
     if (!IS_ADMIN) return;
@@ -87,42 +106,58 @@ async function loadAllUsers() {
     if (!res.ok) return;
 
     const users = await res.json();
-    const list = document.getElementById('usersList');
-    if (!list) return;
+    users.sort((a, b) => a.id - b.id);
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
 
-    list.innerHTML = '';
+    tbody.innerHTML = '';
 
     users.forEach(u => {
-        const li = document.createElement('li');
-        li.className = 'collection-item';
+        const tr = document.createElement('tr');
 
         const isActive = u.status === 'ACTIVE';
         const isAdmin = u.role === 'ROLE_ADMIN';
+        const isDynamic = u.role === 'ROLE_DYNAMIC_LOCATION_SELLER';
 
-        const disableDeactivate = isAdmin && isActive;
+        tr.innerHTML = `
+          <td><b>${u.username}</b></td>
 
-        li.innerHTML = `
-          <div class="user-email">${u.username}</div>
+          <td>${u.location ?? '<span class="grey-text">—</span>'}</td>
 
-          <div class="user-actions">
-            <button
-              class="btn-small ${isActive ? 'red' : 'green'}"
-              ${disableDeactivate ? 'disabled' : ''}
-              onclick="toggleUserStatus(${u.id})"
-              title="${disableDeactivate ? 'Nie można dezaktywować administratora' : ''}"
-            >
-              ${isActive ? 'DEZAKTYWUJ' : 'AKTYWUJ'}
-            </button>
+          <td>
+            <div class="switch">
+              <label>
+                Off
+               <input type="checkbox"
+                   ${isDynamic ? 'checked' : ''}
+                   ${isAdmin ? 'disabled' : ''}
+                   onchange="toggleDynamicLocation(this, ${u.id})">
+                <span class="lever"></span>
+                On
+              </label>
+            </div>
+          </td>
 
-            <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
-              ${u.status}
-            </span>
+       <td>
+          <div class="switch">
+            <label>
+              Statyczna
+              <input type="checkbox"
+                     ${isDynamic ? 'checked' : ''}
+                     ${isAdmin ? 'disabled' : ''}
+                     onchange="toggleDynamicLocation(this, ${u.id})">
+              <span class="lever"></span>
+              Dynamiczna
+            </label>
           </div>
+        </td>
+
         `;
 
-        list.appendChild(li);
+        tbody.appendChild(tr);
     });
 }
+
 async function toggleUserStatus(userId) {
     if (!IS_ADMIN) return;
 
@@ -131,11 +166,7 @@ async function toggleUserStatus(userId) {
     });
 
     if (!res.ok) {
-        const msg = await res.text();
-        M.toast({
-            html: msg || 'Nie można zmienić statusu użytkownika',
-            classes: 'red'
-        });
+        M.toast({ html: 'Nie można zmienić statusu', classes: 'red' });
         return;
     }
 
@@ -143,14 +174,41 @@ async function toggleUserStatus(userId) {
     loadAllUsers();
 }
 
+async function toggleDynamicLocation(checkbox, userId) {
+    if (checkbox.disabled) return;
+
+    const previousState = checkbox.checked;
+
+    const res = await fetch(
+        `/api/v1/admin/users/${userId}/toggle-dynamic-location`,
+        { method: 'PUT' }
+    );
+
+    if (!res.ok) {
+        checkbox.checked = !previousState;
+        M.toast({
+            html: 'Nie udało się zmienić trybu lokalizacji',
+            classes: 'red'
+        });
+        return;
+    }
+
+    M.toast({
+        html: 'Tryb lokalizacji zmieniony',
+        classes: 'green'
+    });
+}
+
+/* =======================
+   CURRENT USER
+   ======================= */
+
 async function loadCurrentUser() {
     const res = await fetch('/api/v1/users/auth/me');
     if (!res.ok) return;
 
     CURRENT_USER = await res.json();
     IS_ADMIN = CURRENT_USER.role === 'ROLE_ADMIN';
-
-    console.log("CURRENT_USER", CURRENT_USER); // ⬅️ MUSI BYĆ location
 
     if (IS_ADMIN) {
         document

@@ -134,4 +134,21 @@ public class UserService {
     }
 
 
+    public void toggleDynamicLocationRole(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+
+        switch (user.getRole()) {
+            case "ROLE_SELLER" ->
+                user.setRole("ROLE_DYNAMIC_LOCATION_SELLER");
+
+            case "ROLE_DYNAMIC_LOCATION_SELLER" ->
+                user.setRole("ROLE_SELLER");
+
+            default ->
+                throw new IllegalStateException("Nieobsługiwana rola: " + user.getRole());
+        }
+
+        userRepository.save(user);
+    }
+
 }
