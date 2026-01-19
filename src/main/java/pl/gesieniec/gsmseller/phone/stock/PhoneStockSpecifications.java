@@ -80,7 +80,10 @@ public class PhoneStockSpecifications {
         LocalDateTime to
     ) {
         return (root, query, cb) -> cb.and(
-            cb.equal(root.get("status"), Status.SPRZEDANY),
+            root.get("status").in(
+                Status.SPRZEDANY,
+                Status.ODDANY
+            ),
             cb.between(root.get("soldAt"), from, to),
             cb.isNotNull(root.get("soldFor")),
             cb.isNotNull(root.get("purchasePrice"))

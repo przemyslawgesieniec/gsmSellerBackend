@@ -145,7 +145,8 @@ public class PhoneStock {
         }
         this.status = Status.ODDANY;
         this.comment = comment;
-
+        this.soldFor = this.sellingPrice;
+        this.soldAt = LocalDateTime.now();
     }
 
 }
