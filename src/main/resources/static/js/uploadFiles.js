@@ -342,18 +342,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     <label class="active">Cena sprzedaży</label>
                 </div>
                 
-             <div class="input-field col s12 m2">
+            <div class="input-field col s12 m2">
                 <select
                     id="purchaseType-${i}"
                     name="purchaseType"
                     data-field="purchaseType"
+                    data-current-value="${p.purchaseType || ''}"
                     class="purchase-type-select">
+                    <option value="">Wybierz</option>
                     <option value="CASH">Gotówka</option>
                     <option value="VAT_23">Faktura VAT (23%)</option>
                     <option value="VAT_EXEMPT">Faktura marża (ZW)</option>
                 </select>
                 <label for="purchaseType-${i}" class="active">Forma zakupu</label>
             </div>
+
 
             </div>
         </div>`;
@@ -368,6 +371,28 @@ document.addEventListener("DOMContentLoaded", () => {
         content.innerHTML = html;
         card.appendChild(content);
         container.appendChild(card);
+
+        // === TomSelect: forma zakupu (wyniki skanowania) ===
+        const purchaseTypeSelects = container.querySelectorAll(".purchase-type-select");
+
+        purchaseTypeSelects.forEach(select => {
+            // zabezpieczenie przed podwójną inicjalizacją
+            if (select.tomselect) return;
+
+            const ts = new TomSelect(select, {
+                create: false,
+                allowEmptyOption: true,
+                placeholder: "Wybierz",
+                dropdownParent: "body"
+            });
+
+            // ✅ ustawienie wartości z response (p.purchaseType)
+            const value = select.dataset.currentValue;
+            if (value) {
+                ts.setValue(value, true);
+            }
+        });
+
 
         M.updateTextFields();
 
