@@ -217,5 +217,25 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
         repository.save(phone);
     }
 
+    @Transactional
+    public void handoverPhone(
+        UUID technicalId,
+        String comment,
+        String username
+    ) {
+        PhoneStock phone = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() ->
+                new EntityNotFoundException("Phone not found: " + technicalId)
+            );
+
+        phone.handover(comment);
+
+        log.info(
+            "Telefon {} przekazany przez {}. Komentarz: {}",
+            technicalId,
+            username,
+            comment
+        );
+    }
 
 }

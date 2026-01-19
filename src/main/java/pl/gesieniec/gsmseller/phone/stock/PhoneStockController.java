@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
+import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
@@ -87,6 +88,19 @@ public class PhoneStockController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{technicalId}/handover")
+    public ResponseEntity<Void> handoverPhone(
+        @PathVariable UUID technicalId,
+        @RequestBody HandoverRequest request,
+        Principal principal
+    ) {
+        service.handoverPhone(
+            technicalId,
+            request.getComment(),
+            principal.getName()
+        );
+        return ResponseEntity.ok().build();
+    }
 
 
 }

@@ -32,6 +32,7 @@ public class PhoneStock {
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
     private LocalDateTime soldAt;
+    private String comment;
 
     @ManyToOne
     @JoinColumn(name = "location_id")
@@ -47,7 +48,7 @@ public class PhoneStock {
 
     public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei,
                       String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
-                      LocationEntity location, Status status, PurchaseType purchaseType) {
+                      LocationEntity location, Status status, PurchaseType purchaseType, String comment) {
 
         this.technicalId = technicalId;
         this.model = model;
@@ -62,13 +63,14 @@ public class PhoneStock {
         this.location = location;
         this.status = status;
         this.purchaseType = purchaseType;
+        this.comment = comment;
     }
 
     public static PhoneStock create(String model, String ram, String memory, String color, String imei,
                                     String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice, PurchaseType purchaseType) {
 
         return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name,
-            source, purchasePrice, sellingPrice, null, Status.WPROWADZONY, purchaseType);
+            source, purchasePrice, sellingPrice, null, Status.WPROWADZONY, purchaseType, null);
     }
 
     public void update(String model, String ram, String memory, String color,
@@ -133,6 +135,17 @@ public class PhoneStock {
 
     private boolean canBeRemovedFromLocation() {
         return this.status == Status.DOSTĘPNY;
+    }
+
+    public void handover(String comment) {
+        if (this.status != Status.DOSTĘPNY) {
+            throw new IllegalStateException(
+                "Phone cannot be handed over in status: " + status
+            );
+        }
+        this.status = Status.ODDANY;
+        this.comment = comment;
+
     }
 
 }

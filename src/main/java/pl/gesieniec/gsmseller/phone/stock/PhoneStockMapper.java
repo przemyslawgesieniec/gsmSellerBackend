@@ -42,6 +42,7 @@ public class PhoneStockMapper {
             save.getSellingPrice(),
             Optional.ofNullable(save.getLocation())
                 .map(LocationEntity::getName).orElse(null),
-            save.getPurchaseType());
+            save.getPurchaseType(),
+            save.getComment());
     }
 }

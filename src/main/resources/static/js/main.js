@@ -1,5 +1,6 @@
 const pageSize = 20;
 let currentPage = 0;
+let phoneToHandover = null;
 
 const listContainer = document.getElementById("phone-list");
 
@@ -34,7 +35,8 @@ async function loadStock(page = 0) {
             purchasePrice: phone.purchasePrice,
             status: phone.status,
             locationName: phone.locationName,
-            purchaseType: phone.purchaseType
+            purchaseType: phone.purchaseType,
+            comment: phone.comment
         }));
 
 
@@ -200,6 +202,7 @@ function renderPhones(phones) {
               <p><b>Kolor:</b> ${phone.color}</p>
               <p><b>Froma zakupu:</b> ${PURCHASE_TYPE_LABELS[phone.purchaseType] ?? "—"}
               <p><b>IMEI:</b> ${phone.imei}</p>
+              ${phone.comment ? `<p class="handover-comment"><b>Komentarz:</b> ${phone.comment}</p>` : ``}
               ${
             phone.locationName
                 ? `<p class="location">
@@ -252,7 +255,14 @@ function renderPhones(phones) {
                 Usuń ze sklepu
               </a>
             </li>
-
+            <li>
+              <a href="#!"
+                 data-action="handover"
+                 data-id="${phone.technicalId}"
+                 class="${phone.status !== 'DOSTĘPNY' ? 'disabled-link' : ''}">
+                Przekaż
+              </a>
+            </li>
               <li class="red-text">
                 <a href="#!"
                    data-action="delete"
@@ -883,8 +893,26 @@ function handleDropdownAction(e) {
         case "delete":
             confirmDeletePhone(id);
             break;
+
+        case "handover":
+            openHandoverModal(id);
+            break;
+
     }
 }
+
+function openHandoverModal(technicalId) {
+    phoneToHandover = technicalId;
+
+    document.getElementById("handoverComment").value = "";
+    M.updateTextFields();
+
+    const modal = M.Modal.getInstance(
+        document.getElementById("handoverPhoneModal")
+    );
+    modal.open();
+}
+
 
 function removePhoneFromLocation(technicalId) {
     fetch(`/api/v1/phones/${technicalId}/remove-from-location`, {
@@ -898,6 +926,44 @@ function removePhoneFromLocation(technicalId) {
             M.toast({ html: err.message });
         });
 }
+
+document.getElementById("confirmHandoverBtn")
+    .addEventListener("click", async () => {
+
+        const comment =
+            document.getElementById("handoverComment").value;
+
+        try {
+            const response = await fetch(
+                `/api/v1/phones/${phoneToHandover}/handover`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ comment })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Błąd przekazania");
+            }
+
+            M.toast({ html: "Telefon przekazany", classes: "green" });
+
+            const modal = M.Modal.getInstance(
+                document.getElementById("handoverPhoneModal")
+            );
+            modal.close();
+
+            loadStock(); // refresh listy
+
+        } catch (err) {
+            console.error(err);
+            M.toast({ html: "Błąd przekazania", classes: "red" });
+        }
+    });
+
 
 function initSimpleSelect(selector) {
     const el = document.querySelector(selector);
