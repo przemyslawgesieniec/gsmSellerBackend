@@ -96,7 +96,7 @@ public class PhoneStockController {
     ) {
         service.handoverPhone(
             technicalId,
-            request.getComment(),
+            request,
             principal.getName()
         );
         return ResponseEntity.ok().build();

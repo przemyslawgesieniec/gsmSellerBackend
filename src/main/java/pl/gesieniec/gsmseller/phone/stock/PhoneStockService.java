@@ -22,6 +22,7 @@ import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.event.PhoneRemovedEvent;
 import pl.gesieniec.gsmseller.phone.stock.handler.PhoneReturnHandler;
 import pl.gesieniec.gsmseller.phone.stock.handler.PhoneSoldHandler;
+import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
 import pl.gesieniec.gsmseller.user.User;
@@ -220,7 +221,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     @Transactional
     public void handoverPhone(
         UUID technicalId,
-        String comment,
+        HandoverRequest request,
         String username
     ) {
         PhoneStock phone = repository.findByTechnicalId(technicalId)
@@ -228,13 +229,13 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                 new EntityNotFoundException("Phone not found: " + technicalId)
             );
 
-        phone.handover(comment);
+        phone.handover(request.getComment(),request.getPrice());
 
         log.info(
             "Telefon {} przekazany przez {}. Komentarz: {}",
             technicalId,
             username,
-            comment
+            request
         );
     }
 

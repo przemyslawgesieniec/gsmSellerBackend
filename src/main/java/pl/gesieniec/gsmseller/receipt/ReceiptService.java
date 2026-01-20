@@ -48,6 +48,11 @@ public class ReceiptService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createDate"));
 
+        String userRole = userService.getUserByUsername(username).map(User::getRole).orElse("NON_ADMIN");
+
+        if(userRole.equals("ROLE_ADMIN")){
+            return receiptRepository.findAll(pageable);
+        }
         return receiptRepository.findByCreatedByOrderByCreateDateDesc(username, pageable);
     }
 

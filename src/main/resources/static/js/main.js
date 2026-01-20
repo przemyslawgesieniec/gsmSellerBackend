@@ -905,6 +905,7 @@ function openHandoverModal(technicalId) {
     phoneToHandover = technicalId;
 
     document.getElementById("handoverComment").value = "";
+    document.getElementById("handoverPrice").value = "";
     M.updateTextFields();
 
     const modal = M.Modal.getInstance(
@@ -933,6 +934,9 @@ document.getElementById("confirmHandoverBtn")
         const comment =
             document.getElementById("handoverComment").value;
 
+        const price =
+            document.getElementById("handoverPrice").value;
+
         try {
             const response = await fetch(
                 `/api/v1/phones/${phoneToHandover}/handover`,
@@ -941,7 +945,7 @@ document.getElementById("confirmHandoverBtn")
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ comment })
+                    body: JSON.stringify({ comment, price })
                 }
             );
 

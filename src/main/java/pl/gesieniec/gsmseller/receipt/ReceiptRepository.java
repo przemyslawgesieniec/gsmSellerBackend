@@ -16,5 +16,4 @@ public interface ReceiptRepository  extends JpaRepository<ReceiptEntity, Long> {
 
     Page<ReceiptEntity> findByCreatedByOrderByCreateDateDesc(String createdBy, Pageable pageable);
 
-
 }

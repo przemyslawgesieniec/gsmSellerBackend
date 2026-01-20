@@ -137,7 +137,7 @@ public class PhoneStock {
         return this.status == Status.DOSTĘPNY;
     }
 
-    public void handover(String comment) {
+    public void handover(String comment, String price) {
         if (this.status != Status.DOSTĘPNY) {
             throw new IllegalStateException(
                 "Phone cannot be handed over in status: " + status
@@ -145,7 +145,8 @@ public class PhoneStock {
         }
         this.status = Status.ODDANY;
         this.comment = comment;
-        this.soldFor = this.sellingPrice;
+        this.soldFor = new BigDecimal(price);
+        this.sellingPrice = new BigDecimal(price);
         this.soldAt = LocalDateTime.now();
     }
 
