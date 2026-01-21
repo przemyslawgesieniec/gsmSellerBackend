@@ -61,7 +61,7 @@ public class PdfGenerationService {
         prepareRemarks(document, receipt);
         document.setMargins(100, 40, 170, 40);
 
-        pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new SignatureHandler());
+        pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new SignatureHandler(font));
 
         document.close();
         return out.toByteArray();
