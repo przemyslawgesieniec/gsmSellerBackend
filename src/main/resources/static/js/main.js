@@ -33,10 +33,14 @@ async function loadStock(page = 0) {
             imei: phone.imei,
             sellingPrice: phone.sellingPrice,
             purchasePrice: phone.purchasePrice,
+            createDateTime: phone.createDateTime,
             status: phone.status,
             locationName: phone.locationName,
             purchaseType: phone.purchaseType,
-            comment: phone.comment
+            comment: phone.comment,
+            description: phone.description,
+            batteryCondition: phone.batteryCondition,
+            isUsed: phone.isUsed
         }));
 
 
@@ -202,7 +206,10 @@ function renderPhones(phones) {
               <p><b>Kolor:</b> ${phone.color}</p>
               <p><b>Froma zakupu:</b> ${PURCHASE_TYPE_LABELS[phone.purchaseType] ?? "—"}
               <p><b>IMEI:</b> ${phone.imei}</p>
+              <p><b>Dodano:</b> ${phone.createDateTime}</p>
+              <p><b>Opis:</b> ${phone.description}</p>
               ${phone.comment ? `<p class="handover-comment"><b>Komentarz:</b> ${phone.comment}</p>` : ``}
+              ${phone.batteryCondition ? `<p><b>Stan baterii:</b> ${phone.batteryCondition} %</p>` : ``}
               ${
             phone.locationName
                 ? `<p class="location">

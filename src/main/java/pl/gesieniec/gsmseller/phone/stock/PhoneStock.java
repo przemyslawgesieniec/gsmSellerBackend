@@ -32,7 +32,14 @@ public class PhoneStock {
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
     private LocalDateTime soldAt;
+    private LocalDateTime createDateTime;
     private String comment;
+    private String description;
+    private String batteryCondition;
+
+    @Access(AccessType.FIELD)
+    @Column(name = "is_used")
+    private boolean used;
 
     @ManyToOne
     @JoinColumn(name = "location_id")
@@ -48,7 +55,9 @@ public class PhoneStock {
 
     public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei,
                       String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
-                      LocationEntity location, Status status, PurchaseType purchaseType, String comment) {
+                      LocationEntity location, Status status, PurchaseType purchaseType, String comment,
+                      String description,
+                      String batteryCondition, boolean isUsed) {
 
         this.technicalId = technicalId;
         this.model = model;
@@ -63,14 +72,19 @@ public class PhoneStock {
         this.location = location;
         this.status = status;
         this.purchaseType = purchaseType;
+        this.description = description;
         this.comment = comment;
+        this.batteryCondition = batteryCondition;
+        this.used = isUsed;
+        this.createDateTime = LocalDateTime.now();
     }
 
     public static PhoneStock create(String model, String ram, String memory, String color, String imei,
-                                    String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice, PurchaseType purchaseType) {
+                                    String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice, PurchaseType purchaseType,
+                                    String comment, String description, String batteryCondition, boolean isUsed ) {
 
         return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name,
-            source, purchasePrice, sellingPrice, null, Status.WPROWADZONY, purchaseType, null);
+            source, purchasePrice, sellingPrice, null, Status.WPROWADZONY, purchaseType, comment, description, batteryCondition, isUsed);
     }
 
     public void update(String model, String ram, String memory, String color,

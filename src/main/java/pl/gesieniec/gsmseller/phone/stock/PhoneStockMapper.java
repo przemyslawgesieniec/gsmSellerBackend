@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,11 @@ import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PhoneStockMapper {
 
-    public PhoneStock toPhoneStock(PhoneScanDto phoneScanDto){
+    private static DateTimeFormatter formatter =
+        DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+
+    public PhoneStock toPhoneStock(PhoneScanDto phoneScanDto) {
         return PhoneStock.create(
             phoneScanDto.getModel(),
             phoneScanDto.getRam(),
@@ -24,7 +29,11 @@ public class PhoneStockMapper {
             phoneScanDto.getSource(),
             new BigDecimal(phoneScanDto.getInitialPrice()),
             new BigDecimal(phoneScanDto.getSellingPrice()),
-            phoneScanDto.getPurchaseType());
+            phoneScanDto.getPurchaseType(),
+            phoneScanDto.getComment(),
+            phoneScanDto.getDescription(),
+            phoneScanDto.getBatteryCondition(),
+            phoneScanDto.isUsed());
     }
 
     public PhoneStockDto toDto(PhoneStock save) {
@@ -40,9 +49,13 @@ public class PhoneStockMapper {
             save.getStatus(),
             save.getPurchasePrice(),
             save.getSellingPrice(),
+            save.getCreateDateTime().format(formatter),
             Optional.ofNullable(save.getLocation())
                 .map(LocationEntity::getName).orElse(null),
             save.getPurchaseType(),
-            save.getComment());
+            save.getComment(),
+            save.getDescription(),
+            save.getBatteryCondition(),
+            save.isUsed());
     }
 }

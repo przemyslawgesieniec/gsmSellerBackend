@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.phone.stock.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,12 @@ public class PhoneStockDto {
     private Status status;
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
+    private String createDateTime;
     private String locationName;
     private PurchaseType purchaseType;
     private String comment;
+    private String description;
+    private String batteryCondition;
+    private Boolean isUsed;
+
 }

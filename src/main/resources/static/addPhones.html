@@ -73,6 +73,35 @@
                         <label>Forma zakupu</label>
                     </div>
 
+
+                    <div class="input-field col s12">
+                        <textarea id="manualDescription" class="materialize-textarea"></textarea>
+                        <label for="manualDescription">Uwagi</label>
+                    </div>
+
+                    <div class="col s12 m4">
+                        <div class="switch" style="margin-top:15px">
+                            <label>
+                                Nowy
+                                <input type="checkbox" id="manualIsUsed">
+                                <span class="lever"></span>
+                                Używany
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-field col s12 m4 hide" id="manualBatteryConditionWrapper">
+                        <input
+                                type="number"
+                                id="manualBatteryCondition"
+                                min="0"
+                                max="100"
+                                step="1"
+                        >
+                        <label for="manualBatteryCondition">Kondycja baterii (%)</label>
+                    </div>
+
+
                 </div>
 
                 <div class="switch" style="margin-top: 20px;">
@@ -85,9 +114,6 @@
                 </div>
 
             </div>
-
-
-
 
             <div class="card-action right-align">
                 <button class="btn blue darken-2" id="addBulkBtn">Dodaj</button>

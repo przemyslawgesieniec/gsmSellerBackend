@@ -26,6 +26,15 @@ public class PhoneScanDto {
     private String name;
     @Setter
     private PurchaseType purchaseType;
+    @Setter
+    private String comment;
+    @Setter
+    private String description;
+    @Setter
+    private String batteryCondition;
+    @Setter
+    private boolean isUsed;
+
 
     public PhoneScanDto(String model, String ram, String memory, String color, String imei) {
         this.model = model;
