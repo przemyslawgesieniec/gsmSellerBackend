@@ -27,6 +27,11 @@ google:
   vision:
     credentials: ${GOOGLE_CLOUD_VISION_CREDENTIALS}
 
+openai:
+  api-base: https://api.openai.com/v1
+  model: gpt-4o-mini
+  api-key: ${OPENAI_API_KEY}
+
 logging:
   level:
     org.springframework.security: DEBUG

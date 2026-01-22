@@ -6,6 +6,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import pl.gesieniec.gsmseller.phone.scan.parser.CustomPhoneDataOcrParser;
+import pl.gesieniec.gsmseller.phone.scan.parser.OcrDataParser;
 
 
 @Slf4j
@@ -14,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class PhoneScanService {
 
     private final GoogleCloudVision googleCloudVision;
-    private final PhoneDataOcrParser phoneDataOcrParser;
+    private final OcrDataParser phoneDataOcrParser;
 
     public List<PhoneScanDto> getPhoneScanDtos(
         String name,

@@ -1,4 +1,4 @@
-package pl.gesieniec.gsmseller.phone.scan;
+package pl.gesieniec.gsmseller.phone.scan.parser;
 
 import java.util.*;
 import java.util.regex.*;

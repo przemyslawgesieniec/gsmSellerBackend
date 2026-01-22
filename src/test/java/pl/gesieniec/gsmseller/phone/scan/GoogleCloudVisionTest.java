@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
+import pl.gesieniec.gsmseller.phone.scan.parser.CustomPhoneDataOcrParser;
 
 class GoogleCloudVisionTest {
 
@@ -12,7 +13,7 @@ class GoogleCloudVisionTest {
     void test(){
         //given
         GoogleCloudVision googleCloudVision = new GoogleCloudVision();
-        PhoneDataOcrParser phoneDataOcrParser = new PhoneDataOcrParser();
+        CustomPhoneDataOcrParser phoneDataOcrParser = new CustomPhoneDataOcrParser();
 
         byte[] data = Files.readAllBytes(Paths.get("src/main/resources/static/IMG_1603A6853523-1.jpeg"));
 

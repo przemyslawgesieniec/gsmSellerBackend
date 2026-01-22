@@ -1,4 +1,4 @@
-package pl.gesieniec.gsmseller.phone.scan;
+package pl.gesieniec.gsmseller.phone.scan.parser;
 
 import java.util.*;
 import java.util.regex.*;
@@ -12,7 +12,7 @@ public class ColorExtractor {
         "Starry Black", "Forest Green", "Electric Blue", "Polar White",
         "Cosmic Black", "Lunar Blue", "Marine Blue", "Stone Black",
         "Mint Green", "Champagne Gold", "Rose Gold",
-        "Starlight", "Space Black", "Pacific Blue", "Midnight",
+        "Starlight", "Space Black", "Pacific Blue",
         "Sunrise Gold", "Alpine Green", "Graphite", "Cream",
         "Onyx", "Coral", "Titanium", "Cobalt Blue"
     );
