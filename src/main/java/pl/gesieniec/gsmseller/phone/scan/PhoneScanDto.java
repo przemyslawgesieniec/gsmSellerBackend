@@ -33,7 +33,7 @@ public class PhoneScanDto {
     @Setter
     private String batteryCondition;
     @Setter
-    private boolean isUsed;
+    private boolean used;
 
 
     public PhoneScanDto(String model, String ram, String memory, String color, String imei) {

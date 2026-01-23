@@ -6,8 +6,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import pl.gesieniec.gsmseller.phone.scan.parser.CustomPhoneDataOcrParser;
 import pl.gesieniec.gsmseller.phone.scan.parser.OcrDataParser;
+import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 
 
 @Slf4j
@@ -23,8 +23,11 @@ public class PhoneScanService {
         String source,
         String initialPrice,
         String sellingPrice,
-        List<MultipartFile> photos
-    ) {
+        List<MultipartFile> photos,
+        PurchaseType purchaseType,
+        String description,
+        String batteryCondition,
+        boolean used) {
 
         log.info("📦 Starting phone scan process");
         log.info("Metadata: name={}, source={}, initialPrice={}, sellingPrice={}",
@@ -61,6 +64,11 @@ public class PhoneScanService {
                 phoneScanDto.setSource(source);
                 phoneScanDto.setInitialPrice(initialPrice);
                 phoneScanDto.setSellingPrice(sellingPrice);
+                phoneScanDto.setDescription(description);
+                phoneScanDto.setUsed(used);
+                phoneScanDto.setBatteryCondition(batteryCondition);
+                phoneScanDto.setPurchaseType(purchaseType);
+
 
                 log.info("✅ PhoneScanDto created for photo: {}", photo.getOriginalFilename());
 

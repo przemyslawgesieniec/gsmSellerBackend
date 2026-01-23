@@ -242,6 +242,14 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append("sellingPrice", document.getElementById("manualSellingPrice").value);
             formData.append("source", document.getElementById("manualSource").value);
             formData.append("purchaseType", document.getElementById("manualPurchaseType").value);
+            formData.append(
+                "used",
+                document.getElementById("manualUsed")?.checked ?? false
+            );
+            formData.append("batteryCondition", document.getElementById("manualBatteryCondition").value);
+            formData.append("description", document.getElementById("manualDescription").value);
+
+
             for (const originalFile of selectedFiles) {
 
                 let file = originalFile;
