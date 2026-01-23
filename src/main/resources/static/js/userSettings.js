@@ -1,22 +1,25 @@
-let CURRENT_USER = null;
-let IS_ADMIN = false;
-
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadCurrentUser();
+    await loadCurrentUser(); // 🔥 z auth.js
 
     // CARD zawsze widoczny
     showLocationCard();
 
-    // Zawsze ustaw aktualną lokalizację
+    // aktualna lokalizacja
     setCurrentLocationLabel();
 
-    // Combobox tylko dla dynamicznej lokalizacji
+    // select lokalizacji
     if (canUseLocationSelect()) {
         showLocationSelect();
         initLocationSelect();
         loadLocations();
     }
+
+    // ADMIN
+    if (IS_ADMIN) {
+        await loadAllUsers();
+    }
 });
+
 
 function showLocationCard() {
     document
@@ -183,21 +186,6 @@ async function loadAllUsers() {
    CURRENT USER
    ======================= */
 
-async function loadCurrentUser() {
-    const res = await fetch('/api/v1/users/auth/me');
-    if (!res.ok) return;
-
-    CURRENT_USER = await res.json();
-    IS_ADMIN = CURRENT_USER.role === 'ROLE_ADMIN';
-
-    if (IS_ADMIN) {
-        document
-            .querySelectorAll('.admin-only')
-            .forEach(el => el.classList.remove('hide'));
-
-        await loadAllUsers();
-    }
-}
 async function setUserActive(checkbox, userId) {
     const active = checkbox.checked;
 

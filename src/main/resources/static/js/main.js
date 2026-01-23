@@ -231,19 +231,16 @@ function renderPhones(phones) {
                 
                 <p><i class="material-icons tiny">event</i> <b>Dodano:</b> ${phone.createDateTime}</p>
                 
-                <p><i class="material-icons tiny">notes</i> <b>Opis:</b> ${phone.description}</p>
-                
-                ${phone.batteryCondition
-                            ? `
+                ${phone.description? `<p> <i class="material-icons tiny">notes</i>  <b>Opis:</b> ${phone.description}</p>` : ``}
+                                
+                ${phone.batteryCondition ? `
                 <p class="battery-row">
                   <i class="material-icons tiny ${getBatteryIconClass(phone.batteryCondition)}">
                     ${getBatteryIcon(phone.batteryCondition)}
                   </i>
                   <b>Stan baterii:</b> ${phone.batteryCondition} %
                 </p>
-                `
-                            : ``
-                        }
+                ` : ``}
               ${
             phone.locationName
                 ? `<p class="location">
