@@ -206,7 +206,7 @@ function renderPhones(phones) {
           data-color="${phone.color ?? ""}"
           data-imei="${phone.imei ?? ""}"
           data-description="${phone.description ?? ""}"
-          data-used="${phone.isUsed ?? false}"
+          data-used="${phone.used ?? false}"
           data-battery-condition="${phone.batteryCondition ?? ""}"
           data-selling-price="${phone.sellingPrice ?? ""}"
         >
@@ -545,7 +545,7 @@ function editPhone(technicalId) {
         document.getElementById("editDescription").value =
             card.dataset.description || "";
 
-        document.getElementById("editIsUsed").checked =
+        document.getElementById("editUsed").checked =
             card.dataset.used === "true";
 
         document.getElementById("editBatteryCondition").value =
@@ -568,26 +568,26 @@ function editPhone(technicalId) {
     }
 }
 
-["editName", "editModel", "editIsUsed"].forEach(id => {
+["editName", "editModel", "editUsed"].forEach(id => {
     document.getElementById(id).addEventListener("input", updateEditBatteryVisibility);
     document.getElementById(id).addEventListener("change", updateEditBatteryVisibility);
 });
 
 
-function shouldShowBatteryCondition(name, model, isUsed) {
+function shouldShowBatteryCondition(name, model, used) {
     const text = `${name} ${model}`.toLowerCase();
-    return isUsed === true && text.includes("iphone");
+    return used === true && text.includes("iphone");
 }
 
 function updateEditBatteryVisibility() {
     const name = document.getElementById("editName").value || "";
     const model = document.getElementById("editModel").value || "";
-    const isUsed = document.getElementById("editIsUsed").checked;
+    const used = document.getElementById("editUsed").checked;
 
     const wrapper = document.getElementById("editBatteryConditionWrapper");
     const input = document.getElementById("editBatteryCondition");
 
-    if (shouldShowBatteryCondition(name, model, isUsed)) {
+    if (shouldShowBatteryCondition(name, model, used)) {
         wrapper.classList.remove("hide");
     } else {
         wrapper.classList.add("hide");
@@ -604,11 +604,11 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
 
     const name = document.getElementById("editName").value.trim();
     const model = document.getElementById("editModel").value.trim();
-    const isUsed = document.getElementById("editIsUsed").checked;
+    const used = document.getElementById("editUsed").checked;
 
     const batteryInput = document.getElementById("editBatteryCondition");
     const shouldSendBattery =
-        shouldShowBatteryCondition(name, model, isUsed);
+        shouldShowBatteryCondition(name, model, used);
 
     const updatedPhone = {
         name: name,
@@ -617,7 +617,7 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
         imei: document.getElementById("editImei").value.trim(),
         sellingPrice: parseFloat(document.getElementById("editPrice").value),
         description: document.getElementById("editDescription").value.trim(),
-        isUsed: isUsed,
+        used: used,
         batteryCondition: shouldSendBattery && batteryInput.value !== ""
             ? batteryInput.value
             : null
