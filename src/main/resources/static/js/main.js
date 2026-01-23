@@ -29,12 +29,15 @@ async function loadStock(page = 0) {
             technicalId: phone.technicalId,
             name: phone.name,
             model: phone.model,
+            ram: phone.ram,
+            memory: phone.memory,
             color: phone.color,
             imei: phone.imei,
             sellingPrice: phone.sellingPrice,
             purchasePrice: phone.purchasePrice,
             createDateTime: phone.createDateTime,
             status: phone.status,
+            source: phone.source,
             locationName: phone.locationName,
             purchaseType: phone.purchaseType,
             comment: phone.comment,
@@ -204,6 +207,9 @@ function renderPhones(phones) {
           data-name="${phone.name ?? ""}"
           data-model="${phone.model ?? ""}"
           data-color="${phone.color ?? ""}"
+          data-memory="${phone.memory ?? ""}"
+          data-ram="${phone.ram ?? ""}"
+          data-source="${phone.source ?? ""}"
           data-imei="${phone.imei ?? ""}"
           data-description="${phone.description ?? ""}"
           data-used="${phone.used ?? false}"
@@ -220,6 +226,23 @@ function renderPhones(phones) {
                   </span>
                 </div>
                 <p><i class="material-icons tiny">smartphone</i> <b>Model:</b> ${phone.model}</p>
+
+                ${(phone.ram != null || phone.memory != null) ? `
+                <p>
+                  <i class="material-icons tiny">memory</i>
+                  <b>Specyfikacja:</b>
+                  ${phone.ram != null ? `${phone.ram} GB RAM` : ``}
+                  ${phone.ram != null && phone.memory != null ? ` / ` : ``}
+                  ${phone.memory != null ? `${phone.memory} GB pamięci` : ``}
+                </p>
+                ` : ``}
+                
+                ${phone.source != null && phone.source !== "" ? `
+                <p>
+                  <i class="material-icons tiny">local_shipping</i>
+                  <b>Pochodzenie:</b> ${phone.source}
+                </p>
+                ` : ``}
 
                 <p><i class="material-icons tiny">palette</i> <b>Kolor:</b> ${phone.color}</p>
                 
