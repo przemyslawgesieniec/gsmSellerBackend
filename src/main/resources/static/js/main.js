@@ -231,9 +231,9 @@ function renderPhones(phones) {
                 <p>
                   <i class="material-icons tiny">memory</i>
                   <b>Specyfikacja:</b>
-                  ${phone.ram != null ? `${phone.ram} GB RAM` : ``}
+                  ${phone.ram != null ? `${phone.ram}` : ``}
                   ${phone.ram != null && phone.memory != null ? ` / ` : ``}
-                  ${phone.memory != null ? `${phone.memory} GB pamięci` : ``}
+                  ${phone.memory != null ? `${phone.memory} GB ` : ``}
                 </p>
                 ` : ``}
                 
