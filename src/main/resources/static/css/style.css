@@ -673,3 +673,73 @@ table td {
 .ts-control {
     margin-top: 5px;
 }
+
+
+/* ====== TITLE + CONDITION BADGE ====== */
+
+.title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* wspólny styl */
+.condition-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* NOWY */
+.condition-badge.NEW {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+/* UŻYWANY */
+.condition-badge.USED {
+    background-color: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ffe0b2;
+}
+
+.phone-left p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.phone-left i.material-icons.tiny {
+    font-size: 1.1rem;
+    opacity: 0.75;
+}
+
+/* ===== BATTERY COLORS ===== */
+
+.battery-good {
+    color: #2e7d32; /* zielony */
+}
+
+.battery-ok {
+    color: #f9a825; /* żółty */
+}
+
+.battery-warn {
+    color: #ef6c00; /* pomarańcz */
+}
+
+.battery-bad {
+    color: #c62828; /* czerwony */
+}
+
+.battery-row i {
+    margin-right: 2px;
+}
+

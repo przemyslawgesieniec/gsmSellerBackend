@@ -212,15 +212,38 @@ function renderPhones(phones) {
         >
           <div class="card-content phone-card">
             <div class="phone-left">
-              <span class="card-title">${phone.name}</span>
-              <p><b>Model:</b> ${phone.model}</p>
-              <p><b>Kolor:</b> ${phone.color}</p>
-              <p><b>Froma zakupu:</b> ${PURCHASE_TYPE_LABELS[phone.purchaseType] ?? "—"}
-              <p><b>IMEI:</b> ${phone.imei}</p>
-              <p><b>Dodano:</b> ${phone.createDateTime}</p>
-              <p><b>Opis:</b> ${phone.description}</p>
-              ${phone.comment ? `<p class="handover-comment"><b>Komentarz:</b> ${phone.comment}</p>` : ``}
-              ${phone.batteryCondition ? `<p><b>Stan baterii:</b> ${phone.batteryCondition} %</p>` : ``}
+                <div class="title-row">
+                  <span class="card-title">${phone.name}</span>
+                
+                  <span class="condition-badge ${phone.used ? "USED" : "NEW"}">
+                    ${phone.used ? "UŻYWANY" : "NOWY"}
+                  </span>
+                </div>
+                <p><i class="material-icons tiny">smartphone</i> <b>Model:</b> ${phone.model}</p>
+
+                <p><i class="material-icons tiny">palette</i> <b>Kolor:</b> ${phone.color}</p>
+                
+                <p><i class="material-icons tiny">receipt</i> <b>Forma zakupu:</b>
+                  ${PURCHASE_TYPE_LABELS[phone.purchaseType] ?? "—"}
+                </p>
+                
+                <p><i class="material-icons tiny">fingerprint</i> <b>IMEI:</b> ${phone.imei}</p>
+                
+                <p><i class="material-icons tiny">event</i> <b>Dodano:</b> ${phone.createDateTime}</p>
+                
+                <p><i class="material-icons tiny">notes</i> <b>Opis:</b> ${phone.description}</p>
+                
+                ${phone.batteryCondition
+                            ? `
+                <p class="battery-row">
+                  <i class="material-icons tiny ${getBatteryIconClass(phone.batteryCondition)}">
+                    ${getBatteryIcon(phone.batteryCondition)}
+                  </i>
+                  <b>Stan baterii:</b> ${phone.batteryCondition} %
+                </p>
+                `
+                            : ``
+                        }
               ${
             phone.locationName
                 ? `<p class="location">
@@ -1051,4 +1074,28 @@ function initSimpleSelect(selector) {
         closeAfterSelect: true,
         allowEmptyOption: true
     });
+}
+
+function getBatteryIcon(percent) {
+    const p = Number(percent);
+
+    if (p >= 90) return "battery_full";
+    if (p >= 80) return "battery_6_bar";
+    if (p >= 70) return "battery_5_bar";
+    if (p >= 60) return "battery_4_bar";
+    if (p >= 50) return "battery_3_bar";
+    if (p >= 30) return "battery_2_bar";
+    if (p >= 15) return "battery_1_bar";
+
+    return "battery_alert";
+}
+
+function getBatteryIconClass(percent) {
+    const p = Number(percent);
+
+    if (p >= 80) return "battery-good";
+    if (p >= 50) return "battery-ok";
+    if (p >= 30) return "battery-warn";
+
+    return "battery-bad";
 }
