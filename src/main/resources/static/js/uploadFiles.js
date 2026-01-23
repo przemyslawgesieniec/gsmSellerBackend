@@ -145,8 +145,8 @@ function addManualPhone() {
                 Nowy
                 <input
                     type="checkbox"
-                    data-field="isUsed"
-                    ${document.getElementById("manualIsUsed").checked ? "checked" : ""}
+                    data-field="used"
+                    ${document.getElementById("manualUsed").checked ? "checked" : ""}
                 >
                 <span class="lever"></span>
                 Używany
@@ -154,14 +154,14 @@ function addManualPhone() {
         </div>
     </div>
 
-    <div class="input-field col s12 m4 hide battery-health-wrapper">
+    <div class="input-field col s12 m4 hide battery-condition-wrapper">
         <input
             type="number"
             min="0"
             max="100"
             step="1"
-            data-field="batteryHealth"
-            value="${document.getElementById("manualBatteryHealth").value || ""}"
+            data-field="batteryCondition"
+            value="${document.getElementById("manualBatteryCondition").value || ""}"
         >
         <label class="active">Kondycja baterii (%)</label>
     </div>
@@ -429,22 +429,22 @@ document.addEventListener("DOMContentLoaded", () => {
                             Nowy
                             <input
                                 type="checkbox"
-                                data-field="isUsed"
-                                ${p.isUsed ? "checked" : ""}>
+                                data-field="used"
+                                ${p.used ? "checked" : ""}>
                             <span class="lever"></span>
                             Używany
                         </label>
                     </div>
                 </div>
 
-                <div class="input-field col s12 m4 hide battery-health-wrapper">
+                <div class="input-field col s12 m4 hide battery-condition-wrapper">
                     <input
                         type="number"
                         min="0"
                         max="100"
                         step="1"
-                        data-field="batteryHealth"
-                        value="${p.batteryHealth ?? ""}">
+                        data-field="batteryCondition"
+                        value="${p.batteryCondition ?? ""}">
                     <label class="active">Kondycja baterii (%)</label>
                 </div>
 
@@ -529,7 +529,7 @@ function sendFinalPhones() {
             }
 
             // battery
-            if (key === "batteryHealth") {
+            if (key === "batteryCondition") {
                 phone[key] = el.value === "" ? null : Number(el.value);
                 return;
             }
@@ -541,6 +541,8 @@ function sendFinalPhones() {
 
         resultList.push(phone);
     });
+
+    console.log("Wysyłane dane:", JSON.stringify(resultList, null, 2));
 
     fetch("/api/v1/phones", {
         method: "POST",
@@ -672,19 +674,19 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-function shouldShowBatteryCondition(name, model, isUsed) {
+function shouldShowBatteryCondition(name, model, used) {
     const text = `${name} ${model}`.toLowerCase();
-    return isUsed && text.includes("iphone");
+    return used && text.includes("iphone");
 }
 
 function updateManualBatteryVisibility() {
     const name = document.getElementById("manualName").value || "";
     const model = ""; // w głównym cardzie nie masz modelu
-    const isUsed = document.getElementById("manualIsUsed").checked;
+    const used = document.getElementById("manualUsed").checked;
 
     const wrapper = document.getElementById("manualBatteryConditionWrapper");
 
-    if (shouldShowBatteryCondition(name, model, isUsed)) {
+    if (shouldShowBatteryCondition(name, model, used)) {
         wrapper.classList.remove("hide");
     } else {
         wrapper.classList.add("hide");
@@ -694,7 +696,7 @@ function updateManualBatteryVisibility() {
     M.updateTextFields();
 }
 
-["manualName", "manualIsUsed"].forEach(id => {
+["manualName", "manualUsed"].forEach(id => {
     document.getElementById(id).addEventListener("input", updateManualBatteryVisibility);
     document.getElementById(id).addEventListener("change", updateManualBatteryVisibility);
 });
@@ -703,14 +705,14 @@ function updateManualBatteryVisibility() {
 function updateBatteryVisibilityForBlock(block) {
     const name = block.querySelector('[data-field="name"]')?.value || "";
     const model = block.querySelector('[data-field="model"]')?.value || "";
-    const isUsed = block.querySelector('[data-field="isUsed"]')?.checked;
+    const used = block.querySelector('[data-field="used"]')?.checked;
 
     const wrapper = block.querySelector(".battery-condition-wrapper");
     const input = block.querySelector('[data-field="batteryCondition"]');
 
     if (!wrapper) return;
 
-    if (shouldShowBatteryCondition(name, model, isUsed)) {
+    if (shouldShowBatteryCondition(name, model, used)) {
         wrapper.classList.remove("hide");
     } else {
         wrapper.classList.add("hide");

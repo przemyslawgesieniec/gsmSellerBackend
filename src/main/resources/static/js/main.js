@@ -40,7 +40,7 @@ async function loadStock(page = 0) {
             comment: phone.comment,
             description: phone.description,
             batteryCondition: phone.batteryCondition,
-            isUsed: phone.isUsed
+            used: phone.used
         }));
 
 
