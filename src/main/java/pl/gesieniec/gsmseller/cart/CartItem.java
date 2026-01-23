@@ -57,12 +57,40 @@ public class CartItem {
     private UUID technicalId;
 
     public static CartItem fromPhone(PhoneStockDto phone) {
-        String description = String.format("(%s - %s/%s GB, kolor: %s, IMEI: %s",
-            phone.getName(), phone.getRam(), phone.getMemory(), phone.getColor(), phone.getImei());
+        StringBuilder description = new StringBuilder();
+        description.append("(").append(phone.getName());
 
-        return new CartItem(description, phone.getSellingPrice(),
-            phone.getTechnicalId(), ItemType.PHONE);
+        if (phone.getRam() != null || phone.getMemory() != null) {
+            description.append(" - ");
+
+            if (phone.getRam() != null) {
+                description.append(phone.getRam());
+            }
+
+            if (phone.getRam() != null && phone.getMemory() != null) {
+                description.append("/");
+            }
+
+            if (phone.getMemory() != null) {
+                description.append(phone.getMemory()).append(" GB");
+            }
+        }
+
+        if (phone.getColor() != null && !phone.getColor().isBlank()) {
+            description.append(", kolor: ").append(phone.getColor());
+        }
+
+        description.append(", IMEI: ").append(phone.getImei());
+        description.append(")");
+
+        return new CartItem(
+            description.toString(),
+            phone.getSellingPrice(),
+            phone.getTechnicalId(),
+            ItemType.PHONE
+        );
     }
+
 
     public void update(String description, BigDecimal price) {
         this.description = description;
