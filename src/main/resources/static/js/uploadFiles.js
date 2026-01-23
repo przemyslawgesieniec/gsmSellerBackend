@@ -88,13 +88,13 @@ function addManualPhone() {
 
         <div class="row">
             <div class="input-field col s12 m4">
-                <input type="text" data-field="ram">
-                <label>RAM</label>
+                <input type="number" data-field="ram">
+                <label>RAM (GB)</label>
             </div>
 
             <div class="input-field col s12 m4">
-                <input type="text" data-field="memory">
-                <label>Pamięć</label>
+                <input type="number" data-field="memory">
+                <label>Pamięć (GB)</label>
             </div>
 
             <div class="input-field col s12 m4">
@@ -371,13 +371,13 @@ document.addEventListener("DOMContentLoaded", () => {
             <!-- RAM, Memory, Color -->
             <div class="row">
                 <div class="input-field col s12 m4">
-                    <input type="text" value="${p.ram || ''}" data-field="ram">
-                    <label class="active">RAM</label>
+                    <input type="number" value="${p.ram || ''}" data-field="ram">
+                    <label class="active">RAM (GB)</label>
                 </div>
 
                 <div class="input-field col s12 m4">
-                    <input type="text" value="${p.memory || ''}" data-field="memory">
-                    <label class="active">Pamięć</label>
+                    <input type="number" value="${p.memory || ''}" data-field="memory">
+                    <label class="active">Pamięć (GB)</label>
                 </div>
 
                 <div class="input-field col s12 m4">

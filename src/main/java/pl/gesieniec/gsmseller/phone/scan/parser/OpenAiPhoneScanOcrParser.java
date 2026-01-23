@@ -55,7 +55,10 @@ public class OpenAiPhoneScanOcrParser implements OcrDataParser {
 
             String json = extractJson(response);
 
-            return objectMapper.readValue(json, PhoneScanDto.class);
+            PhoneScanDto phoneScanDto = objectMapper.readValue(json, PhoneScanDto.class);
+            phoneScanDto.normalizeData();
+
+            return phoneScanDto;
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse OCR phone data", e);

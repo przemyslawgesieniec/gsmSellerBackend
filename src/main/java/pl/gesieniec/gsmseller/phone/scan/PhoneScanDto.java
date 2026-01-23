@@ -44,5 +44,13 @@ public class PhoneScanDto {
         this.imei = imei;
     }
 
+    public void normalizeData(){
+        if (ram != null) {
+            ram = ram.replaceAll("\\D", "");
+        }
+        if (memory != null) {
+            memory = memory.replaceAll("\\D", "");
+        }
+    }
 
 }
