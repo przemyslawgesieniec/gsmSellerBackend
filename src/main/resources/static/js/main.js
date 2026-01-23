@@ -511,57 +511,105 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function editPhone(technicalId) {
     try {
-        // znajdź kartę
         const card = document.querySelector(`.card[data-technical-id="${technicalId}"]`);
-        if (!card) {
-            console.error("Nie znaleziono karty telefonu dla ID:", technicalId);
-            return;
-        }
+        if (!card) return;
 
-        // Pobierz dane z karty
         const name = card.querySelector(".card-title")?.textContent.trim() || "";
-        const model = card.querySelector("p:nth-of-type(1)")?.textContent.replace("Model:", "").trim() || "";
-        const color = card.querySelector("p:nth-of-type(2)")?.textContent.replace("Kolor:", "").trim() || "";
-        const imei = card.querySelector("p:nth-of-type(4)")?.textContent.replace("IMEI:", "").trim() || "";
-        const priceText = card.querySelector(".sellingPrice")?.textContent.replace("zł", "").trim() || "";
-        const price = parseFloat(priceText) || 0;
+        const model = card.querySelector('[data-field="model"]')?.textContent || "";
+        const color = card.querySelector('[data-field="color"]')?.textContent || "";
+        const imei = card.querySelector('[data-field="imei"]')?.textContent || "";
+        const price = parseFloat(
+            card.querySelector(".sellingPrice")?.textContent.replace("zł", "").trim()
+        ) || 0;
 
-        // Wypełnij formularz
+        const description =
+            card.querySelector('[data-field="description"]')?.textContent || "";
+
+        const isUsed =
+            card.querySelector('[data-field="isUsed"]')?.textContent === "true";
+
+        const batteryCondition =
+            card.querySelector('[data-field="batteryCondition"]')?.textContent || "";
+
         document.getElementById("editName").value = name;
         document.getElementById("editModel").value = model;
         document.getElementById("editColor").value = color;
         document.getElementById("editImei").value = imei;
         document.getElementById("editPrice").value = price;
+        document.getElementById("editDescription").value = description;
+        document.getElementById("editIsUsed").checked = isUsed;
+        document.getElementById("editBatteryCondition").value = batteryCondition;
 
         M.updateTextFields();
+        updateEditBatteryVisibility();
 
-        // ustaw ID w przycisku zapisu
         const saveBtn = document.getElementById("saveEditBtn");
         saveBtn.setAttribute("data-technical-id", technicalId);
 
-        // otwórz modal
-        const modal = M.Modal.getInstance(document.getElementById("editPhoneModal"));
-        modal.open();
+        M.Modal.getInstance(document.getElementById("editPhoneModal")).open();
 
-    } catch (error) {
-        console.error("Błąd podczas otwierania edycji:", error);
-        M.toast({html: "Nie udało się otworzyć edycji telefonu", classes: "red"});
+    } catch (e) {
+        console.error(e);
+        M.toast({ html: "Błąd edycji telefonu", classes: "red" });
     }
+}
+
+["editName", "editModel", "editIsUsed"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateEditBatteryVisibility);
+    document.getElementById(id).addEventListener("change", updateEditBatteryVisibility);
+});
+
+
+function shouldShowBatteryCondition(name, model, isUsed) {
+    const text = `${name} ${model}`.toLowerCase();
+    return isUsed === true && text.includes("iphone");
+}
+
+function updateEditBatteryVisibility() {
+    const name = document.getElementById("editName").value || "";
+    const model = document.getElementById("editModel").value || "";
+    const isUsed = document.getElementById("editIsUsed").checked;
+
+    const wrapper = document.getElementById("editBatteryConditionWrapper");
+    const input = document.getElementById("editBatteryCondition");
+
+    if (shouldShowBatteryCondition(name, model, isUsed)) {
+        wrapper.classList.remove("hide");
+    } else {
+        wrapper.classList.add("hide");
+        input.value = "";
+    }
+
+    M.updateTextFields();
 }
 
 
 document.getElementById("saveEditBtn").addEventListener("click", async () => {
-    const technicalId = document
-        .getElementById("saveEditBtn")
-        .getAttribute("data-technical-id");
+    const technicalId =
+        document.getElementById("saveEditBtn").getAttribute("data-technical-id");
+
+    const name = document.getElementById("editName").value.trim();
+    const model = document.getElementById("editModel").value.trim();
+    const isUsed = document.getElementById("editIsUsed").checked;
+
+    const batteryInput = document.getElementById("editBatteryCondition");
+    const shouldSendBattery =
+        shouldShowBatteryCondition(name, model, isUsed);
 
     const updatedPhone = {
-        name: document.getElementById("editName").value,
-        model: document.getElementById("editModel").value,
-        color: document.getElementById("editColor").value,
-        imei: document.getElementById("editImei").value,
-        sellingPrice: parseFloat(document.getElementById("editPrice").value)
+        name: name,
+        model: model,
+        color: document.getElementById("editColor").value.trim(),
+        imei: document.getElementById("editImei").value.trim(),
+        sellingPrice: parseFloat(document.getElementById("editPrice").value),
+        description: document.getElementById("editDescription").value.trim(),
+        isUsed: isUsed,
+        batteryCondition: shouldSendBattery && batteryInput.value !== ""
+            ? batteryInput.value
+            : null
     };
+
+    console.log("PATCH payload:", updatedPhone);
 
     try {
         const response = await fetch(`/api/v1/phones/${technicalId}`, {
@@ -574,20 +622,20 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
 
         if (!response.ok) {
             throw new Error("Nie udało się zapisać zmian");
-        } else {
-            M.toast({html: "Telefon został zaktualizowany", classes: "green"});
         }
 
-        // Zamknij modal
-        const modal = M.Modal.getInstance(document.getElementById("editPhoneModal"));
+        M.toast({ html: "Telefon został zaktualizowany", classes: "green" });
+
+        const modal = M.Modal.getInstance(
+            document.getElementById("editPhoneModal")
+        );
         modal.close();
 
-        // Odśwież listę telefonów
         loadStock(currentPage);
 
     } catch (error) {
-        console.error("Błąd podczas zapisywania zmian:", error);
-        M.toast({html: "Błąd podczas zapisu", classes: "red"});
+        console.error("Błąd podczas zapisu:", error);
+        M.toast({ html: "Błąd podczas zapisu", classes: "red" });
     }
 });
 

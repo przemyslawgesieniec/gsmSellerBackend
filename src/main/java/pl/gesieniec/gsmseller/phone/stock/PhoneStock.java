@@ -87,18 +87,63 @@ public class PhoneStock {
             source, purchasePrice, sellingPrice, null, Status.WPROWADZONY, purchaseType, comment, description, batteryCondition, isUsed);
     }
 
-    public void update(String model, String ram, String memory, String color,
-                       String imei, String name, String source, BigDecimal sellingPrice) {
+    public void update(
+        String model,
+        String ram,
+        String memory,
+        String color,
+        String imei,
+        String name,
+        String source,
+        BigDecimal sellingPrice,
+        String description,
+        Boolean isUsed,
+        String batteryCondition
+    ) {
+        if (model != null) {
+            this.model = model;
+        }
+        if (ram != null) {
+            this.ram = ram;
+        }
+        if (memory != null) {
+            this.memory = memory;
+        }
+        if (color != null) {
+            this.color = color;
+        }
+        if (imei != null) {
+            this.imei = imei;
+        }
+        if (name != null) {
+            this.name = name;
+        }
+        if (source != null) {
+            this.source = source;
+        }
+        if (sellingPrice != null) {
+            this.sellingPrice = sellingPrice;
+        }
 
-        if (model != null) this.model = model;
-        if (ram != null) this.ram = ram;
-        if (memory != null) this.memory = memory;
-        if (color != null) this.color = color;
-        if (imei != null) this.imei = imei;
-        if (name != null) this.name = name;
-        if (source != null) this.source = source;
-        if (sellingPrice != null) this.sellingPrice = sellingPrice;
+        // === NOWE POLA ===
+        if (description != null) {
+            this.description = description;
+        }
+
+        if (isUsed != null) {
+            this.used = isUsed;
+
+            if (!isUsed) {
+                this.batteryCondition = null;
+            }
+            else {
+                this.batteryCondition = batteryCondition;
+            }
+        }
+
+
     }
+
 
     public void sell(BigDecimal soldPrice) {
         if (this.status != Status.DOSTĘPNY) {

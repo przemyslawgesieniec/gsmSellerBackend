@@ -86,8 +86,12 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             dto.getImei(),
             dto.getName(),
             dto.getSource(),
-            dto.getSellingPrice()
+            dto.getSellingPrice(),
+            dto.getDescription(),
+            dto.getUsed(),
+            dto.getBatteryCondition()
         );
+
 
         return phoneStockMapper.toDto(phone);
     }
