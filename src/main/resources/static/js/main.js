@@ -198,7 +198,18 @@ function renderPhones(phones) {
 
         const card = `
       <div class="col s12">
-        <div class="card z-depth-2" data-technical-id="${phone.technicalId}">
+        <div
+          class="card z-depth-2"
+          data-technical-id="${phone.technicalId}"
+          data-name="${phone.name ?? ""}"
+          data-model="${phone.model ?? ""}"
+          data-color="${phone.color ?? ""}"
+          data-imei="${phone.imei ?? ""}"
+          data-description="${phone.description ?? ""}"
+          data-used="${phone.isUsed ?? false}"
+          data-battery-condition="${phone.batteryCondition ?? ""}"
+          data-selling-price="${phone.sellingPrice ?? ""}"
+        >
           <div class="card-content phone-card">
             <div class="phone-left">
               <span class="card-title">${phone.name}</span>
@@ -274,7 +285,7 @@ function renderPhones(phones) {
                 <a href="#!"
                    data-action="delete"
                    data-id="${phone.technicalId}"
-                   class="${!['WPROWADZONY','DOSTĘPNY'].includes(phone.status)
+                   class="${!['WPROWADZONY', 'DOSTĘPNY'].includes(phone.status)
             ? 'disabled-link'
             : ''}">
                   Usuń
@@ -511,42 +522,45 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function editPhone(technicalId) {
     try {
-        const card = document.querySelector(`.card[data-technical-id="${technicalId}"]`);
+        const card = document.querySelector(
+            `.card[data-technical-id="${technicalId}"]`
+        );
         if (!card) return;
 
-        const name = card.querySelector(".card-title")?.textContent.trim() || "";
-        const model = card.querySelector('[data-field="model"]')?.textContent || "";
-        const color = card.querySelector('[data-field="color"]')?.textContent || "";
-        const imei = card.querySelector('[data-field="imei"]')?.textContent || "";
-        const price = parseFloat(
-            card.querySelector(".sellingPrice")?.textContent.replace("zł", "").trim()
-        ) || 0;
+        document.getElementById("editName").value =
+            card.dataset.name || "";
 
-        const description =
-            card.querySelector('[data-field="description"]')?.textContent || "";
+        document.getElementById("editModel").value =
+            card.dataset.model || "";
 
-        const isUsed =
-            card.querySelector('[data-field="isUsed"]')?.textContent === "true";
+        document.getElementById("editColor").value =
+            card.dataset.color || "";
 
-        const batteryCondition =
-            card.querySelector('[data-field="batteryCondition"]')?.textContent || "";
+        document.getElementById("editImei").value =
+            card.dataset.imei || "";
 
-        document.getElementById("editName").value = name;
-        document.getElementById("editModel").value = model;
-        document.getElementById("editColor").value = color;
-        document.getElementById("editImei").value = imei;
-        document.getElementById("editPrice").value = price;
-        document.getElementById("editDescription").value = description;
-        document.getElementById("editIsUsed").checked = isUsed;
-        document.getElementById("editBatteryCondition").value = batteryCondition;
+        document.getElementById("editPrice").value =
+            card.dataset.sellingPrice || "";
+
+        document.getElementById("editDescription").value =
+            card.dataset.description || "";
+
+        document.getElementById("editIsUsed").checked =
+            card.dataset.used === "true";
+
+        document.getElementById("editBatteryCondition").value =
+            card.dataset.batteryCondition || "";
 
         M.updateTextFields();
         updateEditBatteryVisibility();
 
-        const saveBtn = document.getElementById("saveEditBtn");
-        saveBtn.setAttribute("data-technical-id", technicalId);
+        document
+            .getElementById("saveEditBtn")
+            .setAttribute("data-technical-id", technicalId);
 
-        M.Modal.getInstance(document.getElementById("editPhoneModal")).open();
+        M.Modal.getInstance(
+            document.getElementById("editPhoneModal")
+        ).open();
 
     } catch (e) {
         console.error(e);
