@@ -233,7 +233,7 @@ function renderPhones(phones) {
                   <b>Specyfikacja:</b>
                   ${phone.ram != null ? `${phone.ram}` : ``}
                   ${phone.ram != null && phone.memory != null ? ` / ` : ``}
-                  ${phone.memory != null ? `${phone.memory} GB ` : ``}
+                  ${phone.memory != null ? `${phone.memory}` : ``}
                 </p>
                 ` : ``}
                 
