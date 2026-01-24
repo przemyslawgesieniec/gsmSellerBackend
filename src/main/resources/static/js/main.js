@@ -13,7 +13,7 @@ function getFilters() {
         priceMin: document.getElementById("filterPriceMin").value.trim(),
         priceMax: document.getElementById("filterPriceMax").value.trim(),
         status: document.getElementById("filterStatus").value.trim(),
-        locationName: document.getElementById("filterLocation").value.trim() // 👈
+        locationName: document.getElementById("filterLocation").value.trim()
     };
 }
 
@@ -215,6 +215,7 @@ function renderPhones(phones) {
           data-used="${phone.used ?? false}"
           data-battery-condition="${phone.batteryCondition ?? ""}"
           data-selling-price="${phone.sellingPrice ?? ""}"
+          data-purchase-price="${phone.purchasePrice ?? ""}"
         >
           <div class="card-content phone-card">
             <div class="phone-left">
@@ -594,6 +595,12 @@ function editPhone(technicalId) {
         document.getElementById("editBatteryCondition").value =
             card.dataset.batteryCondition || "";
 
+        // 🔐 ADMIN ONLY – purchasePrice
+        if (IS_ADMIN) {
+            document.getElementById("editPurchasePrice").value =
+                card.dataset.purchasePrice || "";
+        }
+
         M.updateTextFields();
         updateEditBatteryVisibility();
 
@@ -643,7 +650,8 @@ function updateEditBatteryVisibility() {
 
 document.getElementById("saveEditBtn").addEventListener("click", async () => {
     const technicalId =
-        document.getElementById("saveEditBtn").getAttribute("data-technical-id");
+        document.getElementById("saveEditBtn")
+            .getAttribute("data-technical-id");
 
     const name = document.getElementById("editName").value.trim();
     const model = document.getElementById("editModel").value.trim();
@@ -658,12 +666,16 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
         model: model,
         color: document.getElementById("editColor").value.trim(),
         imei: document.getElementById("editImei").value.trim(),
-        sellingPrice: parseFloat(document.getElementById("editPrice").value),
+        sellingPrice: parseFloat(
+            document.getElementById("editPrice").value
+        ),
         description: document.getElementById("editDescription").value.trim(),
         used: used,
-        batteryCondition: shouldSendBattery && batteryInput.value !== ""
-            ? batteryInput.value
-            : null
+        purchasePrice: document.getElementById("editPurchasePrice").value,
+        batteryCondition:
+            shouldSendBattery && batteryInput.value !== ""
+                ? batteryInput.value
+                : null
     };
 
     console.log("PATCH payload:", updatedPhone);
@@ -681,7 +693,10 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
             throw new Error("Nie udało się zapisać zmian");
         }
 
-        M.toast({ html: "Telefon został zaktualizowany", classes: "green" });
+        M.toast({
+            html: "Telefon został zaktualizowany",
+            classes: "green"
+        });
 
         const modal = M.Modal.getInstance(
             document.getElementById("editPhoneModal")

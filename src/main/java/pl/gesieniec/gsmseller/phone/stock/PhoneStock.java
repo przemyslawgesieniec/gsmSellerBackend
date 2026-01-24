@@ -96,6 +96,7 @@ public class PhoneStock {
         String name,
         String source,
         BigDecimal sellingPrice,
+        BigDecimal purchasePrice,
         String description,
         Boolean isUsed,
         String batteryCondition
@@ -124,7 +125,9 @@ public class PhoneStock {
         if (sellingPrice != null) {
             this.sellingPrice = sellingPrice;
         }
-
+        if (purchasePrice != null) {
+            this.purchasePrice = purchasePrice;
+        }
         // === NOWE POLA ===
         if (description != null) {
             this.description = description;
