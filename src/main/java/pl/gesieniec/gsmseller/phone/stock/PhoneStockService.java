@@ -67,7 +67,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             .and(PhoneStockSpecifications.hasPriceMax(priceMax));
 
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("name").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createDateTime").descending());
 
         return repository.findAll(spec, pageable)
             .map(phoneStockMapper::toDto);
