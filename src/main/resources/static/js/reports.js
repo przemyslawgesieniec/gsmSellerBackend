@@ -99,7 +99,7 @@ function renderProfitChart(data) {
     destroyChart();
 
     profitChart = new Chart(ctx, {
-        type: "line",
+        type: "bar",
         data: {
             labels: data.map(d => d.date),
             datasets: [{

@@ -38,30 +38,50 @@
 
   <!-- HEADER -->
   <h4 class="blue-text text-darken-2">Raport sprzedaży</h4>
-  <p class="grey-text">
+  <p class="grey-text" style="
+    margin-bottom: 54px;
+">
     Sprzedaż, magazyn oraz bieżąca aktywność.
   </p>
 
+
   <!-- =========================
-       SALES
+       TODAY
   ========================= -->
 
-  <h5 class="blue-text text-darken-2">Sprzedaż</h5>
+  <h5 class="blue-text text-darken-2">Dzisiaj</h5>
 
-  <!-- DATE RANGE PICKER -->
   <div class="row">
     <div class="col s12 m4">
-      <label class="active">Zakres dat</label>
-      <input
-              type="text"
-              id="dateRangePicker"
-              class="datepicker"
-              placeholder="Wybierz zakres dat"
-              readonly
-      />
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">shopping_bag</i>
+          <h6>Sprzedane sztuki</h6>
+          <h5 id="soldTodayCount">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">attach_money</i>
+          <h6>Obrót dzisiaj</h6>
+          <h5 id="todayTurnover">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">trending_up</i>
+          <h6>Zysk dzisiaj</h6>
+          <h5 id="todayProfit">—</h5>
+        </div>
+      </div>
     </div>
   </div>
-
 
   <!-- =========================
        STOCK
@@ -101,41 +121,24 @@
     </div>
   </div>
 
+
   <!-- =========================
-       TODAY
-  ========================= -->
+     SALES
+========================= -->
 
-  <h5 class="blue-text text-darken-2">Dzisiaj</h5>
+  <h5 class="blue-text text-darken-2">Sprzedaż</h5>
 
+  <!-- DATE RANGE PICKER -->
   <div class="row">
     <div class="col s12 m4">
-      <div class="card center-align">
-        <div class="card-content">
-          <i class="material-icons large blue-text text-darken-2">shopping_bag</i>
-          <h6>Sprzedane sztuki</h6>
-          <h5 id="soldTodayCount">—</h5>
-        </div>
-      </div>
-    </div>
-
-    <div class="col s12 m4">
-      <div class="card center-align">
-        <div class="card-content">
-          <i class="material-icons large blue-text text-darken-2">attach_money</i>
-          <h6>Obrót dzisiaj</h6>
-          <h5 id="todayTurnover">—</h5>
-        </div>
-      </div>
-    </div>
-
-    <div class="col s12 m4">
-      <div class="card center-align">
-        <div class="card-content">
-          <i class="material-icons large blue-text text-darken-2">trending_up</i>
-          <h6>Zysk dzisiaj</h6>
-          <h5 id="todayProfit">—</h5>
-        </div>
-      </div>
+      <label class="active">Zakres dat</label>
+      <input
+              type="text"
+              id="dateRangePicker"
+              class="datepicker"
+              placeholder="Wybierz zakres dat"
+              readonly
+      />
     </div>
   </div>
 
@@ -177,7 +180,7 @@
     <div class="col s12">
       <div class="card">
         <div class="card-content">
-          <span class="card-title">Zysk dzienny</span>
+          <span class="card-title">Zyski w dniach</span>
           <canvas id="profitPerDayChart"></canvas>
         </div>
       </div>
