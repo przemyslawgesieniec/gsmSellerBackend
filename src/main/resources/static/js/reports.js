@@ -103,19 +103,31 @@ function renderProfitChart(data) {
         data: {
             labels: data.map(d => d.date),
             datasets: [{
-                label: "Zysk",
+                label: "Zysk dzienny",
                 data: data.map(d => d.profit),
-                tension: 0.3,
-                fill: true
+                borderRadius: 4
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true, // 🔒 BLOKUJE WZROST
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${formatCurrency(ctx.raw)}`
+                    }
+                }
             },
             scales: {
+                x: {
+                    ticks: {
+                        autoSkip: true,        // ✅ POZWÓL SKIPOWAĆ
+                        maxTicksLimit: 10      // 🔥 MAKS 10 ETYKIET
+                    }
+                },
                 y: {
+                    beginAtZero: true,
                     ticks: {
                         callback: v => formatCurrency(v)
                     }

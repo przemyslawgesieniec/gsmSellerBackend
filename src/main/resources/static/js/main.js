@@ -256,7 +256,13 @@ function renderPhones(phones) {
                 <p><i class="material-icons tiny">event</i> <b>Dodano:</b> ${phone.createDateTime}</p>
                 
                 ${phone.description? `<p> <i class="material-icons tiny">notes</i>  <b>Opis:</b> ${phone.description}</p>` : ``}
-                                
+                
+                ${phone.comment != null && phone.comment !== "" ? `
+                <p>
+                  <i class="material-icons tiny">comment</i>
+                  <b>Komentarz:</b> ${phone.comment}
+                </p>
+                ` : ``}               
                 ${phone.batteryCondition ? `
                 <p class="battery-row">
                   <i class="material-icons tiny ${getBatteryIconClass(phone.batteryCondition)}">
