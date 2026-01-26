@@ -1,7 +1,6 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -165,14 +164,6 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
         return phone;
     }
 
-    public List<PhoneStock> findSoldBetween(
-        LocalDateTime from,
-        LocalDateTime to
-    ) {
-        return repository.findAll(
-            PhoneStockSpecifications.soldBetween(from, to)
-        );
-    }
 
     @Override
     @Transactional

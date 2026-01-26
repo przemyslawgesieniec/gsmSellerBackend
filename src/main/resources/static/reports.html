@@ -4,43 +4,147 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Raport sprzedaży</title>
-  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
 
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Materialize -->
+  <link
+          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+          rel="stylesheet"
+  />
+
+  <!-- Icons -->
+  <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet"
+  />
+
+  <!-- Flatpickr (calendar range picker) -->
+  <link
+          href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+          rel="stylesheet"
+  />
+
+  <!-- Custom -->
   <link href="css/style.css" rel="stylesheet">
 </head>
-<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pl.js"></script>
 
 <body>
 
+<!-- NAVBAR -->
 <div id="navbar"></div>
 <script src="js/loadNavbar.js"></script>
 
 <div class="container">
-  <h4 class="blue-text text-darken-2">Raport sprzedaży</h4>
-  <p class="grey-text">Podsumowanie obrotu, kosztów i zysku.</p>
 
-  <!-- FILTR -->
+  <!-- HEADER -->
+  <h4 class="blue-text text-darken-2">Raport sprzedaży</h4>
+  <p class="grey-text">
+    Sprzedaż, magazyn oraz bieżąca aktywność.
+  </p>
+
+  <!-- =========================
+       SALES
+  ========================= -->
+
+  <h5 class="blue-text text-darken-2">Sprzedaż</h5>
+
+  <!-- DATE RANGE PICKER -->
   <div class="row">
     <div class="col s12 m4">
-      <label class="active" for="dateRange">Zakres czasu</label>
-      <select id="dateRange">
-        <option value="THIS_MONTH" selected>Ten miesiąc</option>
-        <option value="LAST_MONTH">Poprzedni miesiąc</option>
-        <option value="THIS_YEAR">Ten rok</option>
-        <option value="ALL_TIME">Od początku</option>
-      </select>
+      <label class="active">Zakres dat</label>
+      <input
+              type="text"
+              id="dateRangePicker"
+              class="datepicker"
+              placeholder="Wybierz zakres dat"
+              readonly
+      />
     </div>
-
   </div>
 
-  <!-- PODSUMOWANIE -->
+
+  <!-- =========================
+       STOCK
+  ========================= -->
+
+  <h5 class="blue-text text-darken-2">Magazyn</h5>
+
   <div class="row">
     <div class="col s12 m4">
-      <div class="card">
-        <div class="card-content center-align">
-          <i class="material-icons large blue-text">shopping_cart</i>
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">inventory_2</i>
+          <h6>Stan magazynowy</h6>
+          <h5 id="stockCount">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">payments</i>
+          <h6>Wartość magazynu</h6>
+          <h5 id="stockValue">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">show_chart</i>
+          <h6>Potencjalny zysk</h6>
+          <h5 id="potentialProfit">—</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       TODAY
+  ========================= -->
+
+  <h5 class="blue-text text-darken-2">Dzisiaj</h5>
+
+  <div class="row">
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">shopping_bag</i>
+          <h6>Sprzedane sztuki</h6>
+          <h5 id="soldTodayCount">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">attach_money</i>
+          <h6>Obrót dzisiaj</h6>
+          <h5 id="todayTurnover">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">trending_up</i>
+          <h6>Zysk dzisiaj</h6>
+          <h5 id="todayProfit">—</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALES CARDS -->
+  <div class="row">
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">shopping_cart</i>
           <h6>Obrót</h6>
           <h5 id="turnover">—</h5>
         </div>
@@ -48,9 +152,9 @@
     </div>
 
     <div class="col s12 m4">
-      <div class="card">
-        <div class="card-content center-align">
-          <i class="material-icons large orange-text">receipt</i>
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">receipt_long</i>
           <h6>Koszt</h6>
           <h5 id="cost">—</h5>
         </div>
@@ -58,18 +162,36 @@
     </div>
 
     <div class="col s12 m4">
-      <div class="card">
-        <div class="card-content center-align">
-          <i class="material-icons large green-text">trending_up</i>
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">trending_up</i>
           <h6>Zysk</h6>
           <h5 id="profit">—</h5>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- PROFIT PER DAY CHART -->
+  <div class="row">
+    <div class="col s12">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">Zysk dzienny</span>
+          <canvas id="profitPerDayChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
+<!-- LIBS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="js/auth.js"></script>
 <script src="js/reports.js"></script>
 

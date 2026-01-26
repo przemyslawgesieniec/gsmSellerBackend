@@ -743,3 +743,13 @@ table td {
     margin-right: 2px;
 }
 
+/* === FIX: Materialize vs Flatpickr month dropdown === */
+.flatpickr-calendar select {
+    display: block !important;
+}
+
+.flatpickr-monthDropdown-months {
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
+    -moz-appearance: auto !important;
+}

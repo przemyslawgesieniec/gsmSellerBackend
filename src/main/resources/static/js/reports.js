@@ -1,117 +1,169 @@
-
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     M.Sidenav.init(document.querySelectorAll('.sidenav'));
-    loadReport();
-    new TomSelect('#dateRange', {
-        controlInput: null,
-        create: false,
-        searchField: [],
-        shouldSort: false,
-        hideSelected: true,
-        closeAfterSelect: true
-    });
+
+    initDatePicker();
+
+    const { from, to } = getCurrentMonthRange();
+    loadSalesSummary(from, to);
+    loadProfitPerDay(from, to);
+    loadDashboard();
 });
 
-function loadReport() {
-    fetch("/api/reports/sales-summary")
-        .then(res => res.json())
+/* =========================
+   DATE PICKER
+========================= */
+
+function initDatePicker() {
+    flatpickr("#dateRangePicker", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        locale: flatpickr.l10ns.pl,
+        monthSelectorType: "dropdown", // 🔥 TO JEST KLUCZ
+        defaultDate: [
+            getCurrentMonthRange().from,
+            getCurrentMonthRange().to
+        ],
+        onClose(selectedDates) {
+            if (selectedDates.length === 2) {
+                const from = formatDate(selectedDates[0]);
+                const to = formatDate(selectedDates[1]);
+
+                loadSalesSummary(from, to);
+                loadProfitPerDay(from, to);
+            }
+        }
+    });
+
+}
+
+/* =========================
+   SALES SUMMARY
+========================= */
+
+function loadSalesSummary(from, to) {
+    fetch(`/api/reports/sales-summary?from=${from}&to=${to}`)
+        .then(handleJsonResponse)
         .then(data => {
-            document.getElementById("turnover").innerText =
-                formatCurrency(data.turnover);
+            setText("turnover", formatCurrency(data.turnover));
+            setText("cost", formatCurrency(data.cost));
+            setText("profit", formatCurrency(data.profit));
+        })
+        .catch(err => console.error("Sales summary error", err));
+}
 
-            document.getElementById("cost").innerText =
-                formatCurrency(data.cost);
+/* =========================
+   DASHBOARD
+========================= */
 
-            document.getElementById("profit").innerText =
-                formatCurrency(data.profit);
+function loadDashboard() {
+    fetch("/api/reports/sales-dashboard")
+        .then(handleJsonResponse)
+        .then(d => {
+            setText("stockCount", d.stockCount);
+            setText("stockValue", formatCurrency(d.stockValue));
+            setText("potentialProfit", formatCurrency(d.potentialProfit));
 
-            renderChart(data);
+            setText("soldTodayCount", d.soldTodayCount);
+            setText("todayTurnover", formatCurrency(d.todayTurnover));
+            setText("todayProfit", formatCurrency(d.todayProfit));
+        })
+        .catch(err => console.error("Dashboard error", err));
+}
+
+/* =========================
+   PROFIT PER DAY CHART
+========================= */
+
+let profitChart = null;
+
+function loadProfitPerDay(from, to) {
+    fetch(`/api/reports/profit-per-day?from=${from}&to=${to}`)
+        .then(handleJsonResponse)
+        .then(data => {
+            if (!Array.isArray(data) || data.length === 0) {
+                destroyChart();
+                return;
+            }
+            renderProfitChart(data);
+        })
+        .catch(err => {
+            console.error("Profit per day error", err);
+            destroyChart();
         });
 }
 
-function renderChart(data) {
-    const ctx = document.getElementById("profitChart");
+function renderProfitChart(data) {
+    const ctx = document.getElementById("profitPerDayChart");
+    if (!ctx) return;
 
-    new Chart(ctx, {
-        type: 'doughnut',
+    destroyChart();
+
+    profitChart = new Chart(ctx, {
+        type: "line",
         data: {
-            labels: ['Koszt', 'Zysk'],
+            labels: data.map(d => d.date),
             datasets: [{
-                data: [data.cost, data.profit],
-                backgroundColor: ['#ff9800', '#4caf50']
+                label: "Zysk",
+                data: data.map(d => d.profit),
+                tension: 0.3,
+                fill: true
             }]
         },
         options: {
+            responsive: true,
             plugins: {
-                legend: {
-                    position: 'bottom'
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: v => formatCurrency(v)
+                    }
                 }
             }
         }
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadReport("THIS_MONTH");
-
-    const select = document.getElementById("dateRange");
-    select.addEventListener("change", () => {
-        loadReport(select.value);
-    });
-});
-
-function loadReport(range) {
-    const params = buildDateParams(range);
-    const url = params
-        ? `/api/reports/sales-summary?from=${params.from}&to=${params.to}`
-        : `/api/reports/sales-summary`;
-
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("turnover").innerText =
-                formatCurrency(data.turnover);
-            document.getElementById("cost").innerText =
-                formatCurrency(data.cost);
-            document.getElementById("profit").innerText =
-                formatCurrency(data.profit);
-        });
-}
-
-function buildDateParams(range) {
-    const today = new Date();
-
-    switch (range) {
-        case "THIS_MONTH":
-            return {
-                from: formatDate(new Date(today.getFullYear(), today.getMonth(), 1)),
-                to: formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0))
-            };
-
-        case "LAST_MONTH":
-            return {
-                from: formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
-                to: formatDate(new Date(today.getFullYear(), today.getMonth(), 0))
-            };
-
-        case "THIS_YEAR":
-            return {
-                from: formatDate(new Date(today.getFullYear(), 0, 1)),
-                to: formatDate(new Date(today.getFullYear(), 11, 31))
-            };
-
-        case "ALL_TIME":
-            return null;
+function destroyChart() {
+    if (profitChart) {
+        profitChart.destroy();
+        profitChart = null;
     }
 }
 
-function formatDate(date) {
-    return date.toISOString().split('T')[0];
+/* =========================
+   HELPERS
+========================= */
+
+function handleJsonResponse(res) {
+    if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+    }
+    return res.json();
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value ?? "—";
 }
 
 function formatCurrency(value) {
-    return new Intl.NumberFormat('pl-PL', {
-        style: 'currency',
-        currency: 'PLN'
+    if (value == null) return "—";
+    return new Intl.NumberFormat("pl-PL", {
+        style: "currency",
+        currency: "PLN"
     }).format(value);
+}
+
+function formatDate(date) {
+    return date.toISOString().split("T")[0];
+}
+
+function getCurrentMonthRange() {
+    const now = new Date();
+    return {
+        from: formatDate(new Date(now.getFullYear(), now.getMonth(), 1)),
+        to: formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+    };
 }

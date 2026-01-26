@@ -4,20 +4,24 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 import java.math.RoundingMode;
+import pl.gesieniec.gsmseller.phone.stock.StockReportService;
+import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReportService {
 
-    private final PhoneStockService phoneStockService;
+    private final StockReportService stockReportService;
 
     public SalesSummaryDto getSalesSummary(
         LocalDate from,
@@ -27,7 +31,7 @@ public class ReportService {
         LocalDateTime toDate = to.atTime(LocalTime.MAX);
 
         List<PhoneStock> sold =
-            phoneStockService.findSoldBetween(fromDate, toDate);
+            stockReportService.findSoldBetween(fromDate, toDate);
 
         BigDecimal turnover = BigDecimal.ZERO;
         BigDecimal cost = BigDecimal.ZERO;
@@ -53,4 +57,75 @@ public class ReportService {
             marginPercent
         );
     }
+
+    public SalesDashboardDto getDashboard(
+        LocalDate from,
+        LocalDate to
+    ) {
+
+        // ===== sprzedaż (jak wcześniej) =====
+        LocalDateTime fromDate = from.atStartOfDay();
+        LocalDateTime toDate = to.atTime(LocalTime.MAX);
+
+        List<PhoneStock> sold =
+            stockReportService.findSoldBetween(fromDate, toDate);
+
+        BigDecimal turnover = BigDecimal.ZERO;
+        BigDecimal cost = BigDecimal.ZERO;
+
+        for (PhoneStock p : sold) {
+            turnover = turnover.add(p.getSoldFor());
+            cost = cost.add(p.getPurchasePrice());
+        }
+
+        BigDecimal profit = turnover.subtract(cost);
+
+        BigDecimal marginPercent = BigDecimal.ZERO;
+        if (turnover.compareTo(BigDecimal.ZERO) > 0) {
+            marginPercent = profit
+                .divide(turnover, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+        }
+
+        // ===== magazyn / aktywność =====
+        return new SalesDashboardDto(
+            turnover,
+            cost,
+            profit,
+            marginPercent,
+
+            stockReportService.getStockCount(),
+            stockReportService.getStockValue(),
+            stockReportService.getPotentialProfit(),
+
+            stockReportService.getSoldTodayCount(),
+            stockReportService.getTodayTurnover(),
+            stockReportService.getTodayProfit()
+        );
+
+    }
+
+    public List<DailyProfitDto> getProfitPerDay(
+        LocalDate from,
+        LocalDate to
+    ) {
+        LocalDateTime fromDt = from.atStartOfDay();
+        LocalDateTime toDt = to.atTime(LocalTime.MAX);
+
+        return stockReportService.findSoldBetween(fromDt, toDt)
+            .stream()
+            .collect(Collectors.groupingBy(
+                p -> p.getSoldAt().toLocalDate(),
+                Collectors.mapping(
+                    p -> p.getSoldFor().subtract(p.getPurchasePrice()),
+                    Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)
+                )
+            ))
+            .entrySet()
+            .stream()
+            .map(e -> new DailyProfitDto(e.getKey(), e.getValue()))
+            .sorted(Comparator.comparing(DailyProfitDto::date))
+            .toList();
+    }
+
 }
