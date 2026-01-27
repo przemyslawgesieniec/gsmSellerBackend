@@ -1,12 +1,19 @@
 package pl.gesieniec.gsmseller.phone.scan;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import pl.gesieniec.gsmseller.phone.scan.parser.OcrDataParser;
+import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 
 
@@ -17,6 +24,7 @@ public class PhoneScanService {
 
     private final GoogleCloudVision googleCloudVision;
     private final OcrDataParser phoneDataOcrParser;
+    private final PhoneStockService phoneStockService;
 
     public List<PhoneScanDto> getPhoneScanDtos(
         String name,
@@ -69,12 +77,29 @@ public class PhoneScanService {
                 phoneScanDto.setBatteryCondition(batteryCondition);
                 phoneScanDto.setPurchaseType(purchaseType);
 
-
                 log.info("✅ PhoneScanDto created for photo: {}", photo.getOriginalFilename());
 
                 return phoneScanDto;
             })
-            .toList();
+            .filter(this::removeDuplicates)
+            .collect(Collectors.collectingAndThen(
+                Collectors.toMap(
+                    PhoneScanDto::getImei,
+                    Function.identity(),
+                    (first, second) -> first,
+                    LinkedHashMap::new
+                ),
+                map -> new ArrayList<>(map.values())
+            ));
+
+    }
+
+    private boolean removeDuplicates(PhoneScanDto phoneScanDto) {
+        if (phoneScanDto.getImei() == null) {
+            return true;
+        }
+
+        return !phoneStockService.existsActiveDuplicate(phoneScanDto.getImei());
     }
 
     @SneakyThrows

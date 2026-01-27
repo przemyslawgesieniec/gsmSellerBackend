@@ -18,7 +18,7 @@ function initDatePicker() {
         mode: "range",
         dateFormat: "Y-m-d",
         locale: flatpickr.l10ns.pl,
-        monthSelectorType: "dropdown", // 🔥 TO JEST KLUCZ
+        monthSelectorType: "dropdown",
         defaultDate: [
             getCurrentMonthRange().from,
             getCurrentMonthRange().to

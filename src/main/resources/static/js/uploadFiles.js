@@ -64,7 +64,17 @@ function addManualPhone() {
     block.style = "padding:16px; border-radius:8px; margin-top:20px;";
 
     block.innerHTML = `
-        <h6>Telefon #${index}</h6>
+    <div style="position: relative;">
+        <button
+            type="button"
+            class="btn-flat red-text remove-phone-btn"
+            style="position:absolute; top:0; right:0;"
+            title="Usuń telefon">
+            <i class="material-icons">close</i>
+        </button>
+
+        <h6 class="phone-title">Telefon #${index}</h6>
+
 
         <div class="row">
             <div class="input-field col s12 m4">
@@ -171,6 +181,13 @@ function addManualPhone() {
 
     wrapper.appendChild(block);
 
+    block.querySelector(".remove-phone-btn")
+        .addEventListener("click", () => {
+            block.remove();
+            renumberManualPhones();
+        });
+
+
     ["input", "change"].forEach(evt => {
         block.addEventListener(evt, () => updateBatteryVisibilityForBlock(block));
     });
@@ -189,6 +206,16 @@ function addManualPhone() {
     M.updateTextFields();
 }
 
+function renumberManualPhones() {
+    const blocks = document.querySelectorAll("#manualPhones .scan-item");
+
+    blocks.forEach((block, index) => {
+        const title = block.querySelector(".phone-title");
+        if (title) {
+            title.textContent = `Telefon #${index + 1}`;
+        }
+    });
+}
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -196,6 +223,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const fileInput = document.getElementById("fileInput");
     const addBtn = document.getElementById("addBulkBtn");
     let selectedFiles = [];
+
+    const modals = document.querySelectorAll(".modal");
+    M.Modal.init(modals);
 
     dropArea.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", e => addFiles(e.target.files));
@@ -309,7 +339,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const data = await response.json();
-            console.log("Response data:", data);
+
+            handleDuplicatePhones(selectedFiles.length, data);
 
             renderPhoneResults(data);
 
@@ -331,8 +362,58 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    function handleDuplicatePhones(sentCount, receivedPhones) {
+        const receivedCount = receivedPhones.length;
+
+        if (!hasDuplicates(sentCount, receivedCount)) {
+            return;
+        }
+
+        const duplicatesCount = sentCount - receivedCount;
+        const message = buildDuplicatesMessage(sentCount, receivedCount, duplicatesCount);
+
+        openDuplicatesModal(message);
+    }
+
+    function hasDuplicates(sentCount, receivedCount) {
+        return receivedCount < sentCount;
+    }
+
+    function buildDuplicatesMessage(sent, received, duplicates) {
+        const wasWere = duplicates === 1 ? "był" : "były";
+        const phonePhones = duplicates === 1 ? "telefon" : "telefony";
+        const omitted = duplicates === 1 ? "został pominięty" : "zostały pominięte";
+
+        return `
+        Wysłanych zdjęć: <strong>${sent}</strong> <br>
+        Dodanych telefonów: <strong>${received}</strong> 
+        <br><br>
+        Pominiętych telefonów: <strong>${duplicates}</strong> - powtórzone zdjęcia lub widniejące w bazie jako DOSTĘPNE lub WPROWADZONE.
+    `;
+    }
+
+    function openDuplicatesModal(htmlMessage) {
+        const textEl = document.getElementById("duplicatesModalText");
+        const modalEl = document.getElementById("duplicatesModal");
+
+        textEl.innerHTML = htmlMessage;
+
+        let instance = M.Modal.getInstance(modalEl);
+        if (!instance) {
+            instance = M.Modal.init(modalEl);
+        }
+
+        instance.open();
+    }
+
+
     // === WYŚWIETLANIE WYNIKÓW ===
     function renderPhoneResults(phones) {
+
+        if(phones.length === 0) {
+            return;
+        }
+
         const container = document.getElementById("scanResultsContainer");
         container.innerHTML = "";
 

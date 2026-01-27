@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.jspecify.annotations.NonNull;
 import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 
 @ToString

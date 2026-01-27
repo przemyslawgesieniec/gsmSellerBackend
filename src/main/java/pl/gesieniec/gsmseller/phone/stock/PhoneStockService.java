@@ -225,7 +225,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                 new EntityNotFoundException("Phone not found: " + technicalId)
             );
 
-        phone.handover(request.getComment(),request.getPrice());
+        phone.handover(request.getComment(), request.getPrice());
 
         log.info(
             "Telefon {} przekazany przez {}. Komentarz: {}",
@@ -233,6 +233,10 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             username,
             request
         );
+    }
+
+    public boolean existsActiveDuplicate(String imei) {
+        return repository.existsByImeiAndStatusIn(imei, List.of(Status.DOSTĘPNY, Status.WPROWADZONY));
     }
 
 }

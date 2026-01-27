@@ -2,6 +2,7 @@ package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +20,8 @@ public interface PhoneStockRepository extends
     Optional<PhoneStock> findByTechnicalId(UUID technicalId);
 
     long countByStatusIn(List<Status> statuses);
+
+    boolean existsByImeiAndStatusIn(String imei, Collection<Status> statuses);
 
     @Query("""
         select coalesce(sum(p.purchasePrice), 0)
