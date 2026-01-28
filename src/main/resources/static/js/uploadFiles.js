@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     file.name.toLowerCase().endsWith(".heif")
                 ) {
 
-                    updateProgress(
+                    setProgressTarget(
                         Math.round((currentStep / totalSteps) * 100),
                         `Konwersja HEIC: ${file.name}`
                     );
@@ -363,7 +363,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     Math.round((currentStep / totalSteps) * 100)
                 );
 
-                updateProgress(
+                setProgressTarget(
                     percent,
                     `Przetwarzanie: ${file.name}`
                 );
@@ -380,6 +380,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentStep++;
             }
 
+            setProgressTarget(90, "Serwer przetwarza dane…");
+            await nextFrame();
+
             // 🔹 Wysłanie do backendu
             const response = await fetch("/api/v1/phones", {
                 method: "POST",
@@ -393,6 +396,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const data = await response.json();
+
+            setProgressTarget(100, "Gotowe 🎉");
 
             handleDuplicatePhones(selectedFiles.length, data);
 
@@ -747,25 +752,77 @@ async function convertHeicToJpeg(file) {
     );
 }
 
-function showProgressLoader() {
-    document.getElementById("loadingOverlay").classList.remove("hide");
-    updateProgress(0, "Przygotowanie…");
+
+let progressState = {
+    current: 0,
+    target: 0,
+    running: false
+};
+
+function startSmoothProgress() {
+    if (progressState.running) return;
+
+    progressState.running = true;
+
+    function tick() {
+        if (!progressState.running) return;
+
+        if (progressState.current < progressState.target) {
+            progressState.current += Math.max(
+                0.3,
+                (progressState.target - progressState.current) * 0.08
+            );
+
+            // 🔥 TU JUŻ TYLKO RYSUJEMY
+            document.getElementById("progressBar").style.width =
+                Math.floor(progressState.current) + "%";
+            document.getElementById("progressPercent").innerText =
+                Math.floor(progressState.current) + "%";
+        }
+
+        requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
 }
 
-function hideProgressLoader() {
-    document.getElementById("loadingOverlay").classList.add("hide");
+function stopSmoothProgress() {
+    progressState.running = false;
 }
 
-function updateProgress(percent, text) {
-    document.getElementById("progressBar").style.width = percent + "%";
-    document.getElementById("progressPercent").innerText = percent + "%";
+function setProgressTarget(percent, text) {
+    const clamped = Math.min(percent, 99);
+
+    // 🔥 gwarancja wzrostu
+    if (clamped > progressState.target) {
+        progressState.target = clamped;
+    }
 
     if (text) {
         document.getElementById("loaderText").innerText = text;
     }
+
+    startSmoothProgress();
 }
-function nextFrame() {
-    return new Promise(resolve => requestAnimationFrame(resolve));
+
+
+function showProgressLoader() {
+    document.getElementById("loadingOverlay").classList.remove("hide");
+
+    progressState.current = 0;
+    progressState.target = 0;
+
+    setProgressTarget(5, "Przygotowanie…");
+    startSmoothProgress();
+}
+
+function hideProgressLoader() {
+    progressState.target = 100;
+
+    setTimeout(() => {
+        stopSmoothProgress();
+        document.getElementById("loadingOverlay").classList.add("hide");
+    }, 400);
 }
 
 let purchaseTypeSelect;
@@ -829,4 +886,9 @@ function updateBatteryVisibilityForBlock(block) {
 
     M.updateTextFields();
 }
+
+function nextFrame() {
+    return new Promise(resolve => requestAnimationFrame(resolve));
+}
+
 

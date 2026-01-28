@@ -1,15 +1,11 @@
 package pl.gesieniec.gsmseller.phone.scan;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -21,7 +17,6 @@ import pl.gesieniec.gsmseller.phone.scan.parser.OcrDataParser;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 
-
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -30,9 +25,7 @@ public class PhoneScanService {
     private final GoogleCloudVision googleCloudVision;
     private final OcrDataParser phoneDataOcrParser;
     private final PhoneStockService phoneStockService;
-
-    private static final Path UPLOAD_DIR = Paths.get("/app/uploads");
-
+    private final ExecutorService ocrExecutor;
 
     public List<PhoneScanDto> getPhoneScanDtos(
         String name,
@@ -43,103 +36,90 @@ public class PhoneScanService {
         PurchaseType purchaseType,
         String description,
         String batteryCondition,
-        boolean used) {
+        boolean used
+    ) {
 
-        log.info("📦 Starting phone scan process");
-        log.info("Metadata: name={}, source={}, initialPrice={}, sellingPrice={}",
-            name, source, initialPrice, sellingPrice);
+        log.info("📦 Phone scan started | photos={}", photos != null ? photos.size() : 0);
 
-        log.info("Photos count: {}", photos != null ? photos.size() : 0);
+        assert photos != null;
+        List<CompletableFuture<PhoneScanDto>> futures =
+            photos.stream()
+                .map(photo ->
+                    CompletableFuture.supplyAsync(
+                            () -> processPhoto(photo,
+                name,
+                source,
+                initialPrice,
+                sellingPrice,
+                purchaseType,
+                description,
+                batteryCondition,
+                used
+            ),ocrExecutor))
+            .toList();
 
-        return photos.stream()
-            .map(photo -> {
-                log.info("➡️ Processing photo: {}", photo.getOriginalFilename());
+        List<PhoneScanDto> scanned = futures.stream()
+            .map(CompletableFuture::join)
+            .toList();
 
-//                savePhoto(photo);
-
-                byte[] bytes = toBytes(photo);
-
-                log.debug("Photo '{}' byte size: {}", photo.getOriginalFilename(), bytes.length);
-
-                String extractedData;
-                try {
-                    extractedData = googleCloudVision.detect(bytes);
-                } catch (Exception e) {
-                    log.error("❌ OCR failed for photo: {}", photo.getOriginalFilename(), e);
-                    throw e;
-                }
-
-                log.info("➡️ Parsing OCR data for photo: {}", photo.getOriginalFilename());
-
-                PhoneScanDto phoneScanDto;
-                try {
-                    phoneScanDto = phoneDataOcrParser.parseRawOcrData(extractedData);
-                } catch (Exception e) {
-                    log.error("❌ OCR parsing failed for photo: {}", photo.getOriginalFilename(), e);
-                    throw e;
-                }
-
-                phoneScanDto.setName(name);
-                phoneScanDto.setSource(source);
-                phoneScanDto.setInitialPrice(initialPrice);
-                phoneScanDto.setSellingPrice(sellingPrice);
-                phoneScanDto.setDescription(description);
-                phoneScanDto.setUsed(used);
-                phoneScanDto.setBatteryCondition(batteryCondition);
-                phoneScanDto.setPurchaseType(purchaseType);
-
-                log.info("✅ PhoneScanDto created for photo: {}", photo.getOriginalFilename());
-
-                return phoneScanDto;
-            })
-            .filter(this::removeDuplicates)
-            .collect(Collectors.collectingAndThen(
-                Collectors.toMap(
-                    PhoneScanDto::getImei,
-                    Function.identity(),
-                    (first, second) -> first,
-                    LinkedHashMap::new
-                ),
-                map -> new ArrayList<>(map.values())
+        // 🔹 deduplikacja IMEI w request
+        Map<String, PhoneScanDto> uniqueByImei = scanned.stream()
+            .filter(dto -> dto.getImei() != null)
+            .collect(Collectors.toMap(
+                PhoneScanDto::getImei,
+                Function.identity(),
+                (first, second) -> first,
+                LinkedHashMap::new
             ));
 
+        // 🔹 sprawdzenie duplikatów w DB jednym strzałem
+        List<String> imeis = new ArrayList<>(uniqueByImei.keySet());
+        var existingImeis = phoneStockService.findActiveImeis(imeis);
+
+        return uniqueByImei.values().stream()
+            .filter(dto -> !existingImeis.contains(dto.getImei()))
+            .collect(Collectors.toList());
     }
 
-    private boolean removeDuplicates(PhoneScanDto phoneScanDto) {
-        if (phoneScanDto.getImei() == null) {
-            return true;
-        }
+    private PhoneScanDto processPhoto(
+        MultipartFile photo,
+        String name,
+        String source,
+        String initialPrice,
+        String sellingPrice,
+        PurchaseType purchaseType,
+        String description,
+        String batteryCondition,
+        boolean used
+    ) {
 
-        return !phoneStockService.existsActiveDuplicate(phoneScanDto.getImei());
+        try {
+            byte[] bytes = toBytes(photo);
+
+            String ocrText = googleCloudVision.detect(bytes);
+            PhoneScanDto dto = phoneDataOcrParser.parseRawOcrData(ocrText);
+
+            dto.setName(name);
+            dto.setSource(source);
+            dto.setInitialPrice(initialPrice);
+            dto.setSellingPrice(sellingPrice);
+            dto.setDescription(description);
+            dto.setUsed(used);
+            dto.setBatteryCondition(batteryCondition);
+            dto.setPurchaseType(purchaseType);
+
+            return dto;
+
+        } catch (Exception e) {
+            log.error("❌ Failed processing photo {}", photo.getOriginalFilename(), e);
+            throw e;
+        }
     }
 
     @SneakyThrows
     private byte[] toBytes(MultipartFile file) {
-        log.debug("Reading bytes from MultipartFile: {}", file.getOriginalFilename());
-        return file.getBytes();
+        return file.getInputStream().readAllBytes();
     }
-//
-//    @SneakyThrows
-//    private void savePhoto(MultipartFile file) {
-//        Files.createDirectories(UPLOAD_DIR);
-//
-//        String originalName = file.getOriginalFilename();
-//        String extension = "";
-//
-//        if (originalName != null && originalName.contains(".")) {
-//            extension = originalName.substring(originalName.lastIndexOf("."));
-//        }
-//
-//        String filename = UUID.randomUUID() + extension;
-//        Path target = UPLOAD_DIR.resolve(filename);
-//
-//        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-//
-//        log.info("💾 Saved photo: {}", target);
-//
-//         String url = "/uploads/" + filename;
-//
-//         log.info("URL do zdjęcia {} to: {}", filename, url);
-//    }
+
 
 }

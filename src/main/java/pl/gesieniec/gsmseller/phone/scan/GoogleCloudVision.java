@@ -11,49 +11,40 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 @Slf4j
 @Component
 public class GoogleCloudVision {
 
-    @Value("${google.vision.credentials}")
-    private String credentialsBase64;
+    private final ImageAnnotatorClient client;
 
-    @SneakyThrows
-    public String detect(byte[] photo) {
-
-        log.info("📸 Starting Google Cloud Vision OCR (Base64 credentials)");
-
+    public GoogleCloudVision(
+        @Value("${google.vision.credentials}") String credentialsBase64
+    ) {
         if (credentialsBase64 == null || credentialsBase64.isBlank()) {
-            log.error("❌ Google Vision Base64 credentials are EMPTY");
             throw new IllegalStateException("Google Vision credentials not configured");
         }
 
-        byte[] decodedCredentials;
         try {
-            decodedCredentials = Base64.getDecoder().decode(credentialsBase64);
-            log.info("✅ Base64 credentials decoded, size: {}", decodedCredentials.length);
-        } catch (Exception e) {
-            log.error("❌ Failed to decode Base64 credentials", e);
-            throw e;
-        }
+            byte[] decoded = Base64.getDecoder().decode(credentialsBase64);
 
-        GoogleCredentials credentials;
-        try {
-            credentials = GoogleCredentials
-                .fromStream(new ByteArrayInputStream(decodedCredentials))
+            GoogleCredentials credentials = GoogleCredentials
+                .fromStream(new ByteArrayInputStream(decoded))
                 .createScoped("https://www.googleapis.com/auth/cloud-platform");
 
-            log.info("✅ Google credentials created");
+            ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
+                .setCredentialsProvider(() -> credentials)
+                .build();
+
+            this.client = ImageAnnotatorClient.create(settings);
+
+            log.info("✅ Google Cloud Vision client initialized once");
 
         } catch (Exception e) {
-            log.error("❌ Failed to create GoogleCredentials", e);
-            throw e;
+            throw new IllegalStateException("Failed to init Google Vision client", e);
         }
+    }
 
-        ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
-            .setCredentialsProvider(() -> credentials)
-            .build();
+    public String detect(byte[] photo) {
 
         ByteString imgBytes = ByteString.copyFrom(photo);
         Image img = Image.newBuilder().setContent(imgBytes).build();
@@ -67,23 +58,14 @@ public class GoogleCloudVision {
             .setImage(img)
             .build();
 
-        log.info("➡️ Sending OCR request to Google Cloud Vision API");
+        AnnotateImageResponse response =
+            client.batchAnnotateImages(List.of(request))
+                .getResponses(0);
 
-        try (ImageAnnotatorClient client = ImageAnnotatorClient.create(settings)) {
-
-            AnnotateImageResponse response =
-                client.batchAnnotateImages(List.of(request))
-                    .getResponses(0);
-
-            if (response.hasError()) {
-                log.error("❌ Google Vision API error: {}", response.getError().getMessage());
-                throw new IllegalStateException(response.getError().getMessage());
-            }
-
-            String text = response.getFullTextAnnotation().getText();
-            log.info("✅ OCR completed, extracted text length: {}", text != null ? text.length() : 0);
-
-            return text;
+        if (response.hasError()) {
+            throw new IllegalStateException(response.getError().getMessage());
         }
+
+        return response.getFullTextAnnotation().getText();
     }
 }

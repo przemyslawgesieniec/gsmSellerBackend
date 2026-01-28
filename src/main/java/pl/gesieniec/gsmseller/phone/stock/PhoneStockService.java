@@ -1,7 +1,9 @@
 package pl.gesieniec.gsmseller.phone.stock;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -235,8 +237,17 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
         );
     }
 
-    public boolean existsActiveDuplicate(String imei) {
-        return repository.existsByImeiAndStatusIn(imei, List.of(Status.DOSTĘPNY, Status.WPROWADZONY));
+    public Set<String> findActiveImeis(Collection<String> imeis) {
+
+        if (imeis == null || imeis.isEmpty()) {
+            return Set.of();
+        }
+
+        return repository.findImeisByStatusIn(
+            imeis,
+            List.of(Status.DOSTĘPNY, Status.WPROWADZONY)
+        );
     }
+
 
 }
