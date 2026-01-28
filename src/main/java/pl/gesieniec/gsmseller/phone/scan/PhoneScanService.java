@@ -1,10 +1,15 @@
 package pl.gesieniec.gsmseller.phone.scan;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -25,6 +30,9 @@ public class PhoneScanService {
     private final GoogleCloudVision googleCloudVision;
     private final OcrDataParser phoneDataOcrParser;
     private final PhoneStockService phoneStockService;
+
+    private static final Path UPLOAD_DIR = Paths.get("/app/uploads");
+
 
     public List<PhoneScanDto> getPhoneScanDtos(
         String name,
@@ -47,7 +55,10 @@ public class PhoneScanService {
             .map(photo -> {
                 log.info("➡️ Processing photo: {}", photo.getOriginalFilename());
 
+//                savePhoto(photo);
+
                 byte[] bytes = toBytes(photo);
+
                 log.debug("Photo '{}' byte size: {}", photo.getOriginalFilename(), bytes.length);
 
                 String extractedData;
@@ -107,4 +118,28 @@ public class PhoneScanService {
         log.debug("Reading bytes from MultipartFile: {}", file.getOriginalFilename());
         return file.getBytes();
     }
+//
+//    @SneakyThrows
+//    private void savePhoto(MultipartFile file) {
+//        Files.createDirectories(UPLOAD_DIR);
+//
+//        String originalName = file.getOriginalFilename();
+//        String extension = "";
+//
+//        if (originalName != null && originalName.contains(".")) {
+//            extension = originalName.substring(originalName.lastIndexOf("."));
+//        }
+//
+//        String filename = UUID.randomUUID() + extension;
+//        Path target = UPLOAD_DIR.resolve(filename);
+//
+//        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+//
+//        log.info("💾 Saved photo: {}", target);
+//
+//         String url = "/uploads/" + filename;
+//
+//         log.info("URL do zdjęcia {} to: {}", filename, url);
+//    }
+
 }

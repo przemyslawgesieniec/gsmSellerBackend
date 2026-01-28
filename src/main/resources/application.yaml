@@ -42,3 +42,5 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
 
+#app:
+#  upload-dir: /app/uploads

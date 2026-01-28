@@ -216,6 +216,60 @@ function renumberManualPhones() {
         }
     });
 }
+function sendFinalPhones() {
+    const phoneBlocks = document.querySelectorAll(".scan-item");
+    const resultList = [];
+
+    phoneBlocks.forEach(block => {
+        const fields = block.querySelectorAll("[data-field]");
+        const phone = {};
+
+        fields.forEach(el => {
+            const key = el.getAttribute("data-field");
+
+            // checkbox
+            if (el.type === "checkbox") {
+                phone[key] = el.checked;
+                return;
+            }
+
+            // select TomSelect
+            if (el.tagName === "SELECT" && el.tomselect) {
+                phone[key] = el.tomselect.getValue() || null;
+                return;
+            }
+
+            // battery
+            if (key === "batteryCondition") {
+                phone[key] = el.value === "" ? null : Number(el.value);
+                return;
+            }
+
+            // reszta
+            phone[key] = el.value === "" ? null : el.value;
+        });
+
+
+        resultList.push(phone);
+    });
+
+    console.log("Wysyłane dane:", JSON.stringify(resultList, null, 2));
+
+    fetch("/api/v1/phones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(resultList)
+    })
+        .then(res => {
+            if (!res.ok) throw new Error("Błąd");
+            localStorage.setItem("phonesSaved", "true");
+            location.reload();
+        })
+        .catch(err => {
+            console.error(err);
+            M.toast({ html: "Błąd zapisu", classes: "red" });
+        });
+}
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -594,66 +648,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-function sendFinalPhones() {
-    const phoneBlocks = document.querySelectorAll(".scan-item");
-    const resultList = [];
-
-    phoneBlocks.forEach(block => {
-        const fields = block.querySelectorAll("[data-field]");
-        const phone = {};
-
-        fields.forEach(el => {
-            const key = el.getAttribute("data-field");
-
-            // checkbox
-            if (el.type === "checkbox") {
-                phone[key] = el.checked;
-                return;
-            }
-
-            // select TomSelect
-            if (el.tagName === "SELECT" && el.tomselect) {
-                phone[key] = el.tomselect.getValue() || null;
-                return;
-            }
-
-            // battery
-            if (key === "batteryCondition") {
-                phone[key] = el.value === "" ? null : Number(el.value);
-                return;
-            }
-
-            // reszta
-            phone[key] = el.value === "" ? null : el.value;
-        });
-
-
-        resultList.push(phone);
-    });
-
-    console.log("Wysyłane dane:", JSON.stringify(resultList, null, 2));
-
-    fetch("/api/v1/phones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resultList)
-    })
-        .then(res => {
-            if (!res.ok) throw new Error("Błąd");
-            localStorage.setItem("phonesSaved", "true");
-            location.reload();
-        })
-        .catch(err => {
-            console.error(err);
-            M.toast({ html: "Błąd zapisu", classes: "red" });
-        });
-}
 
 function compressImage(file, options = {}) {
     const {
         maxWidth = 1600,
-        quality = 0.7,
-        grayscale = true
+        quality = 0.75
     } = options;
 
     return new Promise((resolve, reject) => {
@@ -666,42 +665,62 @@ function compressImage(file, options = {}) {
         img.onload = () => {
             let { width, height } = img;
 
+            // 🔹 rozsądny resize (nie za agresywny)
             if (width > maxWidth) {
-                height = height * (maxWidth / width);
+                const scale = maxWidth / width;
                 width = maxWidth;
+                height = Math.round(height * scale);
             }
 
             const canvas = document.createElement("canvas");
             canvas.width = width;
             canvas.height = height;
 
-            const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d", {
+                willReadFrequently: true
+            });
+
             ctx.drawImage(img, 0, 0, width, height);
 
-            if (grayscale) {
-                const imageData = ctx.getImageData(0, 0, width, height);
-                const data = imageData.data;
+            // 🔹 grayscale + contrast
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
 
-                const threshold = 160;
+            // 1️⃣ grayscale
+            for (let i = 0; i < data.length; i += 4) {
+                const gray =
+                    data[i] * 0.299 +
+                    data[i + 1] * 0.587 +
+                    data[i + 2] * 0.114;
 
-                for (let i = 0; i < data.length; i += 4) {
-                    const gray =
-                        data[i] * 0.299 +
-                        data[i + 1] * 0.587 +
-                        data[i + 2] * 0.114;
-
-                    const bw = gray > threshold ? 255 : 0;
-
-                    data[i] = data[i + 1] = data[i + 2] = bw;
-                }
-
-                ctx.putImageData(imageData, 0, 0);
-
+                data[i] = data[i + 1] = data[i + 2] = gray;
             }
+
+            // 2️⃣ adaptive contrast stretch
+            let min = 255, max = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                min = Math.min(min, data[i]);
+                max = Math.max(max, data[i]);
+            }
+
+            const range = max - min || 1;
+            for (let i = 0; i < data.length; i += 4) {
+                const v = ((data[i] - min) / range) * 255;
+                data[i] = data[i + 1] = data[i + 2] = v;
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            // 3️⃣ lekkie wyostrzenie (unsharp mask)
+            ctx.globalAlpha = 0.3;
+            ctx.filter = "blur(1px)";
+            ctx.drawImage(canvas, 0, 0);
+            ctx.globalAlpha = 1.0;
+            ctx.filter = "none";
 
             canvas.toBlob(
                 blob => {
-                    resolve(new File([blob], file.name, {
+                    resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
                         type: "image/jpeg"
                     }));
                 },
