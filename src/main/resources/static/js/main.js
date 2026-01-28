@@ -1054,6 +1054,7 @@ function removePhoneFromLocation(technicalId) {
     })
         .then(res => {
             if (!res.ok) throw new Error("Błąd usuwania ze sklepu");
+            M.toast({ html: "Telefon usunięty z lokalizacji", classes: "green" });
             return loadStock(currentPage);
         })
         .catch(err => {
