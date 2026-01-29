@@ -212,6 +212,7 @@ function renderPhones(phones) {
           data-source="${phone.source ?? ""}"
           data-imei="${phone.imei ?? ""}"
           data-description="${phone.description ?? ""}"
+          data-comment="${phone.comment ?? ""}"
           data-used="${phone.used ?? false}"
           data-battery-condition="${phone.batteryCondition ?? ""}"
           data-selling-price="${phone.sellingPrice ?? ""}"
@@ -603,6 +604,9 @@ function editPhone(technicalId) {
         document.getElementById("editDescription").value =
             card.dataset.description || "";
 
+        document.getElementById("editComment").value =
+            card.dataset.comment || "";
+
         document.getElementById("editUsed").checked =
             card.dataset.used === "true";
 
@@ -684,6 +688,7 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
             document.getElementById("editPrice").value
         ),
         description: document.getElementById("editDescription").value.trim(),
+        comment: document.getElementById("editComment").value.trim(),
         used: used,
         purchasePrice: document.getElementById("editPurchasePrice").value,
         batteryCondition:

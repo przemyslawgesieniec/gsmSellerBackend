@@ -99,7 +99,8 @@ public class PhoneStock {
         BigDecimal purchasePrice,
         String description,
         Boolean isUsed,
-        String batteryCondition
+        String batteryCondition,
+        String comment
     ) {
         if (model != null) {
             this.model = model;
@@ -128,9 +129,12 @@ public class PhoneStock {
         if (purchasePrice != null) {
             this.purchasePrice = purchasePrice;
         }
-        // === NOWE POLA ===
         if (description != null) {
             this.description = description;
+        }
+
+        if (comment != null) {
+            this.comment = comment;
         }
 
         if (isUsed != null) {

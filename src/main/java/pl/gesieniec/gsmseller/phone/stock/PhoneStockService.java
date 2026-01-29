@@ -91,7 +91,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             dto.getPurchasePrice(),
             dto.getDescription(),
             dto.getUsed(),
-            dto.getBatteryCondition()
+            dto.getBatteryCondition(),
+            dto.getComment()
         );
 
 
