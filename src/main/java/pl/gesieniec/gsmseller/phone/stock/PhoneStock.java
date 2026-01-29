@@ -180,6 +180,18 @@ public class PhoneStock {
         this.status = Status.USUNIĘTY;
     }
 
+    public void restore() {
+        if (this.status != Status.USUNIĘTY) {
+            throw new IllegalStateException("Only deleted phones can be restored");
+        }
+
+        if (this.location != null) {
+            this.status = Status.DOSTĘPNY;
+        } else {
+            this.status = Status.WPROWADZONY;
+        }
+    }
+
     public boolean canBeRemoved() {
         return this.status == Status.WPROWADZONY
             || this.status == Status.DOSTĘPNY;

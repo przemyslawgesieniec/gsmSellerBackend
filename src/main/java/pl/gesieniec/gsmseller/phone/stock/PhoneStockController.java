@@ -80,6 +80,14 @@ public class PhoneStockController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{technicalId}/restore")
+    public ResponseEntity<Void> restorePhone(
+        @PathVariable UUID technicalId
+    ) {
+        service.restorePhone(technicalId);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/{technicalId}/remove-from-location")
     public ResponseEntity<Void> removePhoneFromLocation(
         @PathVariable UUID technicalId

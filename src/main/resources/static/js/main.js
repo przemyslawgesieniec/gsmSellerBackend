@@ -341,6 +341,14 @@ function renderPhones(phones) {
                   Usuń
                 </a>
               </li>
+
+              ${IS_ADMIN && phone.status === 'USUNIĘTY' ? `
+              <li>
+                <a href="#!" data-action="restore" data-id="${phone.technicalId}">
+                  Przywróć
+                </a>
+              </li>
+              ` : ''}
             
             </ul>
             
@@ -1027,6 +1035,10 @@ function handleDropdownAction(e) {
             confirmDeletePhone(id);
             break;
 
+        case "restore":
+            restorePhone(id);
+            break;
+
         case "handover":
             openHandoverModal(id);
             break;
@@ -1059,6 +1071,20 @@ function removePhoneFromLocation(technicalId) {
         })
         .catch(err => {
             M.toast({ html: err.message });
+        });
+}
+
+function restorePhone(technicalId) {
+    fetch(`/api/v1/phones/${technicalId}/restore`, {
+        method: "POST"
+    })
+        .then(res => {
+            if (!res.ok) throw new Error("Błąd przywracania telefonu");
+            M.toast({ html: "Telefon został przywrócony", classes: "green" });
+            return loadStock(currentPage);
+        })
+        .catch(err => {
+            M.toast({ html: err.message, classes: "red" });
         });
 }
 

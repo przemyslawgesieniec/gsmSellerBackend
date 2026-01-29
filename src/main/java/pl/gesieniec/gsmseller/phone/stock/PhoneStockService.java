@@ -206,6 +206,25 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
         );
     }
 
+    @Transactional
+    public void restorePhone(UUID technicalId) {
+        PhoneStock phone = repository
+            .findByTechnicalId(technicalId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Phone not found"
+            ));
+
+        try {
+            phone.restore();
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, e.getMessage()
+            );
+        }
+
+        repository.save(phone);
+    }
+
     public void removePhoneFromLocation(UUID technicalId) {
 
         PhoneStock phone = repository.findByTechnicalId(technicalId)
