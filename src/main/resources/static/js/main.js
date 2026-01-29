@@ -320,7 +320,7 @@ function renderPhones(phones) {
                  class="${phone.locationName && phone.status === 'DOSTĘPNY'
             ? ''
             : 'disabled-link'}">
-                Usuń ze sklepu
+                Usuń z lokalizacji
               </a>
             </li>
             <li>
@@ -1065,7 +1065,7 @@ function removePhoneFromLocation(technicalId) {
         method: "POST"
     })
         .then(res => {
-            if (!res.ok) throw new Error("Błąd usuwania ze sklepu");
+            if (!res.ok) throw new Error("Błąd usuwania z lokalizacji");
             M.toast({ html: "Telefon usunięty z lokalizacji", classes: "green" });
             return loadStock(currentPage);
         })

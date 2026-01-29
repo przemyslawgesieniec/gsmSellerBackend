@@ -117,8 +117,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
     @Override
     @Transactional
-    public void markPhoneSold(UUID technicalId, BigDecimal soldPrice) {
-        repository.findByTechnicalId(technicalId).ifPresent(e -> e.sell(soldPrice));
+    public void markPhoneSold(UUID technicalId, BigDecimal soldPrice, String sellingInfo) {
+        repository.findByTechnicalId(technicalId).ifPresent(e -> e.sell(soldPrice, sellingInfo));
     }
 
     public void acceptPhone(UUID technicalId, String username) {

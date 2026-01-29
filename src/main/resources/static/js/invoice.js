@@ -52,6 +52,7 @@ function renderInvoice(cart) {
         if (item.itemType === "PHONE") {
             const gwId = `gw-${item.technicalId}`;
             const usedId = `used-${item.technicalId}`;
+            const sellingInfoId = `sellingInfo-${item.technicalId}`;
 
             extraFields = `
               <tr>
@@ -74,6 +75,11 @@ function renderInvoice(cart) {
                           oninput="document.getElementById('${gwId}').value=this.value"
                         >
                       </div>
+                    </div>
+
+                    <div>
+                        <label for="${sellingInfoId}">Informacje dotyczące sprzedaży</label>
+                        <textarea id="${sellingInfoId}" class="materialize-textarea" style="margin-bottom: 0;"></textarea>
                     </div>
 
                     <label>
@@ -203,7 +209,9 @@ function collectInvoiceExtraData(cart) {
             warrantyMonths:
                 Number(document.getElementById(`gw-${item.technicalId}-num`)?.value ?? 0),
             used:
-                Boolean(document.getElementById(`used-${item.technicalId}`)?.checked)
+                Boolean(document.getElementById(`used-${item.technicalId}`)?.checked),
+            sellingInfo:
+                document.getElementById(`sellingInfo-${item.technicalId}`)?.value ?? ""
         };
     });
 }

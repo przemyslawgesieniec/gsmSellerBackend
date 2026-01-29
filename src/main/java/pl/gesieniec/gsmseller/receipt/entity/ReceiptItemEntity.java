@@ -40,4 +40,6 @@ public class ReceiptItemEntity {
 
     @Enumerated(EnumType.STRING)
     private ItemType itemType;
+
+    private String sellingInfo;
 }

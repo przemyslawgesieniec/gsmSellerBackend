@@ -27,7 +27,7 @@ public class PhoneStockEventHandler {
         event.items().stream()
             .filter(item -> item.getItemType().equals(ItemType.PHONE))
             .forEach(item -> {
-                phoneSoldHandler.markPhoneSold(item.getTechnicalId(), item.getNettAmount());
+                phoneSoldHandler.markPhoneSold(item.getTechnicalId(), item.getNettAmount(), item.getSellingInfo());
                 log.info("📱 Telefon {} oznaczono jako sprzedany", item.getTechnicalId());
             });
     }

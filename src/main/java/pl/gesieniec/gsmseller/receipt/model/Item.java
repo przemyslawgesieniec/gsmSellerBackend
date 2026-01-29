@@ -24,6 +24,7 @@ public class Item {
     private final Integer warrantyMonths;
     private final Boolean used;
     private final ItemType itemType;
+    private final String sellingInfo;
 
 
     /**
@@ -45,7 +46,8 @@ public class Item {
             null,
             null,
             null,
-            ItemType.MISC
+            ItemType.MISC,
+            null
         );
     }
 
@@ -59,7 +61,8 @@ public class Item {
         VatRate vatRate,
         UUID technicalId,
         Integer warrantyMonths,
-        Boolean used
+        Boolean used,
+        String sellingInfo
     ) {
         BigDecimal vatAmount = nettAmount
             .multiply(vatRate.getValue())
@@ -76,7 +79,8 @@ public class Item {
             technicalId,
             warrantyMonths,
             used,
-            ItemType.PHONE
+            ItemType.PHONE,
+            sellingInfo
         );
     }
 
@@ -104,7 +108,8 @@ public class Item {
             this.technicalId,
             this.warrantyMonths,
             this.used,
-            this.itemType
+            this.itemType,
+            this.sellingInfo
         );
     }
 

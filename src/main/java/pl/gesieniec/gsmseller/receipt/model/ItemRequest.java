@@ -20,4 +20,5 @@ public class ItemRequest {
     private Boolean used;
     private BigDecimal price;
     private String description;
+    private String sellingInfo;
 }

@@ -144,7 +144,8 @@ public class ReceiptService {
                         vatRate,
                         req.getTechnicalId(),
                         req.getWarrantyMonths(),
-                        req.getUsed()
+                        req.getUsed(),
+                        req.getSellingInfo()
                     );
                 }
 

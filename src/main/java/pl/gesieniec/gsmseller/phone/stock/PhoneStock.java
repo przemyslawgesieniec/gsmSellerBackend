@@ -148,7 +148,7 @@ public class PhoneStock {
     }
 
 
-    public void sell(BigDecimal soldPrice) {
+    public void sell(BigDecimal soldPrice, String sellingInfo) {
         if (this.status != Status.DOSTĘPNY) {
             throw new IllegalStateException("Phone cannot be sold in status: " + status);
         }
@@ -156,6 +156,9 @@ public class PhoneStock {
         this.status = Status.SPRZEDANY;
         this.soldFor = soldPrice;
         this.soldAt = LocalDateTime.now();
+        if (sellingInfo != null && !sellingInfo.isBlank()) {
+            this.comment = sellingInfo;
+        }
     }
 
 
