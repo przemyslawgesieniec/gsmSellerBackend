@@ -164,6 +164,21 @@ function addManualPhone() {
         </div>
     </div>
 
+    <div class="col s12 m4">
+        <div class="switch">
+            <label>
+                Sprawny
+                <input
+                    type="checkbox"
+                    data-field="damaged"
+                    ${document.getElementById("manualDamaged").checked ? "checked" : ""}
+                >
+                <span class="lever"></span>
+                Uszkodzony
+            </label>
+        </div>
+    </div>
+
     <div class="input-field col s12 m4 hide battery-condition-wrapper">
         <input
             type="number"
@@ -329,6 +344,10 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append(
                 "used",
                 document.getElementById("manualUsed")?.checked ?? false
+            );
+            formData.append(
+                "damaged",
+                document.getElementById("manualDamaged")?.checked ?? false
             );
             formData.append("batteryCondition", document.getElementById("manualBatteryCondition").value);
             formData.append("description", document.getElementById("manualDescription").value);
@@ -581,6 +600,20 @@ document.addEventListener("DOMContentLoaded", () => {
                                 ${p.used ? "checked" : ""}>
                             <span class="lever"></span>
                             Używany
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col s12 m4">
+                    <div class="switch">
+                        <label>
+                            Sprawny
+                            <input
+                                type="checkbox"
+                                data-field="damaged"
+                                ${p.damaged ? "checked" : ""}>
+                            <span class="lever"></span>
+                            Uszkodzony
                         </label>
                     </div>
                 </div>

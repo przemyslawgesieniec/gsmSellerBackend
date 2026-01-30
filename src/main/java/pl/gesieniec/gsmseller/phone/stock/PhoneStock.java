@@ -48,6 +48,7 @@ public class PhoneStock {
     private BigDecimal soldFor;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(255)")
     private Status status;
 
     @Enumerated(EnumType.STRING)
@@ -212,6 +213,10 @@ public class PhoneStock {
         }
         this.location = null;
         this.status = Status.WPROWADZONY;
+    }
+
+    public void moveToService() {
+        this.status = Status.SERWIS;
     }
 
     private boolean canBeRemovedFromLocation() {

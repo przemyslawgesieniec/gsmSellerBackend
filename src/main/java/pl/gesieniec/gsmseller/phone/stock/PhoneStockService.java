@@ -26,6 +26,8 @@ import pl.gesieniec.gsmseller.phone.stock.handler.PhoneSoldHandler;
 import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
+import pl.gesieniec.gsmseller.repair.Repair;
+import pl.gesieniec.gsmseller.repair.RepairRepository;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 
@@ -38,6 +40,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     private final PhoneStockMapper phoneStockMapper;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RepairRepository repairRepository;
 
 
     public PhoneStockDto getByTechnicalId(UUID id) {
@@ -106,14 +109,34 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             .map(User::getLocation)
             .orElse(null);
 
-        phoneScanDtoList.stream()
-            .map(phoneStockMapper::toPhoneStock)
-            .forEach(entity -> {
-                if (locationEntity != null) {
-                    entity.acceptAtLocation(locationEntity);
-                }
-                repository.save(entity);
-            });
+        phoneScanDtoList.forEach(dto -> {
+            PhoneStock entity = phoneStockMapper.toPhoneStock(dto);
+            if (locationEntity != null) {
+                entity.acceptAtLocation(locationEntity);
+            }
+
+            if (dto.isDamaged()) {
+                entity.moveToService();
+            }
+
+            repository.save(entity);
+
+            if (dto.isDamaged()) {
+                Repair repair = Repair.create(
+                    entity.getName(),
+                    entity.getImei(),
+                    entity.getColor(),
+                    entity.getPurchasePrice(),
+                    null, // repairPrice not known yet
+                    "Telefon dodany jako uszkodzony",
+                    null,
+                    null,
+                    false, // na sprzedaż
+                    entity.getTechnicalId()
+                );
+                repairRepository.save(repair);
+            }
+        });
     }
 
     @Override
