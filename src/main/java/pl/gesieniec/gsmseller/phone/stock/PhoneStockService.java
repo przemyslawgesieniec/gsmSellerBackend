@@ -288,7 +288,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
         return repository.findImeisByStatusIn(
             imeis,
-            List.of(Status.DOSTĘPNY, Status.WPROWADZONY)
+            List.of(Status.DOSTĘPNY, Status.WPROWADZONY, Status.SERWIS)
         );
     }
 

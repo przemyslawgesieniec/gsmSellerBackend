@@ -67,6 +67,16 @@
       border: 2px dashed #999;
     }
     
+    .kanban-card.status-NAPRAWIONY {
+      background-color: #e8f5e9 !important; /* light green */
+    }
+    .kanban-card.status-ANULOWANY {
+      background-color: #f5f5f5 !important; /* light gray */
+    }
+    .kanban-card.status-NIE_DO_NAPRAWY {
+      background-color: #ffeae6 !important; /* light red/peach */
+    }
+    
     /* Mobile view with tabs */
     @media only screen and (max-width: 992px) {
       .kanban-board {
@@ -108,9 +118,9 @@
       <div class="kanban-column-header orange-text text-darken-2">W NAPRAWIE</div>
       <div class="kanban-cards" id="cards-W_NAPRAWIE"></div>
     </div>
-    <div class="kanban-column" id="col-NAPRAWIONY" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
-      <div class="kanban-column-header green-text text-darken-2">NAPRAWIONY</div>
-      <div class="kanban-cards" id="cards-NAPRAWIONY"></div>
+    <div class="kanban-column" id="col-ZAKONCZONY" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+      <div class="kanban-column-header green-text text-darken-2">ZAKOŃCZONY</div>
+      <div class="kanban-cards" id="cards-ZAKONCZONY"></div>
     </div>
   </div>
 
@@ -121,7 +131,7 @@
         <ul class="tabs">
           <li class="tab col s4"><a href="#tab-DO_NAPRAWY" class="blue-text">Do naprawy</a></li>
           <li class="tab col s4"><a href="#tab-W_NAPRAWIE" class="orange-text">W naprawie</a></li>
-          <li class="tab col s4"><a href="#tab-NAPRAWIONY" class="green-text">Naprawiony</a></li>
+          <li class="tab col s4"><a href="#tab-ZAKONCZONY" class="green-text">Zakończony</a></li>
         </ul>
       </div>
       <div id="tab-DO_NAPRAWY" class="col s12">
@@ -130,8 +140,8 @@
       <div id="tab-W_NAPRAWIE" class="col s12">
         <div id="mobile-cards-W_NAPRAWIE" class="row" style="margin-top: 10px;"></div>
       </div>
-      <div id="tab-NAPRAWIONY" class="col s12">
-        <div id="mobile-cards-NAPRAWIONY" class="row" style="margin-top: 10px;"></div>
+      <div id="tab-ZAKONCZONY" class="col s12">
+        <div id="mobile-cards-ZAKONCZONY" class="row" style="margin-top: 10px;"></div>
       </div>
     </div>
   </div>
@@ -221,6 +231,42 @@
     <button class="btn green darken-2 waves-effect waves-light" id="confirmRestoreBtn">Zatwierdź</button>
   </div>
 </div>
+
+<!-- Modal: Wybór statusu zakończenia -->
+<div id="statusSelectionModal" class="modal">
+  <div class="modal-content">
+    <h5>Wybierz status zakończenia naprawy</h5>
+    <p>Przeciągnąłeś zlecenie do kolumny zakończonych. Wybierz odpowiedni status:</p>
+    <input type="hidden" id="statusSelectionRepairId">
+    <div class="row" style="margin-top: 20px;">
+      <div class="col s12 m4">
+        <button class="btn green darken-2 waves-effect waves-light full-width" onclick="finalizeStatus('NAPRAWIONY')">
+          <i class="material-icons left">check_circle</i>Naprawiony
+        </button>
+      </div>
+      <div class="col s12 m4">
+        <button class="btn red darken-2 waves-effect waves-light full-width" onclick="finalizeStatus('NIE_DO_NAPRAWY')">
+          <i class="material-icons left">error</i>Nie do naprawy
+        </button>
+      </div>
+      <div class="col s12 m4">
+        <button class="btn grey darken-2 waves-effect waves-light full-width" onclick="finalizeStatus('ANULOWANY')">
+          <i class="material-icons left">cancel</i>Anulowany
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-flat waves-effect" onclick="cancelStatusSelection()">Anuluj</button>
+  </div>
+</div>
+
+<style>
+  .full-width {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+</style>
 
 
 <!-- Materialize JS -->

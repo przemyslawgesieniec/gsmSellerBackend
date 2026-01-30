@@ -30,7 +30,8 @@ async function loadRepairs() {
 }
 
 function renderBoard() {
-    const statuses = ['DO_NAPRAWY', 'W_NAPRAWIE', 'NAPRAWIONY'];
+    const statuses = ['DO_NAPRAWY', 'W_NAPRAWIE', 'ZAKONCZONY'];
+    const finishedStatuses = ['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'];
     
     statuses.forEach(status => {
         const desktopContainer = document.getElementById(`cards-${status}`);
@@ -39,7 +40,12 @@ function renderBoard() {
         desktopContainer.innerHTML = '';
         mobileContainer.innerHTML = '';
         
-        const filteredRepairs = repairsData.filter(r => r.status === status);
+        const filteredRepairs = repairsData.filter(r => {
+            if (status === 'ZAKONCZONY') {
+                return finishedStatuses.includes(r.status);
+            }
+            return r.status === status;
+        });
         
         filteredRepairs.forEach(repair => {
             const card = createCard(repair);
@@ -51,14 +57,23 @@ function renderBoard() {
 
 function createCard(repair) {
     const div = document.createElement('div');
-    div.className = 'card kanban-card z-depth-1';
+    div.className = `card kanban-card z-depth-1 status-${repair.status}`;
     div.draggable = true;
     div.setAttribute('data-id', repair.technicalId);
     div.setAttribute('ondragstart', 'drag(event)');
     div.setAttribute('onclick', `openRepairDetails('${repair.technicalId}')`);
 
+    const statusLabels = {
+        'NAPRAWIONY': '<span class="new badge green left" data-badge-caption="naprawiony" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'ANULOWANY': '<span class="new badge grey left" data-badge-caption="anulowany" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
+    };
+    const statusLabel = statusLabels[repair.status] || '';
+
     div.innerHTML = `
         <div class="card-content">
+            ${statusLabel}
+            <div style="clear: both;"></div>
             <span class="card-title">${repair.name}</span>
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
             <p><b>Kolor:</b> ${repair.color || '-'}</p>
@@ -75,19 +90,20 @@ function createCard(repair) {
                 </div>
             ` : ''}
             
-            ${repair.status === 'NAPRAWIONY' ? `
+            ${['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
                 <div class="right-align" style="margin-top: 10px;">
-                    ${repair.forCustomer ? `
+                    ${repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
                         <button class="btn-small green darken-2 waves-effect waves-light" 
                                 onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'handover')">
                             <i class="material-icons left">check_circle</i>Odbiór
                         </button>
-                    ` : `
+                    ` : ''}
+                    ${!repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
                         <button class="btn-small orange darken-2 waves-effect waves-light" 
                                 onclick="event.stopPropagation(); openRestoreModal('${repair.technicalId}')">
                             <i class="material-icons left">store</i>Przywróć na sklep
                         </button>
-                    `}
+                    ` : ''}
                 </div>
             ` : ''}
         </div>
@@ -98,9 +114,18 @@ function createCard(repair) {
 function createMobileCard(repair) {
     const div = document.createElement('div');
     div.className = 'col s12';
+    const statusLabels = {
+        'NAPRAWIONY': '<span class="new badge green left" data-badge-caption="naprawiony" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'ANULOWANY': '<span class="new badge grey left" data-badge-caption="anulowany" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
+    };
+    const statusLabel = statusLabels[repair.status] || '';
+
     div.innerHTML = `
-        <div class="card z-depth-1" onclick="openRepairDetails('${repair.technicalId}')">
+        <div class="card z-depth-1 status-${repair.status}" onclick="openRepairDetails('${repair.technicalId}')">
             <div class="card-content">
+                ${statusLabel}
+                <div style="clear: both;"></div>
                 <span class="card-title">${repair.name}</span>
                 <div class="row" style="margin-bottom: 0;">
                     <div class="col s6">
@@ -122,19 +147,20 @@ function createMobileCard(repair) {
                     </div>
                 ` : ''}
                 
-                ${repair.status === 'NAPRAWIONY' ? `
+                ${['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
                     <div class="right-align" style="margin-top: 10px;">
-                        ${repair.forCustomer ? `
+                        ${repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
                             <button class="btn green darken-2 waves-effect waves-light" 
                                     onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'handover')">
                                 <i class="material-icons left">check_circle</i>Potwierdzenie odbioru
                             </button>
-                        ` : `
+                        ` : ''}
+                        ${!repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
                             <button class="btn orange darken-2 waves-effect waves-light" 
                                     onclick="event.stopPropagation(); openRestoreModal('${repair.technicalId}')">
                                 <i class="material-icons left">store</i>Przywróć na sklep
                             </button>
-                        `}
+                        ` : ''}
                     </div>
                 ` : ''}
             </div>
@@ -166,6 +192,16 @@ window.drop = async function(ev) {
     const id = ev.dataTransfer.getData("text");
     const newStatus = container.id.replace('col-', '');
     
+    if (newStatus === 'ZAKONCZONY') {
+        document.getElementById('statusSelectionRepairId').value = id;
+        M.Modal.getInstance(document.getElementById('statusSelectionModal')).open();
+        return;
+    }
+    
+    await updateRepairStatus(id, newStatus);
+}
+
+async function updateRepairStatus(id, newStatus) {
     const repair = repairsData.find(r => r.technicalId === id);
     if (repair && repair.status !== newStatus) {
         try {
@@ -181,6 +217,17 @@ window.drop = async function(ev) {
             M.toast({html: 'Błąd podczas zmiany statusu', classes: 'red'});
         }
     }
+}
+
+window.finalizeStatus = async function(selectedStatus) {
+    const id = document.getElementById('statusSelectionRepairId').value;
+    M.Modal.getInstance(document.getElementById('statusSelectionModal')).close();
+    await updateRepairStatus(id, selectedStatus);
+}
+
+window.cancelStatusSelection = function() {
+    M.Modal.getInstance(document.getElementById('statusSelectionModal')).close();
+    loadRepairs(); // Refresh to move the card back to its original position visually
 }
 
 async function openRepairDetails(technicalId) {

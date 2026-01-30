@@ -39,7 +39,7 @@ public class Repair {
     private UUID phoneTechnicalId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(255)")
+    @Column(nullable = false)
     private RepairStatus status;
 
     private LocalDateTime createDateTime;
