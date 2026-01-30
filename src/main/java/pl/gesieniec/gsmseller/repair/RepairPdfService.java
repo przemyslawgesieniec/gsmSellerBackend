@@ -1,26 +1,32 @@
 package pl.gesieniec.gsmseller.repair;
 
-import com.itextpdf.kernel.events.PdfDocumentEvent;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
-import pl.gesieniec.gsmseller.receipt.handlers.FooterHandler;
-import pl.gesieniec.gsmseller.receipt.handlers.HeaderHandler;
-import pl.gesieniec.gsmseller.receipt.handlers.SignatureHandler;
+import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -44,73 +50,159 @@ public class RepairPdfService {
 
         PdfWriter writer = new PdfWriter(out);
         PdfDocument pdfDoc = new PdfDocument(writer);
-        Document document = new Document(pdfDoc, PageSize.A4);
-        document.setMargins(40, 40, 40, 40);
-
+        
         PdfFont font = PdfFontFactory.createFont("/fonts/Fira_Sans/FiraSans-Regular.ttf",
             "Identity-H", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
-        document.setFont(font);
 
-        // Stopka
-        pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new FooterHandler(document, font));
+        PdfPage page = pdfDoc.addNewPage(PageSize.A4);
+        Rectangle pageSize = page.getPageSize();
+        float halfHeight = pageSize.getHeight() / 2;
 
-        // Nagłówek (logo)
-        pdfDoc.addEventHandler(PdfDocumentEvent.START_PAGE,
-            new HeaderHandler("/imgs/logo_gsm.png"));
+        // Egzemplarz 1 (Góra)
+        Rectangle rectUpper = new Rectangle(0, halfHeight, pageSize.getWidth(), halfHeight);
+        Canvas canvasUpper = new Canvas(page, rectUpper);
+        drawContent(canvasUpper, repair, title, font, rectUpper);
+        canvasUpper.close();
+
+        // Egzemplarz 2 (Dół)
+        Rectangle rectLower = new Rectangle(0, 0, pageSize.getWidth(), halfHeight);
+        Canvas canvasLower = new Canvas(page, rectLower);
+        drawContent(canvasLower, repair, title, font, rectLower);
+        canvasLower.close();
+
+        // Linia przerywana
+        PdfCanvas pdfCanvas = new PdfCanvas(page);
+        pdfCanvas.setLineDash(3, 3);
+        pdfCanvas.moveTo(0, halfHeight);
+        pdfCanvas.lineTo(pageSize.getWidth(), halfHeight);
+        pdfCanvas.stroke();
+
+        pdfDoc.close();
+        return out.toByteArray();
+    }
+
+    @SneakyThrows
+    private void drawContent(Canvas canvas, Repair repair, String title, PdfFont font, Rectangle rootRect) {
+        canvas.setFont(font);
+
+        // Logo
+        drawLogo(canvas, rootRect);
 
         // Tytuł dokumentu
-        document.add(new Paragraph(title)
+        canvas.add(new Paragraph(title)
             .setBold()
-            .setFontSize(16)
+            .setFontSize(14)
             .setTextAlignment(TextAlignment.CENTER)
-            .setMarginTop(60)
-            .setMarginBottom(20));
+            .setMarginTop(30));
 
-        // Data i Miejsce
-        document.add(new Paragraph("Data: " + repair.getCreateDateTime().format(DATE_FORMATTER))
+        // Data
+        canvas.add(new Paragraph("Data: " + repair.getCreateDateTime().format(DATE_FORMATTER))
             .setTextAlignment(TextAlignment.RIGHT)
-            .setFontSize(10)
-            .setMarginBottom(20));
+            .setFontSize(9));
 
         // Dane urządzenia
-        document.add(new Paragraph("Dane urządzenia:").setBold().setUnderline().setMarginBottom(10));
+        canvas.add(new Paragraph("Dane urządzenia:").setBold().setUnderline().setFontSize(10).setMarginTop(5));
         
-        float[] colWidths = {150f, 350f};
+        float[] colWidths = {120f, 300f};
         Table table = new Table(colWidths);
         table.setWidth(UnitValue.createPercentValue(100));
+        table.setFontSize(9);
 
         addTableRow(table, "Urządzenie:", repair.getName());
         addTableRow(table, "IMEI:", repair.getImei());
         addTableRow(table, "Kolor:", repair.getColor());
         addTableRow(table, "PIN/Hasło:", repair.getPinPassword());
         
-        document.add(table);
+        canvas.add(table);
 
-        // Opis uszkodzenia i zlecenia
-        document.add(new Paragraph("\nOpis uszkodzenia:").setBold().setMarginTop(10));
-        document.add(new Paragraph(repair.getDamageDescription() != null ? repair.getDamageDescription() : "---")
-            .setFontSize(10)
-            .setMarginBottom(10));
-
-        document.add(new Paragraph("Opis zlecenia naprawy:").setBold().setMarginTop(10));
-        document.add(new Paragraph(repair.getRepairOrderDescription() != null ? repair.getRepairOrderDescription() : "---")
-            .setFontSize(10)
-            .setMarginBottom(10));
-
-        // Ceny
-        if (repair.getRepairPrice() != null) {
-            document.add(new Paragraph("\nPrzewidywany koszt naprawy: " + repair.getRepairPrice() + " zł")
-                .setBold()
-                .setFontSize(12)
-                .setMarginTop(10));
+        // Status-specific content
+        if (repair.getStatus() == RepairStatus.NAPRAWIONY) {
+            canvas.add(new Paragraph("\nOpis naprawy:").setBold().setFontSize(10));
+            canvas.add(new Paragraph(repair.getRepairOrderDescription() != null ? repair.getRepairOrderDescription() : "---")
+                .setFontSize(9));
+            if (repair.getRepairPrice() != null) {
+                canvas.add(new Paragraph("Koszt naprawy: " + repair.getRepairPrice() + " zł")
+                    .setBold().setFontSize(10));
+            }
+            canvas.add(new Paragraph("\nPotwierdzam odbiór sprawnego urządzenia.")
+                .setFontSize(9).setItalic());
+        } else if (repair.getStatus() == RepairStatus.ANULOWANY) {
+            canvas.add(new Paragraph("\nStatus: ANULOWANO").setBold().setFontSize(10));
+            canvas.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
+                .setFontSize(9));
+            canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
+                .setFontSize(9).setItalic());
+        } else if (repair.getStatus() == RepairStatus.NIE_DO_NAPRAWY) {
+            canvas.add(new Paragraph("\nStatus: NIE DO NAPRAWY").setBold().setFontSize(10));
+            canvas.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
+                .setFontSize(9));
+            canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
+                .setFontSize(9).setItalic());
+        } else {
+            // Domyślnie (np. DO_NAPRAWY - pokwitowanie przyjęcia)
+            canvas.add(new Paragraph("\nOpis uszkodzenia:").setBold().setFontSize(10));
+            canvas.add(new Paragraph(repair.getDamageDescription() != null ? repair.getDamageDescription() : "---")
+                .setFontSize(9));
+            canvas.add(new Paragraph("Przewidywany koszt: " + (repair.getRepairPrice() != null ? repair.getRepairPrice() + " zł" : "do ustalenia"))
+                .setFontSize(10));
         }
 
         // Podpisy
-        document.setMargins(100, 40, 170, 40);
-        pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new SignatureHandler(font));
+        drawSignatures(canvas);
 
-        document.close();
-        return out.toByteArray();
+        // Stopka
+        drawFooter(canvas, rootRect);
+    }
+
+    @SneakyThrows
+    private void drawLogo(Canvas canvas, Rectangle rootRect) {
+        try (InputStream is = getClass().getResourceAsStream("/imgs/logo_gsm.png")) {
+            if (is != null) {
+                ImageData imageData = ImageDataFactory.create(is.readAllBytes());
+                Image logo = new Image(imageData);
+                logo.scaleToFit(100, 40);
+                logo.setFixedPosition(rootRect.getLeft() + 40, rootRect.getTop() - 50);
+                canvas.add(logo);
+            }
+        }
+    }
+
+    private void drawSignatures(Canvas canvas) {
+        Table signatureTable = new Table(new float[]{1, 1});
+        signatureTable.setWidth(UnitValue.createPercentValue(100));
+        signatureTable.setMarginTop(30);
+
+        signatureTable.addCell(new Cell().add(new Paragraph("........................................\nPodpis klienta")
+            .setTextAlignment(TextAlignment.CENTER).setFontSize(8)).setBorder(Border.NO_BORDER));
+        signatureTable.addCell(new Cell().add(new Paragraph("........................................\nPieczątka i podpis serwisu")
+            .setTextAlignment(TextAlignment.CENTER).setFontSize(8)).setBorder(Border.NO_BORDER));
+
+        canvas.add(signatureTable);
+    }
+
+    private void drawFooter(Canvas canvas, Rectangle rootRect) {
+        Paragraph footerLine = new Paragraph().setBorderTop(new SolidBorder(ColorConstants.BLACK, 0.5f));
+        footerLine.setFixedPosition(rootRect.getLeft() + 40, rootRect.getBottom() + 60, rootRect.getWidth() - 80);
+        canvas.add(footerLine);
+
+        Table table = new Table(new float[]{1, 1, 1, 1});
+        table.setWidth(UnitValue.createPercentValue(100));
+        table.setFontSize(6);
+        table.setFixedPosition(rootRect.getLeft() + 40, rootRect.getBottom() + 10, rootRect.getWidth() - 80);
+
+        table.addCell(makeFooterCell("Carrefour Kutno", "Oporowska 6A, 99-300 Kutno", "+48 736 810 390"));
+        table.addCell(makeFooterCell("Galeria Różana Kutno", "Kościuszki 73, 99-300 Kutno", "+48 579 900 005"));
+        table.addCell(makeFooterCell("M Park Piotrków Tryb.", "Sikorskiego 13/17, 97-300 Piotrków", "+48 579 900 070"));
+        table.addCell(makeFooterCell("Galeria Zgierska Zgierz", "Armii Krajowej 10, 95-100 Zgierz", "+48 579 900 050"));
+
+        canvas.add(table);
+    }
+
+    private Cell makeFooterCell(String title, String address, String tel) {
+        return new Cell().setBorder(Border.NO_BORDER)
+            .add(new Paragraph(title).setBold())
+            .add(new Paragraph(address))
+            .add(new Paragraph(tel));
     }
 
     private void addTableRow(Table table, String label, String value) {

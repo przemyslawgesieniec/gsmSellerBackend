@@ -17,19 +17,19 @@ public class StockReportService {
 
     public long getStockCount() {
         return phoneStockRepository.countByStatusIn(
-            List.of(Status.DOSTĘPNY, Status.WPROWADZONY)
+            List.of(Status.DOSTĘPNY, Status.WPROWADZONY, Status.SERWIS)
         );
     }
 
     public BigDecimal getStockValue() {
         return phoneStockRepository.sumPurchasePriceByStatusIn(
-            List.of(Status.DOSTĘPNY, Status.WPROWADZONY)
+            List.of(Status.DOSTĘPNY, Status.WPROWADZONY, Status.SERWIS)
         );
     }
 
     public BigDecimal getPotentialProfit() {
         return phoneStockRepository.sumPotentialProfitByStatusIn(
-            List.of(Status.DOSTĘPNY, Status.WPROWADZONY)
+            List.of(Status.DOSTĘPNY, Status.WPROWADZONY, Status.SERWIS)
         );
     }
 

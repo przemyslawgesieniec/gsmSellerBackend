@@ -188,7 +188,7 @@ const PURCHASE_TYPE_LABELS = {
 function renderPhones(phones) {
     listContainer.innerHTML = "";
     phones.forEach((phone) => {
-        const statusClass = phone.status;
+        const statusClass = phone.status ? phone.status.toUpperCase() : "";
         const inCart = isPhoneInCart(phone.technicalId);
 
         const disableSellButton =
@@ -575,8 +575,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     loadLocationsFilter();
 
-    initSimpleSelect('#filterStatus');
-    initSimpleSelect('#filterLocation');
+    const statusSelect = initSimpleSelect('#filterStatus');
+    const locationSelect = initSimpleSelect('#filterLocation');
+
+    if (statusSelect) {
+        statusSelect.on('change', () => liveReload());
+    }
+    if (locationSelect) {
+        locationSelect.on('change', () => liveReload());
+    }
 });
 
 function editPhone(technicalId) {
@@ -1136,9 +1143,9 @@ document.getElementById("confirmHandoverBtn")
 
 function initSimpleSelect(selector) {
     const el = document.querySelector(selector);
-    if (!el) return;
+    if (!el) return null;
 
-    new TomSelect(el, {
+    return new TomSelect(el, {
         controlInput: null,
         create: false,
         searchField: [],
