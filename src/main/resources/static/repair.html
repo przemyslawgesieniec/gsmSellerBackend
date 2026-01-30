@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Serwis - Naprawy</title>
+
+  <!-- Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Nasze style -->
+  <link href="css/style.css" rel="stylesheet">
+  <style>
+    .kanban-board {
+      display: flex;
+      gap: 15px;
+      padding: 10px;
+      overflow-x: auto;
+      min-height: calc(100vh - 150px);
+    }
+    .kanban-column {
+      flex: 1;
+      min-width: 300px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 170px);
+    }
+    .kanban-column-header {
+      padding: 15px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      border-bottom: 2px solid #ddd;
+      background-color: #eee;
+      border-radius: 8px 8px 0 0;
+      text-align: center;
+    }
+    .kanban-cards {
+      padding: 10px;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    .kanban-card {
+      margin-bottom: 10px;
+      cursor: grab;
+      user-select: none;
+    }
+    .kanban-card:active {
+      cursor: grabbing;
+    }
+    .kanban-card .card-content {
+      padding: 12px !important;
+    }
+    .kanban-card .card-title {
+      font-size: 1.1rem !important;
+      font-weight: 500;
+      margin-bottom: 5px !important;
+    }
+    .kanban-card p {
+      margin: 2px 0;
+      font-size: 0.9rem;
+    }
+    .drag-over {
+      background-color: #e0e0e0;
+      border: 2px dashed #999;
+    }
+    
+    /* Mobile view with tabs */
+    @media only screen and (max-width: 992px) {
+      .kanban-board {
+        display: none;
+      }
+      .mobile-repair-view {
+        display: block;
+      }
+    }
+    @media only screen and (min-width: 993px) {
+      .mobile-repair-view {
+        display: none;
+      }
+    }
+
+    .fab-fixed {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
+
+<div class="container wide-layout">
+  <h4 class="center-align">Zlecenia Serwisowe</h4>
+
+  <!-- Desktop Kanban Board -->
+  <div class="kanban-board">
+    <div class="kanban-column" id="col-DO_NAPRAWY" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+      <div class="kanban-column-header blue-text text-darken-2">DO NAPRAWY</div>
+      <div class="kanban-cards" id="cards-DO_NAPRAWY"></div>
+    </div>
+    <div class="kanban-column" id="col-W_NAPRAWIE" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+      <div class="kanban-column-header orange-text text-darken-2">W NAPRAWIE</div>
+      <div class="kanban-cards" id="cards-W_NAPRAWIE"></div>
+    </div>
+    <div class="kanban-column" id="col-NAPRAWIONY" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+      <div class="kanban-column-header green-text text-darken-2">NAPRAWIONY</div>
+      <div class="kanban-cards" id="cards-NAPRAWIONY"></div>
+    </div>
+  </div>
+
+  <!-- Mobile Tabs View -->
+  <div class="mobile-repair-view">
+    <div class="row">
+      <div class="col s12">
+        <ul class="tabs">
+          <li class="tab col s4"><a href="#tab-DO_NAPRAWY" class="blue-text">Do naprawy</a></li>
+          <li class="tab col s4"><a href="#tab-W_NAPRAWIE" class="orange-text">W naprawie</a></li>
+          <li class="tab col s4"><a href="#tab-NAPRAWIONY" class="green-text">Naprawiony</a></li>
+        </ul>
+      </div>
+      <div id="tab-DO_NAPRAWY" class="col s12">
+        <div id="mobile-cards-DO_NAPRAWY" class="row" style="margin-top: 10px;"></div>
+      </div>
+      <div id="tab-W_NAPRAWIE" class="col s12">
+        <div id="mobile-cards-W_NAPRAWIE" class="row" style="margin-top: 10px;"></div>
+      </div>
+      <div id="tab-NAPRAWIONY" class="col s12">
+        <div id="mobile-cards-NAPRAWIONY" class="row" style="margin-top: 10px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab-fixed">
+  <a class="btn-floating btn-large waves-effect waves-light red">
+    <i class="material-icons">add</i>
+  </a>
+</div>
+
+<!-- Modal: Dodawanie/Edycja naprawy -->
+<div id="repairModal" class="modal">
+  <div class="modal-content">
+    <h5 id="modalTitle">Szczegóły naprawy</h5>
+    <div class="row">
+      <form id="repairForm">
+        <input type="hidden" id="repairTechnicalId">
+        <div class="input-field col s12 m6">
+          <input id="repairName" type="text" class="validate" required>
+          <label for="repairName">Nazwa urządzenia *</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="repairImei" type="text">
+          <label for="repairImei">IMEI</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="repairColor" type="text">
+          <label for="repairColor">Kolor</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="repairPinPassword" type="text">
+          <label for="repairPinPassword">PIN / Hasło</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="repairPurchasePrice" type="number" step="0.01">
+          <label for="repairPurchasePrice">Cena zakupu / przyjęcia</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="repairPrice" type="number" step="0.01">
+          <label for="repairPrice">Cena naprawy</label>
+        </div>
+        <div class="input-field col s12">
+          <textarea id="repairDamageDescription" class="materialize-textarea"></textarea>
+          <label for="repairDamageDescription">Opis uszkodzenia</label>
+        </div>
+        <div class="input-field col s12">
+          <textarea id="repairOrderDescription" class="materialize-textarea"></textarea>
+          <label for="repairOrderDescription">Opis zlecenia naprawy</label>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-flat modal-close waves-effect waves-red">Anuluj</button>
+    <button class="btn blue darken-2 waves-effect waves-light" id="saveRepairBtn">Zapisz</button>
+  </div>
+</div>
+
+<!-- Modal: Przywróć na sklep -->
+<div id="restoreToShopModal" class="modal">
+  <div class="modal-content">
+    <h5>Przywróć telefon na sklep</h5>
+    <div class="row">
+      <form id="restoreToShopForm">
+        <input type="hidden" id="restoreRepairId">
+        <div class="input-field col s12 m6">
+          <input id="restoreRepairPrice" type="number" step="0.01">
+          <label for="restoreRepairPrice">Cena naprawy</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="restoreSellingPrice" type="number" step="0.01">
+          <label for="restoreSellingPrice">Ostateczna cena sprzedaży</label>
+        </div>
+        <div class="input-field col s12">
+          <select id="restoreLocation">
+            <option value="" disabled selected>Wybierz lokalizację</option>
+          </select>
+          <label>Lokalizacja</label>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-flat modal-close waves-effect waves-red">Anuluj</button>
+    <button class="btn green darken-2 waves-effect waves-light" id="confirmRestoreBtn">Zatwierdź</button>
+  </div>
+</div>
+
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/repair.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    M.Tabs.init(document.querySelectorAll('.tabs'));
+    M.Modal.init(document.querySelectorAll('.modal'));
+  });
+</script>
+
+</body>
+</html>
