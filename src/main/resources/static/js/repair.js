@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fab.addEventListener('click', () => {
         resetForm();
         document.getElementById('modalTitle').innerText = 'Nowe zlecenie naprawy';
+        document.getElementById('repairPurchasePriceWrapper').classList.add('hide');
         M.updateTextFields();
         M.Modal.getInstance(document.getElementById('repairModal')).open();
     });
@@ -78,10 +79,10 @@ function createCard(repair) {
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
             <p><b>Kolor:</b> ${repair.color || '-'}</p>
             <div class="divider" style="margin: 5px 0;"></div>
-            <p><b>Cena zak.:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>
+            ${repair.forCustomer ? '' : `<p><b>Cena zak.:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>`}
             <p><b>Cena napr.:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
             
-            ${repair.status === 'DO_NAPRAWY' && repair.forCustomer ? `
+            ${['DO_NAPRAWY'].includes(repair.status) && repair.forCustomer ? `
                 <div class="right-align" style="margin-top: 10px;">
                     <button class="btn-small blue darken-2 waves-effect waves-light" 
                             onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'receipt')">
@@ -92,7 +93,7 @@ function createCard(repair) {
             
             ${['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
                 <div class="right-align" style="margin-top: 10px;">
-                    ${repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
+                    ${repair.forCustomer ? `
                         <button class="btn-small green darken-2 waves-effect waves-light" 
                                 onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'handover')">
                             <i class="material-icons left">check_circle</i>Odbiór
@@ -133,12 +134,12 @@ function createMobileCard(repair) {
                         <p><b>Kolor:</b> ${repair.color || '-'}</p>
                     </div>
                     <div class="col s6 right-align">
-                        <p><b>Zakup:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>
+                        ${repair.forCustomer ? '' : `<p><b>Zakup:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>`}
                         <p><b>Naprawa:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
                     </div>
                 </div>
                 
-                ${repair.status === 'DO_NAPRAWY' && repair.forCustomer ? `
+                ${['DO_NAPRAWY'].includes(repair.status) && repair.forCustomer ? `
                     <div class="right-align" style="margin-top: 10px;">
                         <button class="btn blue darken-2 waves-effect waves-light" 
                                 onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'receipt')">
@@ -149,7 +150,7 @@ function createMobileCard(repair) {
                 
                 ${['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
                     <div class="right-align" style="margin-top: 10px;">
-                        ${repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
+                        ${repair.forCustomer ? `
                             <button class="btn green darken-2 waves-effect waves-light" 
                                     onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'handover')">
                                 <i class="material-icons left">check_circle</i>Potwierdzenie odbioru
@@ -246,6 +247,12 @@ async function openRepairDetails(technicalId) {
     document.getElementById('repairDamageDescription').value = repair.damageDescription || '';
     document.getElementById('repairOrderDescription').value = repair.repairOrderDescription || '';
 
+    if (repair.forCustomer) {
+        document.getElementById('repairPurchasePriceWrapper').classList.add('hide');
+    } else {
+        document.getElementById('repairPurchasePriceWrapper').classList.remove('hide');
+    }
+
     M.updateTextFields();
     M.textareaAutoResize(document.getElementById('repairDamageDescription'));
     M.textareaAutoResize(document.getElementById('repairOrderDescription'));
@@ -335,7 +342,7 @@ window.openRestoreModal = function(technicalId) {
     // Actually, the requirement says: pre-filled with "selling price" from the moment of adding.
     // We need to fetch the associated phone to get its selling price if we want to be accurate, 
     // but the repair object currently only stores purchasePrice.
-    // Let's fetch the phone if phoneTechnicalId is present.
+    // Let's fetch the phone if phoneTechn  icalId is present.
     
     if (repair.phoneTechnicalId) {
         fetch(`/api/v1/phones/${repair.phoneTechnicalId}`)
