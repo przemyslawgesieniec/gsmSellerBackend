@@ -97,6 +97,14 @@
       bottom: 24px;
       right: 24px;
     }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #2196f3;
+      padding-bottom: 5px;
+    }
   </style>
 </head>
 <body>
@@ -155,46 +163,159 @@
 </div>
 
 <!-- Modal: Dodawanie/Edycja naprawy -->
-<div id="repairModal" class="modal">
+<div id="repairModal" class="modal modal-fixed-footer" style="width: 85% !important; max-height: 90% !important;">
   <div class="modal-content">
     <h5 id="modalTitle">Szczegóły naprawy</h5>
-    <div class="row">
-      <form id="repairForm">
-        <input type="hidden" id="repairTechnicalId">
+    <form id="repairForm">
+      <input type="hidden" id="repairTechnicalId">
+      <input type="hidden" id="isForCustomer" value="true">
+      <input type="hidden" id="phoneTechnicalId">
+
+      <!-- Sekcja 1: Klient -->
+      <div class="section-title blue-text text-darken-2">Sekcja 1 - Klient</div>
+      <div class="row card-panel grey lighten-5" style="box-shadow: none; border: 1px solid #ddd;">
+        <div id="clientSearchSection">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">search</i>
+            <input type="text" id="clientSearch" class="autocomplete">
+            <label for="clientSearch">Wyszukaj klienta (Imię, Nazwisko lub Telefon)</label>
+            <input type="hidden" id="selectedClientTechnicalId">
+          </div>
+          <div class="col s12">
+             <p class="grey-text">Wybierz klienta z listy lub <a href="#!" id="btnAddNewClient">dodaj nowego klienta</a></p>
+          </div>
+        </div>
+
+        <div id="newClientFields" style="display: none;">
+          <div class="input-field col s12 m4">
+            <input id="clientName" type="text">
+            <label for="clientName">Imię *</label>
+          </div>
+          <div class="input-field col s12 m4">
+            <input id="clientSurname" type="text">
+            <label for="clientSurname">Nazwisko *</label>
+          </div>
+          <div class="input-field col s12 m4">
+            <input id="clientPhone" type="text">
+            <label for="clientPhone">Numer telefonu *</label>
+          </div>
+          <div class="col s12">
+             <button type="button" class="btn-small grey" id="cancelNewClient">Wróć do wyszukiwania</button>
+          </div>
+        </div>
+        
+        <div id="selectedClientInfo" style="display: none;" class="col s12">
+            <div class="chip blue white-text">
+                <span id="selectedClientDisplay"></span>
+                <i class="close material-icons" id="clearSelectedClient">close</i>
+            </div>
+        </div>
+      </div>
+
+      <!-- Sekcja 2: Urządzenie -->
+      <div class="section-title blue-text text-darken-2">Sekcja 2 - Urządzenie</div>
+      <div class="row card-panel grey lighten-5" style="box-shadow: none; border: 1px solid #ddd;">
         <div class="input-field col s12 m6">
-          <input id="repairName" type="text" class="validate" required>
-          <label for="repairName">Nazwa urządzenia *</label>
+          <input id="repairManufacturer" type="text">
+          <label for="repairManufacturer">Producent</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="repairModel" type="text" required>
+          <label for="repairModel">Model *</label>
         </div>
         <div class="input-field col s12 m6">
           <input id="repairImei" type="text">
           <label for="repairImei">IMEI</label>
         </div>
+      </div>
+
+      <!-- Sekcja 3: Naprawa -->
+      <div class="section-title blue-text text-darken-2">Sekcja 3 - Naprawa</div>
+      <div class="row card-panel grey lighten-5" style="box-shadow: none; border: 1px solid #ddd;">
         <div class="input-field col s12 m6">
-          <input id="repairColor" type="text">
-          <label for="repairColor">Kolor</label>
-        </div>
-        <div class="input-field col s12 m6">
-          <input id="repairPinPassword" type="text">
-          <label for="repairPinPassword">PIN / Hasło</label>
-        </div>
-        <div class="input-field col s12 m6" id="repairPurchasePriceWrapper">
-          <input id="repairPurchasePrice" type="number" step="0.01">
-          <label for="repairPurchasePrice">Cena zakupu / przyjęcia</label>
+          <textarea id="repairProblemDescription" class="materialize-textarea"></textarea>
+          <label for="repairProblemDescription">Opis problemu</label>
         </div>
         <div class="input-field col s12 m6">
-          <input id="repairPrice" type="number" step="0.01">
-          <label for="repairPrice">Cena naprawy</label>
+          <textarea id="repairDeviceCondition" class="materialize-textarea"></textarea>
+          <label for="repairDeviceCondition">Stan telefonu</label>
         </div>
-        <div class="input-field col s12">
-          <textarea id="repairDamageDescription" class="materialize-textarea"></textarea>
-          <label for="repairDamageDescription">Opis uszkodzenia</label>
+        <div class="input-field col s12 m12">
+          <textarea id="repairRemarks" class="materialize-textarea"></textarea>
+          <label for="repairRemarks">Uwagi</label>
         </div>
-        <div class="input-field col s12">
-          <textarea id="repairOrderDescription" class="materialize-textarea"></textarea>
-          <label for="repairOrderDescription">Opis zlecenia naprawy</label>
+
+        <div class="input-field col s12 m6">
+           <input id="repairLockCode" type="text">
+           <label for="repairLockCode">Kod blokady telefonu</label>
         </div>
-      </form>
-    </div>
+
+        <div class="col s12 m6">
+            <div class="file-field input-field">
+              <div class="btn-small blue">
+                <span>Zdjęcia</span>
+                <input type="file" multiple id="repairPhotos">
+              </div>
+              <div class="file-path-wrapper">
+                <input class="file-path validate" type="text" placeholder="Dodaj zdjęcia urządzenia">
+              </div>
+            </div>
+        </div>
+
+        <div class="col s12 m4">
+          <p>
+            <label>
+              <input type="checkbox" id="repairMoistureTraces" class="filled-in" />
+              <span>Ślady zawilgocenia</span>
+            </label>
+          </p>
+        </div>
+        <div class="col s12 m4">
+          <p>
+            <label>
+              <input type="checkbox" id="repairWarrantyRepair" class="filled-in" />
+              <span>Naprawa gwarancyjna</span>
+            </label>
+          </p>
+        </div>
+        <div class="col s12 m4">
+          <p>
+            <label>
+              <input type="checkbox" id="repairTurnsOn" class="filled-in" />
+              <span>Czy telefon się uruchamia?</span>
+            </label>
+          </p>
+        </div>
+
+        <div class="input-field col s12 m4">
+          <input id="repairReceiptDate" type="date">
+          <label for="repairReceiptDate" class="active">Data przyjęcia</label>
+        </div>
+        <div class="input-field col s12 m4">
+          <input id="repairEstimatedRepairDate" type="date">
+          <label for="repairEstimatedRepairDate" class="active">Szacowana data naprawy</label>
+        </div>
+        <div class="input-field col s12 m4">
+          <input id="repairEstimatedCost" type="number" step="0.01">
+          <label for="repairEstimatedCost">Szacowany koszt naprawy</label>
+        </div>
+        
+        <div id="repairFinalPriceWrapper" style="display: none;">
+            <div class="input-field col s12 m6">
+              <input id="repairPrice" type="number" step="0.01">
+              <label for="repairPrice">Ostateczna cena naprawy</label>
+            </div>
+        </div>
+        
+        <!-- Legacy fields for shop repairs -->
+        <div id="shopRepairFields" style="display: none;">
+            <div class="input-field col s12 m6">
+              <input id="repairPurchasePrice" type="number" step="0.01">
+              <label for="repairPurchasePrice">Cena zakupu / przyjęcia</label>
+            </div>
+        </div>
+      </div>
+    </form>
   </div>
   <div class="modal-footer">
     <button class="btn-flat modal-close waves-effect waves-red">Anuluj</button>

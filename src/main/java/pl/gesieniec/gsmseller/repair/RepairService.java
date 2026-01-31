@@ -12,6 +12,8 @@ import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.location.LocationRepository;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockRepository;
+import pl.gesieniec.gsmseller.repair.client.RepairClient;
+import pl.gesieniec.gsmseller.repair.client.RepairClientRepository;
 import pl.gesieniec.gsmseller.repair.model.RepairDto;
 import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 import pl.gesieniec.gsmseller.repair.model.RestoreToShopRequest;
@@ -26,6 +28,7 @@ public class RepairService {
     private final RepairPdfService pdfService;
     private final PhoneStockRepository phoneStockRepository;
     private final LocationRepository locationRepository;
+    private final RepairClientRepository clientRepository;
 
     @Transactional(readOnly = true)
     public List<RepairDto> getAllRepairs() {
@@ -57,17 +60,34 @@ public class RepairService {
 
     @Transactional
     public RepairDto addRepair(RepairDto dto) {
+        RepairClient client = null;
+        if (dto.getClientTechnicalId() != null) {
+            client = clientRepository.findByTechnicalId(dto.getClientTechnicalId())
+                .orElseThrow(() -> new RuntimeException("Client not found: " + dto.getClientTechnicalId()));
+        } else if (dto.getClientName() != null && !dto.getClientName().isBlank()) {
+            client = RepairClient.create(dto.getClientName(), dto.getClientSurname(), dto.getClientPhoneNumber());
+            client = clientRepository.save(client);
+        }
+
         Repair repair = Repair.create(
-            dto.getName(),
+            client,
+            dto.getManufacturer(),
+            dto.getModel(),
             dto.getImei(),
-            dto.getColor(),
+            dto.getDeviceCondition(),
+            dto.getProblemDescription(),
+            dto.getRemarks(),
+            dto.isMoistureTraces(),
+            dto.isWarrantyRepair(),
+            dto.isTurnsOn(),
+            dto.getLockCode(),
+            dto.getReceiptDate(),
+            dto.getEstimatedRepairDate(),
+            dto.getEstimatedCost(),
+            dto.getPhotoUrls(),
+            dto.getPhoneTechnicalId(),
             dto.getPurchasePrice(),
-            dto.getRepairPrice(),
-            dto.getDamageDescription(),
-            dto.getRepairOrderDescription(),
-            dto.getPinPassword(),
-            dto.isForCustomer(),
-            dto.getPhoneTechnicalId()
+            dto.getRepairPrice()
         );
         Repair saved = repository.save(repair);
         return mapper.toDto(saved);
@@ -78,17 +98,34 @@ public class RepairService {
         Repair repair = repository.findByTechnicalId(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
 
+        RepairClient client = null;
+        if (dto.getClientTechnicalId() != null) {
+            client = clientRepository.findByTechnicalId(dto.getClientTechnicalId())
+                .orElseThrow(() -> new RuntimeException("Client not found: " + dto.getClientTechnicalId()));
+        } else if (dto.getClientName() != null && !dto.getClientName().isBlank()) {
+            client = RepairClient.create(dto.getClientName(), dto.getClientSurname(), dto.getClientPhoneNumber());
+            client = clientRepository.save(client);
+        }
+
         repair.update(
-            dto.getName(),
+            client,
+            dto.getManufacturer(),
+            dto.getModel(),
             dto.getImei(),
-            dto.getColor(),
+            dto.getDeviceCondition(),
+            dto.getProblemDescription(),
+            dto.getRemarks(),
+            dto.isMoistureTraces(),
+            dto.isWarrantyRepair(),
+            dto.isTurnsOn(),
+            dto.getLockCode(),
+            dto.getReceiptDate(),
+            dto.getEstimatedRepairDate(),
+            dto.getEstimatedCost(),
+            dto.getPhotoUrls(),
+            dto.getPhoneTechnicalId(),
             dto.getPurchasePrice(),
-            dto.getRepairPrice(),
-            dto.getDamageDescription(),
-            dto.getRepairOrderDescription(),
-            dto.getPinPassword(),
-            dto.isForCustomer(),
-            dto.getPhoneTechnicalId()
+            dto.getRepairPrice()
         );
 
         return mapper.toDto(repair);
