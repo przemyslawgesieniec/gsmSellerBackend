@@ -27,9 +27,12 @@ public class UserService {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        LocationEntity location = locationService.getLocationByTechnicalId(technicalId);
-
-        user.setLocation(location);
+        if (technicalId == null) {
+            user.setLocation(null);
+        } else {
+            LocationEntity location = locationService.getLocationByTechnicalId(technicalId);
+            user.setLocation(location);
+        }
 
         userRepository.save(user);
     }

@@ -32,7 +32,7 @@ function setCurrentLocationLabel() {
     if (!label) return;
 
     label.textContent =
-        CURRENT_USER?.location ?? "Nie masz przypisanej lokalizacji";
+        CURRENT_USER?.location ?? "Brak lokalizacji";
 }
 
 function showLocationSelect() {
@@ -85,6 +85,11 @@ function loadLocations() {
             ts.clear();
             ts.clearOptions();
 
+            ts.addOption({
+                value: "",
+                text: "Brak lokalizacji"
+            });
+
             locations.forEach(loc => {
                 ts.addOption({
                     value: loc.technicalId,
@@ -95,20 +100,27 @@ function loadLocations() {
             ts.refreshOptions(false);
 
             if (CURRENT_USER?.location) {
-                ts.setValue(CURRENT_USER.location);
+                // Znajdź technicalId dla aktualnej nazwy lokalizacji, aby ustawić wartość w select
+                const currentLoc = locations.find(l => l.name === CURRENT_USER.location);
+                if (currentLoc) {
+                    ts.setValue(currentLoc.technicalId);
+                } else {
+                    ts.setValue("");
+                }
             } else {
-                ts.clear();
+                ts.setValue("");
             }
 
             ts.off("change");
             ts.on("change", value => {
-                if (value) assignLocation(value);
+                assignLocation(value);
             });
         });
 }
 
 function assignLocation(technicalId) {
-    fetch(`/api/v1/users/location/${technicalId}`, {
+    const url = technicalId ? `/api/v1/users/location/${technicalId}` : `/api/v1/users/location`;
+    fetch(url, {
         method: "PUT"
     })
         .then(res => {
@@ -147,7 +159,7 @@ async function loadAllUsers() {
         tr.innerHTML = `
   <td><b>${u.username}</b></td>
 
-  <td>${u.location ?? '<span class="grey-text">—</span>'}</td>
+  <td>${u.location ?? '<span class="grey-text">Brak lokalizacji</span>'}</td>
 
   <td>
     <div class="switch">

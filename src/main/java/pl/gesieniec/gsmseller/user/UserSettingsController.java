@@ -20,9 +20,9 @@ public class UserSettingsController {
 
     private final UserService userService;
 
-    @PutMapping("/location/{technicalId}")
+    @PutMapping({"/location/{technicalId}", "/location"})
     public ResponseEntity<Void> assignLocation(
-        @PathVariable UUID technicalId,
+        @PathVariable(required = false) UUID technicalId,
         Principal principal
     ) {
         userService.assignUserToLocation(principal.getName(), technicalId);
