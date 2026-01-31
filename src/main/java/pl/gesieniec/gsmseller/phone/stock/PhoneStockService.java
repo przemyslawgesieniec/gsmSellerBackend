@@ -122,16 +122,14 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             repository.save(entity);
 
             if (dto.isDamaged()) {
-                Repair repair = Repair.create(
-                    entity.getName(),
+                Repair repair = Repair.createInHouseRepair(
+                    entity.getModel(),
                     entity.getImei(),
-                    entity.getColor(),
                     entity.getPurchasePrice(),
                     null, // repairPrice not known yet
                     "Telefon dodany jako uszkodzony",
                     null,
                     null,
-                    false, // na sprzedaż
                     entity.getTechnicalId()
                 );
                 repairRepository.save(repair);

@@ -110,9 +110,8 @@ public class RepairPdfService {
         table.setWidth(UnitValue.createPercentValue(100));
         table.setFontSize(9);
 
-        addTableRow(table, "Urządzenie:", repair.getName());
+        addTableRow(table, "Urządzenie:", (repair.getManufacturer() != null ? repair.getManufacturer() + " " : "") + (repair.getModel() != null ? repair.getModel() : ""));
         addTableRow(table, "IMEI:", repair.getImei());
-        addTableRow(table, "Kolor:", repair.getColor());
 
         canvas.add(table);
 

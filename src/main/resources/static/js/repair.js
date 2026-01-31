@@ -10,11 +10,99 @@ document.addEventListener('DOMContentLoaded', function() {
     fab.addEventListener('click', () => {
         resetForm();
         document.getElementById('modalTitle').innerText = 'Nowe zlecenie naprawy';
-        document.getElementById('repairPurchasePriceWrapper').classList.add('hide');
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        document.getElementById('repairReceiptDate').value = today;
+        document.getElementById('repairEstimatedRepairDate').value = nextWeek;
+        
         M.updateTextFields();
         M.Modal.getInstance(document.getElementById('repairModal')).open();
     });
+
+    initClientAutocomplete();
+    initClientToggles();
 });
+
+function initClientAutocomplete() {
+    const el = document.getElementById('clientSearch');
+    M.Autocomplete.init(el, {
+        data: {},
+        onAutocomplete: function(val) {
+            const client = selectedClientsMap[val];
+            if (client) {
+                selectClient(client);
+            }
+        },
+        minLength: 1
+    });
+
+    el.addEventListener('input', debounce(async (e) => {
+        const query = e.target.value;
+        if (query.length < 1) return;
+
+        try {
+            const response = await fetch(`/api/v1/repair-clients/search?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            const autocompleteData = {};
+            selectedClientsMap = {};
+
+            data.content.forEach(client => {
+                const display = `${client.name} ${client.surname} (${client.phoneNumber})`;
+                autocompleteData[display] = null;
+                selectedClientsMap[display] = client;
+            });
+
+            const instance = M.Autocomplete.getInstance(el);
+            instance.updateData(autocompleteData);
+            instance.open();
+        } catch (error) {
+            console.error('Error fetching clients:', error);
+        }
+    }, 300));
+}
+
+let selectedClientsMap = {};
+
+function selectClient(client) {
+    document.getElementById('selectedClientTechnicalId').value = client.technicalId;
+    document.getElementById('selectedClientDisplay').innerText = `${client.name} ${client.surname} (${client.phoneNumber})`;
+    document.getElementById('clientSearchSection').style.display = 'none';
+    document.getElementById('selectedClientInfo').style.display = 'block';
+    document.getElementById('newClientFields').style.display = 'none';
+}
+
+function initClientToggles() {
+    document.getElementById('btnAddNewClient').addEventListener('click', () => {
+        document.getElementById('clientSearchSection').style.display = 'none';
+        document.getElementById('newClientFields').style.display = 'block';
+        document.getElementById('selectedClientInfo').style.display = 'none';
+        document.getElementById('selectedClientTechnicalId').value = '';
+    });
+
+    document.getElementById('cancelNewClient').addEventListener('click', () => {
+        document.getElementById('clientSearchSection').style.display = 'block';
+        document.getElementById('newClientFields').style.display = 'none';
+        document.getElementById('repairForm').querySelectorAll('#newClientFields input').forEach(i => i.value = '');
+    });
+
+    document.getElementById('clearSelectedClient').addEventListener('click', () => {
+        document.getElementById('clientSearchSection').style.display = 'block';
+        document.getElementById('selectedClientInfo').style.display = 'none';
+        document.getElementById('selectedClientTechnicalId').value = '';
+        document.getElementById('clientSearch').value = '';
+        M.updateTextFields();
+    });
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
 
 let repairsData = [];
 
@@ -70,17 +158,18 @@ function createCard(repair) {
         'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
     };
     const statusLabel = statusLabels[repair.status] || '';
+    const clientDisplay = repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta';
 
     div.innerHTML = `
         <div class="card-content">
             ${statusLabel}
             <div style="clear: both;"></div>
-            <span class="card-title">${repair.name}</span>
+            <span class="card-title">${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}</span>
+            <p><b>Klient:</b> ${clientDisplay}</p>
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
-            <p><b>Kolor:</b> ${repair.color || '-'}</p>
             <div class="divider" style="margin: 5px 0;"></div>
-            ${repair.forCustomer ? '' : `<p><b>Cena zak.:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>`}
-            <p><b>Cena napr.:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+            <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
+            ${repair.repairPrice ? `<p><b>Koszt końcowy:</b> ${repair.repairPrice} zł</p>` : ''}
             
             ${['DO_NAPRAWY'].includes(repair.status) && repair.forCustomer ? `
                 <div class="right-align" style="margin-top: 10px;">
@@ -121,21 +210,22 @@ function createMobileCard(repair) {
         'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
     };
     const statusLabel = statusLabels[repair.status] || '';
+    const clientDisplay = repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta';
 
     div.innerHTML = `
         <div class="card z-depth-1 status-${repair.status}" onclick="openRepairDetails('${repair.technicalId}')">
             <div class="card-content">
                 ${statusLabel}
                 <div style="clear: both;"></div>
-                <span class="card-title">${repair.name}</span>
+                <span class="card-title">${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}</span>
+                <p><b>Klient:</b> ${clientDisplay}</p>
                 <div class="row" style="margin-bottom: 0;">
                     <div class="col s6">
                         <p><b>IMEI:</b> ${repair.imei || '-'}</p>
-                        <p><b>Kolor:</b> ${repair.color || '-'}</p>
                     </div>
                     <div class="col s6 right-align">
-                        ${repair.forCustomer ? '' : `<p><b>Zakup:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>`}
-                        <p><b>Naprawa:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+                        <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
+                        ${repair.repairPrice ? `<p><b>Końcowy:</b> ${repair.repairPrice} zł</p>` : ''}
                     </div>
                 </div>
                 
@@ -238,24 +328,61 @@ async function openRepairDetails(technicalId) {
     resetForm();
     document.getElementById('modalTitle').innerText = 'Szczegóły naprawy';
     document.getElementById('repairTechnicalId').value = repair.technicalId;
-    document.getElementById('repairName').value = repair.name;
+    document.getElementById('isForCustomer').value = repair.forCustomer;
+    document.getElementById('phoneTechnicalId').value = repair.phoneTechnicalId || '';
+    
+    // Klient
+    if (repair.clientTechnicalId) {
+        selectClient({
+            technicalId: repair.clientTechnicalId,
+            name: repair.clientName,
+            surname: repair.clientSurname,
+            phoneNumber: repair.clientPhoneNumber
+        });
+    }
+
+    // Urządzenie
+    document.getElementById('repairManufacturer').value = repair.manufacturer || '';
+    document.getElementById('repairModel').value = repair.model || '';
     document.getElementById('repairImei').value = repair.imei || '';
-    document.getElementById('repairColor').value = repair.color || '';
-    document.getElementById('repairPinPassword').value = repair.pinPassword || '';
-    document.getElementById('repairPurchasePrice').value = repair.purchasePrice || '';
+
+    // Naprawa
+    document.getElementById('repairProblemDescription').value = repair.problemDescription || repair.damageDescription || '';
+    document.getElementById('repairDeviceCondition').value = repair.deviceCondition || '';
+    document.getElementById('repairRemarks').value = repair.remarks || repair.repairOrderDescription || '';
+    document.getElementById('repairLockCode').value = repair.lockCode || repair.pinPassword || '';
+    
+    document.getElementById('repairMoistureTraces').checked = repair.moistureTraces;
+    document.getElementById('repairWarrantyRepair').checked = repair.warrantyRepair;
+    document.getElementById('repairTurnsOn').checked = repair.turnsOn;
+
+    if (repair.receiptDate) {
+        document.getElementById('repairReceiptDate').value = repair.receiptDate.split('T')[0];
+    }
+    if (repair.estimatedRepairDate) {
+        document.getElementById('repairEstimatedRepairDate').value = repair.estimatedRepairDate.split('T')[0];
+    }
+    document.getElementById('repairEstimatedCost').value = repair.estimatedCost || '';
     document.getElementById('repairPrice').value = repair.repairPrice || '';
-    document.getElementById('repairDamageDescription').value = repair.damageDescription || '';
-    document.getElementById('repairOrderDescription').value = repair.repairOrderDescription || '';
+    document.getElementById('repairPurchasePrice').value = repair.purchasePrice || '';
+
+    // Visibility of price fields
+    if (repair.status === 'NAPRAWIONY' || repair.status === 'NIE_DO_NAPRAWY') {
+        document.getElementById('repairFinalPriceWrapper').style.display = 'block';
+    } else {
+        document.getElementById('repairFinalPriceWrapper').style.display = 'none';
+    }
 
     if (repair.forCustomer) {
-        document.getElementById('repairPurchasePriceWrapper').classList.add('hide');
+        document.getElementById('shopRepairFields').style.display = 'none';
     } else {
-        document.getElementById('repairPurchasePriceWrapper').classList.remove('hide');
+        document.getElementById('shopRepairFields').style.display = 'block';
     }
 
     M.updateTextFields();
-    M.textareaAutoResize(document.getElementById('repairDamageDescription'));
-    M.textareaAutoResize(document.getElementById('repairOrderDescription'));
+    M.textareaAutoResize(document.getElementById('repairProblemDescription'));
+    M.textareaAutoResize(document.getElementById('repairDeviceCondition'));
+    M.textareaAutoResize(document.getElementById('repairRemarks'));
     
     const modal = M.Modal.getInstance(document.getElementById('repairModal'));
     modal.open();
@@ -265,20 +392,46 @@ async function saveRepair() {
     const id = document.getElementById('repairTechnicalId').value;
     const existingRepair = id ? repairsData.find(r => r.technicalId === id) : null;
 
+    const receiptDate = document.getElementById('repairReceiptDate').value;
+    const estimatedDate = document.getElementById('repairEstimatedRepairDate').value;
+
     const repairDto = {
-        name: document.getElementById('repairName').value,
+        clientTechnicalId: document.getElementById('selectedClientTechnicalId').value || null,
+        clientName: document.getElementById('clientName').value,
+        clientSurname: document.getElementById('clientSurname').value,
+        clientPhoneNumber: document.getElementById('clientPhone').value,
+        
+        manufacturer: document.getElementById('repairManufacturer').value,
+        model: document.getElementById('repairModel').value,
         imei: document.getElementById('repairImei').value,
-        color: document.getElementById('repairColor').value,
-        pinPassword: document.getElementById('repairPinPassword').value,
-        purchasePrice: document.getElementById('repairPurchasePrice').value || null,
+        
+        problemDescription: document.getElementById('repairProblemDescription').value,
+        deviceCondition: document.getElementById('repairDeviceCondition').value,
+        remarks: document.getElementById('repairRemarks').value,
+        lockCode: document.getElementById('repairLockCode').value,
+        
+        moistureTraces: document.getElementById('repairMoistureTraces').checked,
+        warrantyRepair: document.getElementById('repairWarrantyRepair').checked,
+        turnsOn: document.getElementById('repairTurnsOn').checked,
+        
+        receiptDate: receiptDate ? receiptDate + 'T00:00:00' : null,
+        estimatedRepairDate: estimatedDate ? estimatedDate + 'T00:00:00' : null,
+        estimatedCost: document.getElementById('repairEstimatedCost').value || null,
+        
         repairPrice: document.getElementById('repairPrice').value || null,
-        damageDescription: document.getElementById('repairDamageDescription').value,
-        repairOrderDescription: document.getElementById('repairOrderDescription').value,
-        forCustomer: existingRepair ? existingRepair.forCustomer : true
+        purchasePrice: document.getElementById('repairPurchasePrice').value || null,
+        
+        forCustomer: existingRepair ? existingRepair.forCustomer : (document.getElementById('isForCustomer').value === 'true'),
+        phoneTechnicalId: document.getElementById('phoneTechnicalId').value || null
     };
 
-    if (!repairDto.name) {
-        M.toast({html: 'Nazwa urządzenia jest wymagana', classes: 'orange'});
+    if (!repairDto.model) {
+        M.toast({html: 'Model urządzenia jest wymagany', classes: 'orange'});
+        return;
+    }
+
+    if (!repairDto.clientTechnicalId && !repairDto.clientName && repairDto.forCustomer) {
+        M.toast({html: 'Wybierz klienta lub podaj dane nowego klienta', classes: 'orange'});
         return;
     }
 
@@ -306,6 +459,15 @@ async function saveRepair() {
 function resetForm() {
     document.getElementById('repairForm').reset();
     document.getElementById('repairTechnicalId').value = '';
+    document.getElementById('selectedClientTechnicalId').value = '';
+    document.getElementById('clientSearchSection').style.display = 'block';
+    document.getElementById('newClientFields').style.display = 'none';
+    document.getElementById('selectedClientInfo').style.display = 'none';
+    document.getElementById('clientSearch').value = '';
+    document.getElementById('repairFinalPriceWrapper').style.display = 'none';
+    document.getElementById('shopRepairFields').style.display = 'none';
+    document.getElementById('isForCustomer').value = 'true';
+    document.getElementById('phoneTechnicalId').value = '';
 }
 
 function downloadRepairPdf(technicalId, type) {
