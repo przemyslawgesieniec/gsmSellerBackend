@@ -50,22 +50,24 @@ public class RepairPdfService {
 
         PdfWriter writer = new PdfWriter(out);
         PdfDocument pdfDoc = new PdfDocument(writer);
-        
+
         PdfFont font = PdfFontFactory.createFont("/fonts/Fira_Sans/FiraSans-Regular.ttf",
-            "Identity-H", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+                "Identity-H", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
 
         PdfPage page = pdfDoc.addNewPage(PageSize.A4);
         Rectangle pageSize = page.getPageSize();
         float halfHeight = pageSize.getHeight() / 2;
+        float marginH = 50f;
+        float marginV = 20f;
 
         // Egzemplarz 1 (Góra)
-        Rectangle rectUpper = new Rectangle(0, halfHeight, pageSize.getWidth(), halfHeight);
+        Rectangle rectUpper = new Rectangle(marginH, halfHeight + marginV, pageSize.getWidth() - 2 * marginH, halfHeight - 2 * marginV);
         Canvas canvasUpper = new Canvas(page, rectUpper);
         drawContent(canvasUpper, repair, title, font, rectUpper);
         canvasUpper.close();
 
         // Egzemplarz 2 (Dół)
-        Rectangle rectLower = new Rectangle(0, 0, pageSize.getWidth(), halfHeight);
+        Rectangle rectLower = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, halfHeight - 2 * marginV);
         Canvas canvasLower = new Canvas(page, rectLower);
         drawContent(canvasLower, repair, title, font, rectLower);
         canvasLower.close();
@@ -102,7 +104,7 @@ public class RepairPdfService {
 
         // Dane urządzenia
         canvas.add(new Paragraph("Dane urządzenia:").setBold().setUnderline().setFontSize(10).setMarginTop(5));
-        
+
         float[] colWidths = {120f, 300f};
         Table table = new Table(colWidths);
         table.setWidth(UnitValue.createPercentValue(100));
@@ -111,8 +113,7 @@ public class RepairPdfService {
         addTableRow(table, "Urządzenie:", repair.getName());
         addTableRow(table, "IMEI:", repair.getImei());
         addTableRow(table, "Kolor:", repair.getColor());
-        addTableRow(table, "PIN/Hasło:", repair.getPinPassword());
-        
+
         canvas.add(table);
 
         // Status-specific content
@@ -125,19 +126,19 @@ public class RepairPdfService {
                     .setBold().setFontSize(10));
             }
             canvas.add(new Paragraph("\nPotwierdzam odbiór sprawnego urządzenia.")
-                .setFontSize(9).setItalic());
+                .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.ANULOWANY) {
             canvas.add(new Paragraph("\nStatus: ANULOWANO").setBold().setFontSize(10));
             canvas.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
                 .setFontSize(9));
             canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
-                .setFontSize(9).setItalic());
+                .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.NIE_DO_NAPRAWY) {
             canvas.add(new Paragraph("\nStatus: NIE DO NAPRAWY").setBold().setFontSize(10));
             canvas.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
                 .setFontSize(9));
             canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
-                .setFontSize(9).setItalic());
+                .setBold().setFontSize(9).setItalic());
         } else {
             // Domyślnie (np. DO_NAPRAWY - pokwitowanie przyjęcia)
             canvas.add(new Paragraph("\nOpis uszkodzenia:").setBold().setFontSize(10));
@@ -161,7 +162,7 @@ public class RepairPdfService {
                 ImageData imageData = ImageDataFactory.create(is.readAllBytes());
                 Image logo = new Image(imageData);
                 logo.scaleToFit(100, 40);
-                logo.setFixedPosition(rootRect.getLeft() + 40, rootRect.getTop() - 50);
+                logo.setFixedPosition(rootRect.getLeft(), rootRect.getTop() - 40);
                 canvas.add(logo);
             }
         }
@@ -182,13 +183,13 @@ public class RepairPdfService {
 
     private void drawFooter(Canvas canvas, Rectangle rootRect) {
         Paragraph footerLine = new Paragraph().setBorderTop(new SolidBorder(ColorConstants.BLACK, 0.5f));
-        footerLine.setFixedPosition(rootRect.getLeft() + 40, rootRect.getBottom() + 60, rootRect.getWidth() - 80);
+        footerLine.setFixedPosition(rootRect.getLeft(), rootRect.getBottom() + 45, rootRect.getWidth());
         canvas.add(footerLine);
 
         Table table = new Table(new float[]{1, 1, 1, 1});
         table.setWidth(UnitValue.createPercentValue(100));
         table.setFontSize(6);
-        table.setFixedPosition(rootRect.getLeft() + 40, rootRect.getBottom() + 10, rootRect.getWidth() - 80);
+        table.setFixedPosition(rootRect.getLeft(), rootRect.getBottom(), rootRect.getWidth());
 
         table.addCell(makeFooterCell("Carrefour Kutno", "Oporowska 6A, 99-300 Kutno", "+48 736 810 390"));
         table.addCell(makeFooterCell("Galeria Różana Kutno", "Kościuszki 73, 99-300 Kutno", "+48 579 900 005"));

@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.repair;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -126,6 +127,11 @@ public class RepairService {
 
         // Update phone
         phone.acceptAtLocation(location);
+
+        BigDecimal currentPurchasePrice = phone.getPurchasePrice() != null ? phone.getPurchasePrice() : BigDecimal.ZERO;
+        BigDecimal repairPrice = request.getRepairPrice() != null ? request.getRepairPrice() : BigDecimal.ZERO;
+        BigDecimal newPurchasePrice = currentPurchasePrice.add(repairPrice);
+
         phone.update(
             null, // model
             null, // ram
@@ -135,23 +141,14 @@ public class RepairService {
             null, // name
             null, // source
             request.getSellingPrice(),
-            null, // purchasePrice
+            newPurchasePrice,
             null, // description
             null, // isUsed
             null, // batteryCondition
             null  // comment
         );
 
-        // Update repair
-        repair.update(
-            null, null, null, null,
-            request.getRepairPrice(),
-            null, null, null,
-            null, null
-        );
-        repair.updateStatus(RepairStatus.ARCHIWALNA);
-
         phoneStockRepository.save(phone);
-        repository.save(repair);
+        repository.delete(repair);
     }
 }
