@@ -62,6 +62,7 @@ public class Repair {
     private RepairStatus status;
 
     private LocalDateTime createDateTime;
+    private LocalDateTime handoverDate;
 
     private BigDecimal purchasePrice;
     private BigDecimal repairPrice;
@@ -120,6 +121,13 @@ public class Repair {
 
     public void updateStatus(RepairStatus newStatus) {
         this.status = newStatus;
+        if (newStatus == RepairStatus.ARCHIWALNA) {
+            this.handoverDate = LocalDateTime.now();
+        }
+    }
+
+    public void setHandoverDate(LocalDateTime handoverDate) {
+        this.handoverDate = handoverDate;
     }
 
     public void update(RepairClient client, String manufacturer, String model, String imei,
