@@ -43,6 +43,7 @@ public class RepairDto {
     private boolean forCustomer;
     private UUID phoneTechnicalId;
     private LocalDateTime createDateTime;
+    private LocalDateTime handoverDate;
 
     // For compatibility with old fields if necessary
     private BigDecimal purchasePrice;

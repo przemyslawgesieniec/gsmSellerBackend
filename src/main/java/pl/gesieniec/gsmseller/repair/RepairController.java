@@ -1,9 +1,16 @@
 package pl.gesieniec.gsmseller.repair;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +30,24 @@ public class RepairController {
     @GetMapping
     public List<RepairDto> getAllRepairs() {
         return service.getAllRepairs();
+    }
+
+    @GetMapping("/history")
+    public Page<RepairDto> getHistory(
+        @RequestParam(required = false) String query,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateFrom,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateTo,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime handoverDateFrom,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime handoverDateTo,
+        @PageableDefault(sort = "createDateTime", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Specification<Repair> spec = Specification.allOf(
+            RepairSpecifications.hasClientNameOrPhone(query),
+            RepairSpecifications.receiptDateBetween(receiptDateFrom, receiptDateTo),
+            RepairSpecifications.handoverDateBetween(handoverDateFrom, handoverDateTo)
+        );
+
+        return service.getHistory(spec, pageable);
     }
 
     @GetMapping("/{technicalId}")

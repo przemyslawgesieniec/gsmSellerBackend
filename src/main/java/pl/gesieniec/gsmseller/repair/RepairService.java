@@ -6,6 +6,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.location.LocationEntity;
@@ -31,6 +34,16 @@ public class RepairService {
     private final RepairClientRepository clientRepository;
 
     @Transactional(readOnly = true)
+    public Page<RepairDto> getHistory(Specification<Repair> spec, Pageable pageable) {
+        Specification<Repair> historySpec = Specification.allOf(
+            RepairSpecifications.hasStatus(RepairStatus.ARCHIWALNA),
+            spec
+        );
+        return repository.findAll(historySpec, pageable)
+            .map(mapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
     public List<RepairDto> getAllRepairs() {
         return repository.findAll().stream()
             .filter(r -> r.getStatus() != RepairStatus.ARCHIWALNA)
@@ -48,13 +61,18 @@ public class RepairService {
         return pdfService.generateRepairReceiptPdf(repair);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] generateHandoverPdf(UUID technicalId) {
         Repair repair = repository.findByTechnicalId(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
         if (!repair.isForCustomer()) {
             throw new IllegalStateException("Handover documents are only available for customer repairs");
         }
+        
+        if (List.of(RepairStatus.NAPRAWIONY, RepairStatus.ANULOWANY, RepairStatus.NIE_DO_NAPRAWY).contains(repair.getStatus())) {
+            repair.updateStatus(RepairStatus.ARCHIWALNA);
+        }
+        
         return pdfService.generateRepairHandoverPdf(repair);
     }
 
@@ -185,7 +203,8 @@ public class RepairService {
             null  // comment
         );
 
+        repository.save(repair);
         phoneStockRepository.save(phone);
-        repository.delete(repair);
+        repair.updateStatus(RepairStatus.ARCHIWALNA);
     }
 }
