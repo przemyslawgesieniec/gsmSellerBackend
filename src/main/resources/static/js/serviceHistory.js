@@ -154,21 +154,31 @@ function renderHistory(repairs) {
         const handoverDateStr = repair.handoverDate ? new Date(repair.handoverDate).toLocaleDateString() : '---';
         const receiptDateStr = repair.receiptDate ? new Date(repair.receiptDate).toLocaleDateString() : '---';
 
+        const isArchived = repair.status === 'ARCHIWALNA';
+        const goToBoardBtn = !isArchived ? `
+            <button class="btn-small orange darken-2 waves-effect waves-light" onclick="goToBoard('${repair.technicalId}')" style="margin-right: 10px;">
+                <i class="material-icons left">dashboard</i>Do tablicy
+            </button>
+        ` : '';
+
         li.innerHTML = `
             <div class="collapsible-header">
                 <i class="material-icons ${statusColor}-text">history</i>
                 <span style="flex: 1">
                     <b>${repair.manufacturer || ''} ${repair.model}</b> - ${repair.clientName} ${repair.clientSurname}
+                    ${repair.businessId ? `<span class="blue-text" style="margin-left: 10px;">[${repair.businessId}]</span>` : ''}
                 </span>
                 <span class="grey-text hide-on-small-only" style="margin-right: 20px;">
                     Przyjęto: ${receiptDateStr} | Oddano: ${handoverDateStr}
                 </span>
-                <span class="badge ${statusColor} white-text">${repair.status}</span>
+                <span class="badge ${statusColor} white-text" style="border-radius: 4px; min-width: 100px;">${repair.status}</span>
             </div>
             <div class="collapsible-body">
                 <div class="row">
                     <div class="col s12 m6">
+                        <p><b>RMA:</b> ${repair.businessId || '-'}</p>
                         <p><b>IMEI:</b> ${repair.imei || 'Brak'}</p>
+                        <p><b>Klient:</b> ${repair.clientName} ${repair.clientSurname} (${repair.clientPhoneNumber || 'Brak telefonu'})</p>
                         <p><b>Opis problemu:</b> ${repair.problemDescription || repair.damageDescription || 'Brak'}</p>
                         <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>
                     </div>
@@ -179,6 +189,7 @@ function renderHistory(repairs) {
                     </div>
                 </div>
                 <div class="right-align">
+                    ${goToBoardBtn}
                     <button class="btn-small blue darken-2 waves-effect waves-light" onclick="downloadPdf('${repair.technicalId}')">
                         <i class="material-icons left">description</i>Pobierz dokument
                     </button>
@@ -190,10 +201,16 @@ function renderHistory(repairs) {
     M.Collapsible.init(container);
 }
 
+function goToBoard(technicalId) {
+    window.location.href = `repair.html?highlight=${technicalId}`;
+}
+
 function getStatusColor(status) {
     switch (status) {
+        case 'DO_NAPRAWY': return 'blue';
+        case 'W_NAPRAWIE': return 'orange';
         case 'NAPRAWIONY': return 'green';
-        case 'NIE_DO_NAPRAWY': return 'orange';
+        case 'NIE_DO_NAPRAWY': return 'red';
         case 'ANULOWANY': return 'grey';
         case 'ARCHIWALNA': return 'blue-grey';
         default: return 'blue';

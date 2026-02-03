@@ -32,6 +32,7 @@ public class Repair {
     private String manufacturer;
     private String model;
     private String imei;
+    private String deviceType;
 
     private String deviceCondition;
     private String problemDescription;
@@ -40,6 +41,7 @@ public class Repair {
     private boolean moistureTraces;
     private boolean warrantyRepair;
     private boolean turnsOn;
+    private boolean anonymous;
 
     private String lockCode;
 
@@ -69,9 +71,9 @@ public class Repair {
     private BigDecimal purchasePrice;
     private BigDecimal repairPrice;
 
-    private Repair(RepairClient client, String manufacturer, String model, String imei,
+    private Repair(RepairClient client, String manufacturer, String model, String imei, String deviceType,
                   String deviceCondition, String problemDescription, String remarks,
-                  boolean moistureTraces, boolean warrantyRepair, boolean turnsOn,
+                  boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                   String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
                   BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, boolean isForCustomer, UUID phoneTechnicalId,
                   BigDecimal purchasePrice, BigDecimal repairPrice, String businessId) {
@@ -80,12 +82,14 @@ public class Repair {
         this.manufacturer = manufacturer;
         this.model = model;
         this.imei = imei;
+        this.deviceType = deviceType;
         this.deviceCondition = deviceCondition;
         this.problemDescription = problemDescription;
         this.remarks = remarks;
         this.moistureTraces = moistureTraces;
         this.warrantyRepair = warrantyRepair;
         this.turnsOn = turnsOn;
+        this.anonymous = anonymous;
         this.lockCode = lockCode;
         this.receiptDate = receiptDate != null ? receiptDate : LocalDateTime.now();
         this.estimatedRepairDate = estimatedRepairDate != null ? estimatedRepairDate : LocalDateTime.now().plusDays(7);
@@ -103,14 +107,14 @@ public class Repair {
         this.createDateTime = LocalDateTime.now();
     }
 
-    public static Repair create(RepairClient client, String manufacturer, String model, String imei,
+    public static Repair create(RepairClient client, String manufacturer, String model, String imei, String deviceType,
                                String deviceCondition, String problemDescription, String remarks,
-                               boolean moistureTraces, boolean warrantyRepair, boolean turnsOn,
+                               boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                                String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
                                BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, UUID phoneTechnicalId,
                                BigDecimal purchasePrice, BigDecimal repairPrice, String businessId) {
-        return new Repair(client, manufacturer, model, imei, deviceCondition, problemDescription, remarks,
-                moistureTraces, warrantyRepair, turnsOn, lockCode, receiptDate, estimatedRepairDate,
+        return new Repair(client, manufacturer, model, imei, deviceType, deviceCondition, problemDescription, remarks,
+                moistureTraces, warrantyRepair, turnsOn, anonymous, lockCode, receiptDate, estimatedRepairDate,
                 estimatedCost, advancePayment, photoUrls, true, phoneTechnicalId, purchasePrice, repairPrice, businessId);
     }
 
@@ -118,8 +122,8 @@ public class Repair {
                                             BigDecimal purchasePrice, BigDecimal repairPrice,
                                             String problemDescription, String deviceCondition,
                                             String lockCode, UUID phoneTechnicalId, String businessId) {
-        return new Repair(null, null, model, imei, deviceCondition, problemDescription, null,
-                false, false, false, lockCode, null, null, null, null, null, false,
+        return new Repair(null, null, model, imei, "TELEFON", deviceCondition, problemDescription, null,
+                false, false, false, false, lockCode, null, null, null, null, null, false,
                 phoneTechnicalId, purchasePrice, repairPrice, businessId);
     }
 
@@ -134,9 +138,9 @@ public class Repair {
         this.handoverDate = handoverDate;
     }
 
-    public void update(RepairClient client, String manufacturer, String model, String imei,
+    public void update(RepairClient client, String manufacturer, String model, String imei, String deviceType,
                        String deviceCondition, String problemDescription, String remarks,
-                       Boolean moistureTraces, Boolean warrantyRepair, Boolean turnsOn,
+                       Boolean moistureTraces, Boolean warrantyRepair, Boolean turnsOn, Boolean anonymous,
                        String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
                        BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, UUID phoneTechnicalId,
                        BigDecimal purchasePrice, BigDecimal repairPrice) {
@@ -144,12 +148,14 @@ public class Repair {
         if (manufacturer != null) this.manufacturer = manufacturer;
         if (model != null) this.model = model;
         if (imei != null) this.imei = imei;
+        if (deviceType != null) this.deviceType = deviceType;
         if (deviceCondition != null) this.deviceCondition = deviceCondition;
         if (problemDescription != null) this.problemDescription = problemDescription;
         if (remarks != null) this.remarks = remarks;
         if (moistureTraces != null) this.moistureTraces = moistureTraces;
         if (warrantyRepair != null) this.warrantyRepair = warrantyRepair;
         if (turnsOn != null) this.turnsOn = turnsOn;
+        if (anonymous != null) this.anonymous = anonymous;
         if (lockCode != null) this.lockCode = lockCode;
         if (receiptDate != null) this.receiptDate = receiptDate;
         if (estimatedRepairDate != null) this.estimatedRepairDate = estimatedRepairDate;
