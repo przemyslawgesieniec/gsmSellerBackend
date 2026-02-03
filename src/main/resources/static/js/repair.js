@@ -2,6 +2,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadRepairs();
 
     document.getElementById('saveRepairBtn').addEventListener('click', saveRepair);
+    document.getElementById('editRepairBtn').addEventListener('click', () => {
+        toggleFields(false);
+        document.getElementById('editRepairBtn').style.display = 'none';
+        document.getElementById('saveRepairBtn').style.display = 'inline-block';
+    });
     document.getElementById('confirmRestoreBtn').addEventListener('click', confirmRestore);
     loadLocations();
 
@@ -9,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const fab = document.querySelector('.fab-fixed a');
     fab.addEventListener('click', () => {
         resetForm();
+        toggleFields(false);
+        document.getElementById('editRepairBtn').style.display = 'none';
+        document.getElementById('saveRepairBtn').style.display = 'inline-block';
         document.getElementById('modalTitle').innerText = 'Nowe zlecenie naprawy';
         // Set default dates
         const today = new Date().toISOString().split('T')[0];
@@ -384,6 +392,10 @@ async function openRepairDetails(technicalId) {
     M.textareaAutoResize(document.getElementById('repairDeviceCondition'));
     M.textareaAutoResize(document.getElementById('repairRemarks'));
     
+    toggleFields(true);
+    document.getElementById('editRepairBtn').style.display = 'inline-block';
+    document.getElementById('saveRepairBtn').style.display = 'none';
+
     const modal = M.Modal.getInstance(document.getElementById('repairModal'));
     modal.open();
 }
@@ -448,6 +460,15 @@ async function saveRepair() {
         if (!response.ok) throw new Error('Błąd zapisu');
 
         M.toast({html: 'Zapisano pomyślnie', classes: 'green'});
+        
+        toggleFields(true);
+        document.getElementById('editRepairBtn').style.display = 'inline-block';
+        document.getElementById('saveRepairBtn').style.display = 'none';
+        
+        // Jeśli to było nowe zlecenie, to zamykamy modal lub odświeżamy dane. 
+        // W opisie zadania jest "Po jego utworzeniu pola powinny być nieedytowalne". 
+        // Więc zablokowaliśmy je powyżej.
+        
         M.Modal.getInstance(document.getElementById('repairModal')).close();
         loadRepairs();
     } catch (error) {
@@ -468,6 +489,31 @@ function resetForm() {
     document.getElementById('shopRepairFields').style.display = 'none';
     document.getElementById('isForCustomer').value = 'true';
     document.getElementById('phoneTechnicalId').value = '';
+}
+
+function toggleFields(disabled) {
+    const form = document.getElementById('repairForm');
+    const elements = form.querySelectorAll('input, textarea, select, button:not(.btn-flat)');
+    elements.forEach(el => {
+        // Nie blokujemy ukrytych pól technicznych
+        if (el.type !== 'hidden') {
+            el.disabled = disabled;
+        }
+    });
+    
+    // Specyficzna obsługa dla chipa usuwania klienta
+    const clearClient = document.getElementById('clearSelectedClient');
+    if (clearClient) {
+        clearClient.style.pointerEvents = disabled ? 'none' : 'auto';
+        clearClient.style.opacity = disabled ? '0.5' : '1';
+    }
+    
+    // Przycisk "Dodaj nowego klienta"
+    const addNewClient = document.getElementById('btnAddNewClient');
+    if (addNewClient) {
+        addNewClient.style.pointerEvents = disabled ? 'none' : 'auto';
+        addNewClient.style.opacity = disabled ? '0.5' : '1';
+    }
 }
 
 function downloadRepairPdf(technicalId, type) {
