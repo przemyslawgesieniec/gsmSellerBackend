@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', function() {
     M.Collapsible.init(document.querySelectorAll('.collapsible'));
     initDatePickers();
     initClientAutocomplete();
+    
+    // Obsługa parametru query z URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryParam = urlParams.get('query');
+    if (queryParam) {
+        document.getElementById('historySearch').value = queryParam;
+        M.updateTextFields();
+    }
+    
     loadHistory();
 
     document.getElementById('clearFiltersBtn').addEventListener('click', () => {

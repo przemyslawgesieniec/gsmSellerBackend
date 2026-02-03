@@ -8,6 +8,18 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('saveRepairBtn').style.display = 'inline-block';
     });
     document.getElementById('confirmRestoreBtn').addEventListener('click', confirmRestore);
+    document.getElementById('selectedClientChip').addEventListener('click', (e) => {
+        if (e.target.id !== 'clearSelectedClient') {
+            const clientDisplay = document.getElementById('selectedClientDisplay').innerText;
+            // Spodziewany format: "Imię Nazwisko (Telefon)"
+            // Zmieniamy format przekazywany w query na "[Imię Nazwisko (Telefon)]"
+            const match = clientDisplay.match(/(.*) \((.*)\)/);
+            if (match) {
+                const query = clientDisplay;
+                window.location.href = `serviceHistory.html?query=${encodeURIComponent(query)}`;
+            }
+        }
+    });
     loadLocations();
 
     // Floating button reset form
@@ -154,7 +166,26 @@ function renderBoard() {
 
 function createCard(repair) {
     const div = document.createElement('div');
-    div.className = `card kanban-card z-depth-1 status-${repair.status}`;
+    
+    // Sprawdzenie czy karta jest "przestarzała" (> 7 dni w statusie DO_NAPRAWY lub W_NAPRAWIE)
+    let overdueClass = '';
+    let overdueIcon = '';
+    if (['DO_NAPRAWY', 'W_NAPRAWIE'].includes(repair.status) && repair.createDateTime) {
+        const createDate = new Date(repair.createDateTime);
+        const now = new Date();
+        const diffTime = Math.abs(now - createDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 7) {
+            overdueClass = 'overdue';
+            overdueIcon = `
+                <div class="overdue-container" style="position: absolute; top: 5px; right: 5px; display: flex; align-items: center; color: #f57f17;">
+                    <span style="font-size: 0.8rem; font-weight: bold; margin-right: 2px;">${diffDays} dni</span>
+                    <i class="material-icons" style="font-size: 24px;">warning</i>
+                </div>`;
+        }
+    }
+
+    div.className = `card kanban-card z-depth-1 status-${repair.status} ${overdueClass}`;
     div.draggable = true;
     div.setAttribute('data-id', repair.technicalId);
     div.setAttribute('ondragstart', 'drag(event)');
@@ -170,9 +201,11 @@ function createCard(repair) {
 
     div.innerHTML = `
         <div class="card-content">
+            ${overdueIcon}
             ${statusLabel}
             <div style="clear: both;"></div>
             <span class="card-title">${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}</span>
+            <p><b>RMA:</b> ${repair.businessId || '-'}</p>
             <p><b>Klient:</b> ${clientDisplay}</p>
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
             <div class="divider" style="margin: 5px 0;"></div>
@@ -206,12 +239,37 @@ function createCard(repair) {
             ` : ''}
         </div>
     `;
+    
+    // Inicjalizacja tooltipów po wyrenderowaniu
+    setTimeout(() => {
+        M.Tooltip.init(div.querySelectorAll('.tooltipped'));
+    }, 0);
+
     return div;
 }
 
 function createMobileCard(repair) {
     const div = document.createElement('div');
     div.className = 'col s12';
+    
+    // Sprawdzenie czy karta jest "przestarzała"
+    let overdueClass = '';
+    let overdueIcon = '';
+    if (['DO_NAPRAWY', 'W_NAPRAWIE'].includes(repair.status) && repair.createDateTime) {
+        const createDate = new Date(repair.createDateTime);
+        const now = new Date();
+        const diffTime = Math.abs(now - createDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 7) {
+            overdueClass = 'overdue';
+            overdueIcon = `
+                <div class="overdue-container" style="position: absolute; top: 5px; right: 5px; display: flex; align-items: center; color: #f57f17;">
+                    <span style="font-size: 0.8rem; font-weight: bold; margin-right: 2px;">${diffDays} dni</span>
+                    <i class="material-icons" style="font-size: 24px;">warning</i>
+                </div>`;
+        }
+    }
+
     const statusLabels = {
         'NAPRAWIONY': '<span class="new badge green left" data-badge-caption="naprawiony" style="margin-left: 0; margin-bottom: 5px;"></span>',
         'ANULOWANY': '<span class="new badge grey left" data-badge-caption="anulowany" style="margin-left: 0; margin-bottom: 5px;"></span>',
@@ -221,11 +279,13 @@ function createMobileCard(repair) {
     const clientDisplay = repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta';
 
     div.innerHTML = `
-        <div class="card z-depth-1 status-${repair.status}" onclick="openRepairDetails('${repair.technicalId}')">
+        <div class="card z-depth-1 status-${repair.status} ${overdueClass}" onclick="openRepairDetails('${repair.technicalId}')">
             <div class="card-content">
+                ${overdueIcon}
                 ${statusLabel}
                 <div style="clear: both;"></div>
                 <span class="card-title">${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}</span>
+                <p><b>RMA:</b> ${repair.businessId || '-'}</p>
                 <p><b>Klient:</b> ${clientDisplay}</p>
                 <div class="row" style="margin-bottom: 0;">
                     <div class="col s6">
@@ -265,6 +325,12 @@ function createMobileCard(repair) {
             </div>
         </div>
     `;
+
+    // Inicjalizacja tooltipów po wyrenderowaniu
+    setTimeout(() => {
+        M.Tooltip.init(div.querySelectorAll('.tooltipped'));
+    }, 0);
+
     return div;
 }
 
@@ -291,13 +357,34 @@ window.drop = async function(ev) {
     const id = ev.dataTransfer.getData("text");
     const newStatus = container.id.replace('col-', '');
     
+    const repair = repairsData.find(r => r.technicalId === id);
+    if (!repair || repair.status === newStatus) return;
+
     if (newStatus === 'ZAKONCZONY') {
         document.getElementById('statusSelectionRepairId').value = id;
         M.Modal.getInstance(document.getElementById('statusSelectionModal')).open();
         return;
     }
     
-    await updateRepairStatus(id, newStatus);
+    // Dla innych statusów wymagamy potwierdzenia
+    const statusNames = {
+        'DO_NAPRAWY': 'DO NAPRAWY',
+        'W_NAPRAWIE': 'W NAPRAWIE'
+    };
+    
+    document.getElementById('confirmStatusChangeMessage').innerText = `Czy na pewno chcesz zmienić status zlecenia na ${statusNames[newStatus]}?`;
+    const confirmBtn = document.getElementById('confirmStatusChangeBtn');
+    
+    // Usuwamy stare listenery (klonowanie węzła to najprostszy sposób w czystym JS)
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    newConfirmBtn.addEventListener('click', async () => {
+        M.Modal.getInstance(document.getElementById('confirmStatusChangeModal')).close();
+        await updateRepairStatus(id, newStatus);
+    });
+    
+    M.Modal.getInstance(document.getElementById('confirmStatusChangeModal')).open();
 }
 
 async function updateRepairStatus(id, newStatus) {
@@ -339,6 +426,13 @@ async function openRepairDetails(technicalId) {
     document.getElementById('isForCustomer').value = repair.forCustomer;
     document.getElementById('phoneTechnicalId').value = repair.phoneTechnicalId || '';
     
+    if (repair.businessId) {
+        document.getElementById('rmaDisplay').style.display = 'block';
+        document.getElementById('repairRma').value = repair.businessId;
+    } else {
+        document.getElementById('rmaDisplay').style.display = 'none';
+    }
+
     // Klient
     if (repair.clientTechnicalId) {
         selectClient({
@@ -371,6 +465,7 @@ async function openRepairDetails(technicalId) {
         document.getElementById('repairEstimatedRepairDate').value = repair.estimatedRepairDate.split('T')[0];
     }
     document.getElementById('repairEstimatedCost').value = repair.estimatedCost || '';
+    document.getElementById('repairAdvancePayment').value = repair.advancePayment || '';
     document.getElementById('repairPrice').value = repair.repairPrice || '';
     document.getElementById('repairPurchasePrice').value = repair.purchasePrice || '';
 
@@ -429,6 +524,7 @@ async function saveRepair() {
         receiptDate: receiptDate ? receiptDate + 'T00:00:00' : null,
         estimatedRepairDate: estimatedDate ? estimatedDate + 'T00:00:00' : null,
         estimatedCost: document.getElementById('repairEstimatedCost').value || null,
+        advancePayment: document.getElementById('repairAdvancePayment').value || null,
         
         repairPrice: document.getElementById('repairPrice').value || null,
         purchasePrice: document.getElementById('repairPurchasePrice').value || null,
@@ -479,6 +575,8 @@ async function saveRepair() {
 
 function resetForm() {
     document.getElementById('repairForm').reset();
+    document.getElementById('rmaDisplay').style.display = 'none';
+    document.getElementById('repairRma').value = '';
     document.getElementById('repairTechnicalId').value = '';
     document.getElementById('selectedClientTechnicalId').value = '';
     document.getElementById('clientSearchSection').style.display = 'block';

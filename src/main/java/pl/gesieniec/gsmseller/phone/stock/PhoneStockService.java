@@ -41,6 +41,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final RepairRepository repairRepository;
+    private final pl.gesieniec.gsmseller.repair.RepairService repairService;
 
 
     public PhoneStockDto getByTechnicalId(UUID id) {
@@ -130,7 +131,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                     "Telefon dodany jako uszkodzony",
                     null,
                     null,
-                    entity.getTechnicalId()
+                    entity.getTechnicalId(),
+                    repairService.getNextBusinessId()
                 );
                 repairRepository.save(repair);
             }
