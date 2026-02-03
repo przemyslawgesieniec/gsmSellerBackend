@@ -16,6 +16,22 @@
   </li>
 </ul>
 
+<ul id="dropdown-serwis" class="dropdown-content custom-dropdown">
+  <li>
+    <a href="repair.html" class="dropdown-item">
+      <i class="material-icons left">build</i>
+      Bieżący serwis
+    </a>
+  </li>
+  <li class="divider"></li>
+  <li>
+    <a href="serviceHistory.html" class="dropdown-item">
+      <i class="material-icons left">history</i>
+      Archiwalny serwis
+    </a>
+  </li>
+</ul>
+
 <!-- NAVBAR -->
 <nav class="custom-navbar ">
   <div class="nav-wrapper">
@@ -51,9 +67,12 @@
         </a>
       </li>
 
-      <li><a href="repair.html">
-        <i class="material-icons left">build</i> Serwis
-      </a></li>
+      <li>
+        <a class="dropdown-trigger" href="#!" data-target="dropdown-serwis">
+          <i class="material-icons left">build</i> Serwis
+          <i class="material-icons right">arrow_drop_down</i>
+        </a>
+      </li>
 
       <li><a href="settings.html">
         <i class="material-icons left">settings</i> Ustawienia
@@ -126,10 +145,23 @@
     </a>
   </li>
 
-  <li>
+  <!-- NAGŁÓWEK SEKCJI SERWISU -->
+  <li class="sidenav-section">
+    Serwis
+  </li>
+
+  <!-- PODOPCJE Z WCIECIEM -->
+  <li class="mobile-subitem">
     <a href="repair.html">
       <i class="material-icons">build</i>
-      Serwis
+      Bieżący serwis
+    </a>
+  </li>
+
+  <li class="mobile-subitem">
+    <a href="serviceHistory.html">
+      <i class="material-icons">history</i>
+      Archiwalny serwis
     </a>
   </li>
 
