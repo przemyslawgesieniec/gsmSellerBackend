@@ -88,6 +88,30 @@
     .kanban-card.status-NIE_DO_NAPRAWY {
       background-color: #ffeae6 !important; /* light red/peach */
     }
+
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+
+    @keyframes fadeOutBorder {
+      0% { border: 3px solid #ff9800; }
+      100% { border: 1px solid transparent; }
+    }
+
+    .highlight-card {
+      animation: shake 0.5s, blink 0.5s 3, fadeOutBorder 2s forwards;
+      z-index: 10;
+    }
     
     /* Mobile view with tabs */
     @media only screen and (max-width: 992px) {
@@ -196,6 +220,14 @@
       <!-- Sekcja 1: Klient -->
       <div class="section-title blue-text text-darken-2">Sekcja 1 - Klient</div>
       <div class="row card-panel grey lighten-5" style="box-shadow: none; border: 1px solid #ddd;">
+        <div class="col s12">
+          <p>
+            <label>
+              <input type="checkbox" id="clientAnonymous" class="filled-in" />
+              <span>Klient anonimowy</span>
+            </label>
+          </p>
+        </div>
         <div id="clientSearchSection">
           <div class="input-field col s12">
             <i class="material-icons prefix">search</i>
@@ -209,13 +241,15 @@
         </div>
 
         <div id="newClientFields" style="display: none;">
-          <div class="input-field col s12 m4">
-            <input id="clientName" type="text">
-            <label for="clientName">Imię *</label>
-          </div>
-          <div class="input-field col s12 m4">
-            <input id="clientSurname" type="text">
-            <label for="clientSurname">Nazwisko *</label>
+          <div id="clientNameSurnameFields">
+            <div class="input-field col s12 m4">
+              <input id="clientName" type="text">
+              <label for="clientName">Imię *</label>
+            </div>
+            <div class="input-field col s12 m4">
+              <input id="clientSurname" type="text">
+              <label for="clientSurname">Nazwisko *</label>
+            </div>
           </div>
           <div class="input-field col s12 m4">
             <input id="clientPhone" type="text">
@@ -237,6 +271,15 @@
       <!-- Sekcja 2: Urządzenie -->
       <div class="section-title blue-text text-darken-2">Sekcja 2 - Urządzenie</div>
       <div class="row card-panel grey lighten-5" style="box-shadow: none; border: 1px solid #ddd;">
+        <div class="input-field col s12 m6">
+          <select id="repairDeviceType">
+            <option value="TELEFON" selected>Telefon</option>
+            <option value="TABLET">Tablet</option>
+            <option value="SMARTWATCH">Smartwatch</option>
+            <option value="INNE">Inne</option>
+          </select>
+          <label>Typ urządzenia</label>
+        </div>
         <div class="input-field col s12 m6">
           <input id="repairManufacturer" type="text">
           <label for="repairManufacturer">Producent</label>

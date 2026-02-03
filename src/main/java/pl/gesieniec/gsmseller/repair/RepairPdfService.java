@@ -42,7 +42,46 @@ public class RepairPdfService {
 
     @SneakyThrows
     public byte[] generateRepairHandoverPdf(Repair repair) {
-        return generatePdf(repair, "POTWIERDZENIE ODBIORU TELEFONU Z SERWISU");
+        return generateDoublePdf(repair, "POTWIERDZENIE ODBIORU URZĄDZENIA Z SERWISU");
+    }
+
+    @SneakyThrows
+    private byte[] generateDoublePdf(Repair repair, String title) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        PdfWriter writer = new PdfWriter(out);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+
+        PdfFont font = PdfFontFactory.createFont("/fonts/Fira_Sans/FiraSans-Regular.ttf",
+                "Identity-H", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+
+        PdfPage page = pdfDoc.addNewPage(PageSize.A4);
+        Rectangle pageSize = page.getPageSize();
+        float marginH = 50f;
+        float marginV = 20f;
+        float middleY = pageSize.getHeight() / 2;
+
+        // Egzemplarz 1 (Góra)
+        Rectangle rectUpper = new Rectangle(marginH, middleY + marginV, pageSize.getWidth() - 2 * marginH, middleY - 2 * marginV);
+        Canvas canvasUpper = new Canvas(page, rectUpper);
+        drawContent(canvasUpper, repair, title, font, rectUpper, false);
+        canvasUpper.close();
+
+        // Linia przerywana
+        PdfCanvas pdfCanvas = new PdfCanvas(page);
+        pdfCanvas.setLineDash(3, 3);
+        pdfCanvas.moveTo(0, middleY);
+        pdfCanvas.lineTo(pageSize.getWidth(), middleY);
+        pdfCanvas.stroke();
+
+        // Egzemplarz 2 (Dół)
+        Rectangle rectLower = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, middleY - 2 * marginV);
+        Canvas canvasLower = new Canvas(page, rectLower);
+        drawContent(canvasLower, repair, title, font, rectLower, false);
+        canvasLower.close();
+
+        pdfDoc.close();
+        return out.toByteArray();
     }
 
     @SneakyThrows
@@ -63,7 +102,7 @@ public class RepairPdfService {
         // Egzemplarz 1 (Góra)
         Rectangle rectUpper = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, pageSize.getHeight() - 2 * marginV);
         Canvas canvasUpper = new Canvas(page, rectUpper);
-        drawContent(canvasUpper, repair, title, font, rectUpper);
+        drawContent(canvasUpper, repair, title, font, rectUpper, true);
         canvasUpper.close();
 
         pdfDoc.close();
@@ -71,7 +110,7 @@ public class RepairPdfService {
     }
 
     @SneakyThrows
-    private void drawContent(Canvas canvas, Repair repair, String title, PdfFont font, Rectangle rootRect) {
+    private void drawContent(Canvas canvas, Repair repair, String title, PdfFont font, Rectangle rootRect, boolean withLegalNote) {
         canvas.setFont(font);
 
         // Logo
@@ -90,7 +129,7 @@ public class RepairPdfService {
             .setFontSize(9));
 
         if (repair.getBusinessId() != null) {
-            canvas.add(new Paragraph("RMA: " + repair.getBusinessId())
+            canvas.add(new Paragraph(repair.getBusinessId())
                 .setTextAlignment(TextAlignment.RIGHT)
                 .setFontSize(9));
         }
@@ -103,7 +142,7 @@ public class RepairPdfService {
         table.setWidth(UnitValue.createPercentValue(100));
         table.setFontSize(9);
 
-        addTableRow(table, "Urządzenie:", (repair.getManufacturer() != null ? repair.getManufacturer() + " " : "") + (repair.getModel() != null ? repair.getModel() : ""));
+        addTableRow(table, "Urządzenie:", (repair.getDeviceType() != null ? repair.getDeviceType() + " " : "") + (repair.getManufacturer() != null ? repair.getManufacturer() + " " : "") + (repair.getModel() != null ? repair.getModel() : ""));
         addTableRow(table, "IMEI:", repair.getImei());
 
         canvas.add(table);
@@ -143,6 +182,23 @@ public class RepairPdfService {
                 costParagraph.add(new Paragraph(" | Zaliczka: " + repair.getAdvancePayment() + " zł").setBold());
             }
             canvas.add(costParagraph);
+        }
+
+        // Notka prawna
+        if (withLegalNote) {
+            canvas.add(new Paragraph("Informujemy że nie ponosimy odpowiedzialności za pozostawione karty sim i karty pamięci w serwisie gsm. " +
+                    "Serwis nie odpowiada za ukryte wady urządzenia, których nie stwierdzono przy przyjęciu sprzętu do naprawy. " +
+                    "Na urządzenie zawilgocone i/lub po ingerencji osób trzecich serwis nie udziela gwarancji na naprawę. " +
+                    "Informuje się , że nie dokonanie odbioru telefonu po 3 miesiącach (90 dni) od momentu poinformowania klienta o możliwości odbioru skutkuje przejęciem telefonu na własność serwisu. " +
+                    "Serwis nie ponosi odpowiedzialności za utratę danych z telefonu , ani dalszych strat , które w wyniku tego mogą nastąpić " +
+                    "Wyrażam zgodę na przetwarzania moich danych osobowych zgodnie z rozporządzeniem o ochronie danych z dnia 27 kwietnia 2016 r., tzw. rozporządzeniem RODO przez firmę Teleakcesoria Paweł Jarocki z siedzibą w Stryków ul. Krótka 5A w celu wykonania zleconych uslug. " +
+                    "Oświadczam, że firma Teleakcesoria Paweł Jarocki poinformowała mnie o dobrowolności podania danych, przysługujących mi prawach w szczególności o prawie dostępu do treści danych ,ich poprawiania i usuwania. " +
+                    "Wyrażam równocześnie zgodę na otrzymywanie od firmy Teleakcesoria Paweł Jarocki informacji dotyczących zleconych usług za pomocą środków komunikacji elektronicznej oraz oświadczam, ze zapoznałem(łam) sie z regulaminem serwisu." +
+                    "Administratorem Twoich danych osobowych jest Teleakcesoria Paweł Jarocki z siedzibą w Stryków ul. Krótka 5A (Administrator Danych Osobowych/ADO). " +
+                    "We wszystkich kwestiach związanych z przetwarzaniem Twoich danych osobowych możesz się skontaktować z ADO poprzez adres poczty elektronicznej teleakcesoriamorena@gmail.com.")
+                    .setFontSize(6)
+                    .setFontColor(ColorConstants.GRAY)
+                    .setMarginTop(10));
         }
 
         // Podpisy

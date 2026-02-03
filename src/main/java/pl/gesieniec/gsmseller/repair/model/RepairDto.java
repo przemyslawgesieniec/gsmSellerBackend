@@ -23,6 +23,7 @@ public class RepairDto {
     private String manufacturer;
     private String model;
     private String imei;
+    private String deviceType;
 
     private String deviceCondition;
     private String problemDescription;
@@ -31,6 +32,7 @@ public class RepairDto {
     private boolean moistureTraces;
     private boolean warrantyRepair;
     private boolean turnsOn;
+    private boolean anonymous;
 
     private String lockCode;
 

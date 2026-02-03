@@ -35,11 +35,7 @@ public class RepairService {
 
     @Transactional(readOnly = true)
     public Page<RepairDto> getHistory(Specification<Repair> spec, Pageable pageable) {
-        Specification<Repair> historySpec = Specification.allOf(
-            RepairSpecifications.hasStatus(RepairStatus.ARCHIWALNA),
-            spec
-        );
-        return repository.findAll(historySpec, pageable)
+        return repository.findAll(spec, pageable)
             .map(mapper::toDto);
     }
 
@@ -82,6 +78,10 @@ public class RepairService {
         if (dto.getClientTechnicalId() != null) {
             client = clientRepository.findByTechnicalId(dto.getClientTechnicalId())
                 .orElseThrow(() -> new RuntimeException("Client not found: " + dto.getClientTechnicalId()));
+        } else if (dto.isAnonymous()) {
+            // Anonymous client, only phone number is required
+            client = RepairClient.create("Klient", "Anonimowy", dto.getClientPhoneNumber());
+            client = clientRepository.save(client);
         } else if (dto.getClientName() != null && !dto.getClientName().isBlank()) {
             client = RepairClient.create(dto.getClientName(), dto.getClientSurname(), dto.getClientPhoneNumber());
             client = clientRepository.save(client);
@@ -92,12 +92,14 @@ public class RepairService {
             dto.getManufacturer(),
             dto.getModel(),
             dto.getImei(),
+            dto.getDeviceType(),
             dto.getDeviceCondition(),
             dto.getProblemDescription(),
             dto.getRemarks(),
             dto.isMoistureTraces(),
             dto.isWarrantyRepair(),
             dto.isTurnsOn(),
+            dto.isAnonymous(),
             dto.getLockCode(),
             dto.getReceiptDate(),
             dto.getEstimatedRepairDate(),
@@ -145,12 +147,14 @@ public class RepairService {
             dto.getManufacturer(),
             dto.getModel(),
             dto.getImei(),
+            dto.getDeviceType(),
             dto.getDeviceCondition(),
             dto.getProblemDescription(),
             dto.getRemarks(),
             dto.isMoistureTraces(),
             dto.isWarrantyRepair(),
             dto.isTurnsOn(),
+            dto.isAnonymous(),
             dto.getLockCode(),
             dto.getReceiptDate(),
             dto.getEstimatedRepairDate(),
