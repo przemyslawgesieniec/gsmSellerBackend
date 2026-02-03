@@ -20,6 +20,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+import java.math.BigDecimal;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
@@ -56,28 +57,14 @@ public class RepairPdfService {
 
         PdfPage page = pdfDoc.addNewPage(PageSize.A4);
         Rectangle pageSize = page.getPageSize();
-        float halfHeight = pageSize.getHeight() / 2;
         float marginH = 50f;
         float marginV = 20f;
 
         // Egzemplarz 1 (Góra)
-        Rectangle rectUpper = new Rectangle(marginH, halfHeight + marginV, pageSize.getWidth() - 2 * marginH, halfHeight - 2 * marginV);
+        Rectangle rectUpper = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, pageSize.getHeight() - 2 * marginV);
         Canvas canvasUpper = new Canvas(page, rectUpper);
         drawContent(canvasUpper, repair, title, font, rectUpper);
         canvasUpper.close();
-
-        // Egzemplarz 2 (Dół)
-        Rectangle rectLower = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, halfHeight - 2 * marginV);
-        Canvas canvasLower = new Canvas(page, rectLower);
-        drawContent(canvasLower, repair, title, font, rectLower);
-        canvasLower.close();
-
-        // Linia przerywana
-        PdfCanvas pdfCanvas = new PdfCanvas(page);
-        pdfCanvas.setLineDash(3, 3);
-        pdfCanvas.moveTo(0, halfHeight);
-        pdfCanvas.lineTo(pageSize.getWidth(), halfHeight);
-        pdfCanvas.stroke();
 
         pdfDoc.close();
         return out.toByteArray();
@@ -101,6 +88,12 @@ public class RepairPdfService {
         canvas.add(new Paragraph("Data: " + repair.getCreateDateTime().format(DATE_FORMATTER))
             .setTextAlignment(TextAlignment.RIGHT)
             .setFontSize(9));
+
+        if (repair.getBusinessId() != null) {
+            canvas.add(new Paragraph("RMA: " + repair.getBusinessId())
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setFontSize(9));
+        }
 
         // Dane urządzenia
         canvas.add(new Paragraph("Dane urządzenia:").setBold().setUnderline().setFontSize(10).setMarginTop(5));
@@ -143,8 +136,13 @@ public class RepairPdfService {
             canvas.add(new Paragraph("\nOpis uszkodzenia:").setBold().setFontSize(10));
             canvas.add(new Paragraph(repair.getDamageDescription() != null ? repair.getDamageDescription() : "---")
                 .setFontSize(9));
-            canvas.add(new Paragraph("Przewidywany koszt: " + (repair.getRepairPrice() != null ? repair.getRepairPrice() + " zł" : "do ustalenia"))
-                .setFontSize(10));
+            
+            Paragraph costParagraph = new Paragraph("Przewidywany koszt: " + (repair.getEstimatedCost() != null ? repair.getEstimatedCost() + " zł" : "do ustalenia"))
+                .setFontSize(10);
+            if (repair.getAdvancePayment() != null && repair.getAdvancePayment().compareTo(BigDecimal.ZERO) > 0) {
+                costParagraph.add(new Paragraph(" | Zaliczka: " + repair.getAdvancePayment() + " zł").setBold());
+            }
+            canvas.add(costParagraph);
         }
 
         // Podpisy

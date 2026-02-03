@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RepairRepository extends JpaRepository<Repair, Long>, JpaSpecificationExecutor<Repair> {
     Optional<Repair> findByTechnicalId(UUID technicalId);
+
+    long countByCreateDateTimeBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

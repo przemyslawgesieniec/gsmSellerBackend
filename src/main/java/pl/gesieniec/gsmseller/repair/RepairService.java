@@ -102,13 +102,28 @@ public class RepairService {
             dto.getReceiptDate(),
             dto.getEstimatedRepairDate(),
             dto.getEstimatedCost(),
+            dto.getAdvancePayment(),
             dto.getPhotoUrls(),
             dto.getPhoneTechnicalId(),
             dto.getPurchasePrice(),
-            dto.getRepairPrice()
+            dto.getRepairPrice(),
+            generateBusinessId()
         );
         Repair saved = repository.save(repair);
         return mapper.toDto(saved);
+    }
+
+    private String generateBusinessId() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime startOfYear = now.with(java.time.temporal.TemporalAdjusters.firstDayOfYear()).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        java.time.LocalDateTime endOfYear = now.with(java.time.temporal.TemporalAdjusters.lastDayOfYear()).withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+
+        long count = repository.countByCreateDateTimeBetween(startOfYear, endOfYear);
+        return String.format("RMA/%d/%d", count + 1, now.getYear());
+    }
+
+    public String getNextBusinessId() {
+        return generateBusinessId();
     }
 
     @Transactional
@@ -140,6 +155,7 @@ public class RepairService {
             dto.getReceiptDate(),
             dto.getEstimatedRepairDate(),
             dto.getEstimatedCost(),
+            dto.getAdvancePayment(),
             dto.getPhotoUrls(),
             dto.getPhoneTechnicalId(),
             dto.getPurchasePrice(),

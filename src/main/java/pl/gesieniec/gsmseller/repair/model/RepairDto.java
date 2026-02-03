@@ -37,6 +37,8 @@ public class RepairDto {
     private LocalDateTime receiptDate;
     private LocalDateTime estimatedRepairDate;
     private BigDecimal estimatedCost;
+    private BigDecimal advancePayment;
+    private String businessId;
     private List<String> photoUrls;
 
     private RepairStatus status;
