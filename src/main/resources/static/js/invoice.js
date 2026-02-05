@@ -156,7 +156,8 @@ async function saveAndPrint() {
     const payload = {
         vatRate: getSelectedVatBackend(),
         sellDate: getSellDate(),
-        items: collectInvoiceExtraData(CURRENT_CART)
+        items: collectInvoiceExtraData(CURRENT_CART),
+        customerNote: document.getElementById("customerNote")?.value ?? ""
     };
 
     try {

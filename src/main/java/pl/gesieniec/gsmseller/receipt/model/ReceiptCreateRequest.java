@@ -23,4 +23,6 @@ public class ReceiptCreateRequest {
 
     @NotEmpty(message = "Lista przedmiotów nie może być pusta")
     private List<ItemRequest> items;
+
+    private String customerNote;
 }

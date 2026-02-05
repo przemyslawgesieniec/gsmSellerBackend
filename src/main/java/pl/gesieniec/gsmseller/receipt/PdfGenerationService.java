@@ -54,7 +54,7 @@ public class PdfGenerationService {
 
         prepareTopPart(receipt, document);
 
-        prepareItemsTable(document, receipt.getItems());
+        prepareItemsTable(document, receipt);
 
         prepareSummary(document, receipt);
 
@@ -114,7 +114,8 @@ public class PdfGenerationService {
         document.add(table);
     }
 
-    private void prepareItemsTable(Document document, List<Item> items) {
+    private void prepareItemsTable(Document document, Receipt receipt) {
+        List<Item> items = receipt.getItems();
         float[] columnWidths = {200f, 30f, 80f, 80f, 80f, 80f, 80f};
         Table table = new Table(columnWidths);
         table.setFontSize(8);
@@ -143,7 +144,7 @@ public class PdfGenerationService {
             table.addCell(String.format("%.2f",item.getGrossAmount()))
                 .setTextAlignment(TextAlignment.RIGHT);
         }
-        table.setMarginBottom(40);
+        table.setMarginBottom(10);
         document.add(table);
     }
 
@@ -184,38 +185,51 @@ public class PdfGenerationService {
     private void prepareRemarks(Document document, Receipt receipt) {
         boolean hasUsedItem = receipt.getItems()
             .stream()
-            .filter(e->e.getItemType().equals(ItemType.PHONE))
+            .filter(e -> e.getItemType().equals(ItemType.PHONE))
             .anyMatch(Item::getUsed);
 
-        if (!hasUsedItem) {
+        boolean hasCustomerNote = receipt.getCustomerNote() != null && !receipt.getCustomerNote().isBlank();
+
+        if (!hasUsedItem && !hasCustomerNote) {
             return;
         }
 
-        // Ramka po prawej stronie
-        float[] columnWidths = {350f, 200f}; // lewa część pusta, prawa to ramka
+        float[] columnWidths = {275f, 275f};
         Table wrapper = new Table(columnWidths);
         wrapper.setWidth(UnitValue.createPercentValue(100));
-
-        // Lewa pusta komórka
-        wrapper.addCell(new Cell()
-            .setBorder(Border.NO_BORDER));
-
-        // Prawa komórka z ramką i treścią
-        Cell remarksCell = new Cell()
-            .add(new Paragraph("Uwagi").setBold().setFontSize(10))
-            .add(new Paragraph(
-                "Gwarancja j/w z wyłączeniem rękojmi sprzedawcy ze względu na niższą " +
-                    "cenę towaru niż rynkowa na dzień sprzedaży urządzenia. Zwrot towaru niemożliwy.")
-                .setFontSize(9)
-                .setMarginTop(5))
-            .setBorder(new SolidBorder(1))
-            .setPadding(10)
-            .setTextAlignment(TextAlignment.LEFT);
-
-        wrapper.addCell(remarksCell);
-
         wrapper.setMarginTop(20);
-        wrapper.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+
+        // Adnotacje (po lewej)
+        if (hasCustomerNote) {
+            Cell customerNoteCell = new Cell()
+                .add(new Paragraph("Adnotacje:").setBold().setFontSize(10))
+                .add(new Paragraph(receipt.getCustomerNote())
+                    .setFontSize(9)
+                    .setMarginTop(5))
+                .setBorder(new SolidBorder(1))
+                .setPadding(10)
+                .setTextAlignment(TextAlignment.LEFT);
+            wrapper.addCell(customerNoteCell);
+        } else {
+            wrapper.addCell(new Cell().setBorder(Border.NO_BORDER));
+        }
+
+        // Uwagi (po prawej)
+        if (hasUsedItem) {
+            Cell remarksCell = new Cell()
+                .add(new Paragraph("Uwagi").setBold().setFontSize(10))
+                .add(new Paragraph(
+                    "Gwarancja j/w z wyłączeniem rękojmi sprzedawcy ze względu na niższą " +
+                        "cenę towaru niż rynkowa na dzień sprzedaży urządzenia. Zwrot towaru niemożliwy.")
+                    .setFontSize(9)
+                    .setMarginTop(5))
+                .setBorder(new SolidBorder(1))
+                .setPadding(10)
+                .setTextAlignment(TextAlignment.LEFT);
+            wrapper.addCell(remarksCell);
+        } else {
+            wrapper.addCell(new Cell().setBorder(Border.NO_BORDER));
+        }
 
         document.add(wrapper);
     }

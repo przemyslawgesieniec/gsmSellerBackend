@@ -76,5 +76,7 @@ public class ReceiptEntity {
     @Column(nullable = false)
     private ReceiptStatus status = ReceiptStatus.AKTYWNA;
 
+    private String customerNote;
+
 
 }

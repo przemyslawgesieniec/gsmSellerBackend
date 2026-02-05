@@ -20,10 +20,11 @@ public class Receipt {
     private final Seller seller;
     private final DateAndPlace dateAndPlace;
     private final String createdBy;
+    private final String customerNote;
 
-    public static Receipt of(String number, List<Item> items, Seller seller, DateAndPlace dateAndPlace, String username) {
+    public static Receipt of(String number, List<Item> items, Seller seller, DateAndPlace dateAndPlace, String username, String customerNote) {
         UUID technicalId = UUID.randomUUID();
-        return new Receipt(number, technicalId, ReceiptStatus.AKTYWNA, items, seller, dateAndPlace, username);
+        return new Receipt(number, technicalId, ReceiptStatus.AKTYWNA, items, seller, dateAndPlace, username, customerNote);
     }
 
     public BigDecimal getNetTotal() {
@@ -53,7 +54,8 @@ public class Receipt {
             newItems,
             this.seller,
             this.dateAndPlace,
-            this.createdBy
+            this.createdBy,
+            this.customerNote
         );
     }
 
@@ -65,7 +67,8 @@ public class Receipt {
             this.items,
             this.seller,
             this.dateAndPlace,
-            this.createdBy
+            this.createdBy,
+            this.customerNote
         );
     }
 

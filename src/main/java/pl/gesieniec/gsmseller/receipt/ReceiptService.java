@@ -117,7 +117,8 @@ public class ReceiptService {
                 .map(e -> e.getLocation().getCity())
                 .orElse("Stryków"),
                 sellDate, sellDate),
-            username
+            username,
+            request.getCustomerNote()
         );
 
         log.info("🧾 Mapped receipt: {}", receipt);
@@ -201,17 +202,7 @@ public class ReceiptService {
             );
 
         // 2️⃣ Mapowanie encji → model PDF (ORYGINAŁ)
-        Receipt originalReceipt = new Receipt(
-            entity.getNumber(),
-            entity.getTechnicalId(),
-            entity.getStatus(),
-            entity.getItems().stream()
-                .map(receiptMapper::toModel)
-                .toList(),
-            receiptMapper.toModel(entity.getSeller()),
-            receiptMapper.toModel(entity.getDateAndPlace()),
-            entity.getCreatedBy()
-        );
+        Receipt originalReceipt = receiptMapper.toModel(entity);
 
         Receipt serviceReceipt = originalReceipt.withVat(VatRate.VAT_23);
 
