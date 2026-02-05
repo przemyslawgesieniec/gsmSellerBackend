@@ -78,7 +78,7 @@ function renderInvoice(cart) {
                     </div>
 
                     <div>
-                        <label for="${sellingInfoId}">Informacje dotyczące sprzedaży</label>
+                        <label for="${sellingInfoId}" style="font-weight: bold; font-size: 1.2rem; color: red;">INFORMACJE DOTYCZĄCE SPRZEDAŻY (WIDOCZNE WYŁĄCZNIE W SYSTEMIE)</label>
                         <textarea id="${sellingInfoId}" class="materialize-textarea" style="margin-bottom: 0;"></textarea>
                     </div>
 

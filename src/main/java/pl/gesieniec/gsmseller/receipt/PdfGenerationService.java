@@ -199,10 +199,9 @@ public class PdfGenerationService {
         wrapper.setWidth(UnitValue.createPercentValue(100));
         wrapper.setMarginTop(20);
 
-        // Adnotacje (po lewej)
         if (hasCustomerNote) {
             Cell customerNoteCell = new Cell()
-                .add(new Paragraph("Adnotacje:").setBold().setFontSize(10))
+                .add(new Paragraph("Opis").setBold().setFontSize(10))
                 .add(new Paragraph(receipt.getCustomerNote())
                     .setFontSize(9)
                     .setMarginTop(5))
