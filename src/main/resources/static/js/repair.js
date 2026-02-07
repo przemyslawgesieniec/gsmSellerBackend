@@ -34,6 +34,23 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('saveRepairBtn').style.display = 'inline-block';
     });
     document.getElementById('confirmRestoreBtn').addEventListener('click', confirmRestore);
+    document.getElementById('btnConfirmFinalizeStatus').addEventListener('click', handleFinalizeStatus);
+    document.getElementById('finalStatusSelect').addEventListener('change', (e) => {
+        const status = e.target.value;
+        const diagnosticSection = document.getElementById('diagnosticCostSection');
+        const repairSection = document.getElementById('repairFinishedSection');
+        
+        if (status === 'NAPRAWIONY') {
+            repairSection.style.display = 'block';
+            diagnosticSection.style.display = 'none';
+        } else if (status === 'NIE_DO_NAPRAWY' || status === 'ANULOWANY') {
+            repairSection.style.display = 'none';
+            diagnosticSection.style.display = 'block';
+        } else {
+            repairSection.style.display = 'none';
+            diagnosticSection.style.display = 'none';
+        }
+    });
     document.getElementById('selectedClientChip').addEventListener('click', (e) => {
         if (e.target.id !== 'clearSelectedClient') {
             const clientDisplay = document.getElementById('selectedClientDisplay').innerText;
@@ -313,8 +330,18 @@ function createCard(repair) {
             <p><b>Tel:</b> ${clientPhone}</p>
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
             <div class="divider" style="margin: 5px 0;"></div>
-            <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
-            ${repair.repairPrice ? `<p><b>Koszt końcowy:</b> ${repair.repairPrice} zł</p>` : ''}
+            ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
+            ` : ''}
+            
+            ${repair.status === 'NAPRAWIONY' ? `
+                <p><b>Koszt naprawy:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>
+                <p><b>Cena dla klienta:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+            ` : ''}
+            
+            ${['ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                <p><b>Koszt diagnostyki:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+            ` : ''}
             
             ${['DO_NAPRAWY'].includes(repair.status) && repair.forCustomer ? `
                 <div class="right-align" style="margin-top: 10px;">
@@ -407,8 +434,16 @@ function createMobileCard(repair) {
                         <p><b>IMEI:</b> ${repair.imei || '-'}</p>
                     </div>
                     <div class="col s6 right-align">
-                        <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
-                        ${repair.repairPrice ? `<p><b>Końcowy:</b> ${repair.repairPrice} zł</p>` : ''}
+                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                            <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
+                        ` : ''}
+                        ${repair.status === 'NAPRAWIONY' ? `
+                            <p><b>Koszt:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>
+                            <p><b>Cena:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+                        ` : ''}
+                        ${['ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                            <p><b>Diagnostyka:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+                        ` : ''}
                     </div>
                 </div>
                 
@@ -477,6 +512,21 @@ window.drop = async function(ev) {
 
     if (newStatus === 'ZAKONCZONY') {
         document.getElementById('statusSelectionRepairId').value = id;
+        
+        // Reset modal fields
+        document.getElementById('finalStatusSelect').value = '';
+        M.FormSelect.init(document.getElementById('finalStatusSelect'));
+        document.getElementById('diagnosticCostSection').style.display = 'none';
+        document.getElementById('repairFinishedSection').style.display = 'none';
+        document.getElementById('diagnosticCost').value = '70';
+        document.getElementById('finalRealCost').value = '';
+        document.getElementById('finalCustomerPrice').value = '';
+        
+        // Fill pre-filled fields
+        document.getElementById('finalAdvancePayment').value = repair.advancePayment || 0;
+        document.getElementById('finalEstimatedCost').value = repair.estimatedCost || 0;
+        M.updateTextFields();
+
         M.Modal.getInstance(document.getElementById('statusSelectionModal')).open();
         return;
     }
@@ -517,6 +567,60 @@ async function updateRepairStatus(id, newStatus) {
             console.error(error);
             M.toast({html: 'Błąd podczas zmiany statusu', classes: 'red'});
         }
+    }
+}
+
+async function handleFinalizeStatus() {
+    const id = document.getElementById('statusSelectionRepairId').value;
+    const status = document.getElementById('finalStatusSelect').value;
+    
+    if (!status) {
+        M.toast({html: 'Wybierz status końcowy', classes: 'orange'});
+        return;
+    }
+
+    const repair = repairsData.find(r => r.technicalId === id);
+    if (!repair) return;
+
+    let updateData = { ...repair };
+    updateData.status = status;
+
+    if (status === 'NAPRAWIONY') {
+        const realCost = document.getElementById('finalRealCost').value;
+        const customerPrice = document.getElementById('finalCustomerPrice').value;
+
+        if (!realCost || !customerPrice) {
+            M.toast({html: 'Podaj wszystkie koszty', classes: 'orange'});
+            return;
+        }
+
+        updateData.purchasePrice = realCost;
+        updateData.repairPrice = customerPrice;
+    } else {
+        const diagnosticCost = document.getElementById('diagnosticCost').value;
+        if (!diagnosticCost) {
+            M.toast({html: 'Podaj koszt diagnostyki', classes: 'orange'});
+            return;
+        }
+        updateData.repairPrice = diagnosticCost;
+        updateData.purchasePrice = 0;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+        });
+
+        if (!response.ok) throw new Error('Błąd zapisu');
+
+        M.toast({html: 'Status zaktualizowany', classes: 'green'});
+        M.Modal.getInstance(document.getElementById('statusSelectionModal')).close();
+        loadRepairs();
+    } catch (error) {
+        console.error(error);
+        M.toast({html: 'Błąd podczas zmiany statusu', classes: 'red'});
     }
 }
 
