@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.location.LocationEntity;
@@ -20,6 +22,8 @@ import pl.gesieniec.gsmseller.repair.client.RepairClientRepository;
 import pl.gesieniec.gsmseller.repair.model.RepairDto;
 import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 import pl.gesieniec.gsmseller.repair.model.RestoreToShopRequest;
+import pl.gesieniec.gsmseller.user.User;
+import pl.gesieniec.gsmseller.user.UserRepository;
 
 @Slf4j
 @Service
@@ -32,6 +36,7 @@ public class RepairService {
     private final PhoneStockRepository phoneStockRepository;
     private final LocationRepository locationRepository;
     private final RepairClientRepository clientRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public Page<RepairDto> getHistory(Specification<Repair> spec, Pageable pageable) {
@@ -41,8 +46,19 @@ public class RepairService {
 
     @Transactional(readOnly = true)
     public List<RepairDto> getAllRepairs() {
+        String location = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            location = userRepository.findByUsername(auth.getName())
+                    .map(User::getLocation)
+                    .map(LocationEntity::getName)
+                    .orElse(null);
+        }
+
+        final String finalLocation = location;
         return repository.findAll().stream()
             .filter(r -> r.getStatus() != RepairStatus.ARCHIWALNA)
+            .filter(r -> finalLocation == null || finalLocation.equals(r.getLocation()))
             .map(mapper::toDto)
             .collect(Collectors.toList());
     }
@@ -74,6 +90,15 @@ public class RepairService {
 
     @Transactional
     public RepairDto addRepair(RepairDto dto) {
+        String location = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            location = userRepository.findByUsername(auth.getName())
+                    .map(User::getLocation)
+                    .map(LocationEntity::getName)
+                    .orElse(null);
+        }
+
         RepairClient client = null;
         if (dto.getClientTechnicalId() != null) {
             client = clientRepository.findByTechnicalId(dto.getClientTechnicalId())
@@ -109,7 +134,8 @@ public class RepairService {
             dto.getPhoneTechnicalId(),
             dto.getPurchasePrice(),
             dto.getRepairPrice(),
-            generateBusinessId()
+            generateBusinessId(),
+            location
         );
         Repair saved = repository.save(repair);
         return mapper.toDto(saved);
@@ -142,6 +168,12 @@ public class RepairService {
             client = clientRepository.save(client);
         }
 
+        String location = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            location = dto.getLocation();
+        }
+
         repair.update(
             client,
             dto.getManufacturer(),
@@ -163,7 +195,8 @@ public class RepairService {
             dto.getPhotoUrls(),
             dto.getPhoneTechnicalId(),
             dto.getPurchasePrice(),
-            dto.getRepairPrice()
+            dto.getRepairPrice(),
+            location
         );
 
         return mapper.toDto(repair);

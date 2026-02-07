@@ -292,6 +292,12 @@
           <input id="repairImei" type="text">
           <label for="repairImei">IMEI</label>
         </div>
+        <div class="input-field col s12 m6" id="repairLocationSection" style="display: none;">
+          <select id="repairLocation">
+            <option value="" disabled selected>Wybierz lokalizację</option>
+          </select>
+          <label>Lokalizacja (tylko Admin)</label>
+        </div>
       </div>
 
       <!-- Sekcja 3: Naprawa -->
@@ -474,6 +480,7 @@
 
 <!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/repair.js"></script>
 
 <script>

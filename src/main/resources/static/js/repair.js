@@ -45,6 +45,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicjalizacja selectów Materialize
     M.FormSelect.init(document.querySelectorAll('select'));
+
+    loadCurrentUser().then(() => {
+        if (IS_ADMIN) {
+            document.getElementById('repairLocationSection').style.display = 'block';
+        }
+    });
 });
 
 function initClientAutocomplete() {
@@ -261,6 +267,12 @@ function createCard(repair) {
         <div class="card-content">
             ${overdueIcon}
             ${statusLabel}
+            ${repair.location ? `
+                <p class="location" style="position: absolute; top: 10px; right: 10px; margin: 0; display: flex; align-items: center;">
+                    <i class="material-icons tiny blue-text">place</i>
+                    <b>${repair.location}</b>
+                </p>
+            ` : ''}
             <div style="clear: both;"></div>
             <span class="card-title">
                 ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
@@ -346,6 +358,12 @@ function createMobileCard(repair) {
             <div class="card-content">
                 ${overdueIcon}
                 ${statusLabel}
+                ${repair.location ? `
+                    <p class="location" style="position: absolute; top: 10px; right: 10px; margin: 0; display: flex; align-items: center;">
+                        <i class="material-icons tiny blue-text">place</i>
+                        <b>${repair.location}</b>
+                    </p>
+                ` : ''}
                 <div style="clear: both;"></div>
                 <span class="card-title">
                     ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
@@ -531,6 +549,14 @@ async function openRepairDetails(technicalId) {
     document.getElementById('repairModel').value = repair.model || '';
     document.getElementById('repairImei').value = repair.imei || '';
 
+    if (repair.location) {
+        document.getElementById('repairLocation').value = repair.location;
+        M.FormSelect.init(document.getElementById('repairLocation'));
+    } else {
+        document.getElementById('repairLocation').value = "";
+        M.FormSelect.init(document.getElementById('repairLocation'));
+    }
+
     // Naprawa
     document.getElementById('repairProblemDescription').value = repair.problemDescription || repair.damageDescription || '';
     document.getElementById('repairDeviceCondition').value = repair.deviceCondition || '';
@@ -615,7 +641,8 @@ async function saveRepair() {
         purchasePrice: document.getElementById('repairPurchasePrice').value || null,
         
         forCustomer: existingRepair ? existingRepair.forCustomer : (document.getElementById('isForCustomer').value === 'true'),
-        phoneTechnicalId: document.getElementById('phoneTechnicalId').value || null
+        phoneTechnicalId: document.getElementById('phoneTechnicalId').value || null,
+        location: IS_ADMIN ? document.getElementById('repairLocation').value : (existingRepair ? existingRepair.location : null)
     };
 
     if (!repairDto.model) {
@@ -722,14 +749,22 @@ async function loadLocations() {
         if (!response.ok) throw new Error('Błąd pobierania lokalizacji');
         const locations = await response.json();
         
-        const select = document.getElementById('restoreLocation');
+        const restoreSelect = document.getElementById('restoreLocation');
+        const repairSelect = document.getElementById('repairLocation');
+
         locations.forEach(loc => {
             const option = document.createElement('option');
-            option.value = loc.technicalId;
+            option.value = loc.name; // For repairLocation we use name
             option.text = loc.name;
-            select.appendChild(option);
+            repairSelect.appendChild(option);
+
+            const restoreOption = document.createElement('option');
+            restoreOption.value = loc.technicalId; // For restoreLocation we use technicalId
+            restoreOption.text = loc.name;
+            restoreSelect.appendChild(restoreOption);
         });
-        M.FormSelect.init(select);
+        M.FormSelect.init(restoreSelect);
+        M.FormSelect.init(repairSelect);
     } catch (error) {
         console.error(error);
     }

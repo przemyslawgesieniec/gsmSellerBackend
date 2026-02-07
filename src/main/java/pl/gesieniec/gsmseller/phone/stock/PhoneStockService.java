@@ -132,7 +132,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                     null,
                     null,
                     entity.getTechnicalId(),
-                    repairService.getNextBusinessId()
+                    repairService.getNextBusinessId(),
+                    locationEntity != null ? locationEntity.getName() : null
                 );
                 repairRepository.save(repair);
             }
