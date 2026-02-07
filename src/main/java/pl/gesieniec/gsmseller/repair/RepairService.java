@@ -211,6 +211,10 @@ public class RepairService {
             location
         );
 
+        if (dto.getStatus() != null) {
+            repair.updateStatus(dto.getStatus());
+        }
+
         return mapper.toDto(repair);
     }
 

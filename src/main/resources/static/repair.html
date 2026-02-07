@@ -443,29 +443,59 @@
 <!-- Modal: Wybór statusu zakończenia -->
 <div id="statusSelectionModal" class="modal">
   <div class="modal-content">
-    <h5>Wybierz status zakończenia naprawy</h5>
-    <p>Przeciągnąłeś zlecenie do kolumny zakończonych. Wybierz odpowiedni status:</p>
+    <h5>Zakończenie naprawy</h5>
     <input type="hidden" id="statusSelectionRepairId">
-    <div class="row" style="margin-top: 20px;">
-      <div class="col s12 m4">
-        <button class="btn green darken-2 waves-effect waves-light full-width" onclick="finalizeStatus('NAPRAWIONY')">
-          <i class="material-icons left">check_circle</i>Naprawiony
-        </button>
-      </div>
-      <div class="col s12 m4">
-        <button class="btn red darken-2 waves-effect waves-light full-width" onclick="finalizeStatus('NIE_DO_NAPRAWY')">
-          <i class="material-icons left">error</i>Nie do naprawy
-        </button>
-      </div>
-      <div class="col s12 m4">
-        <button class="btn grey darken-2 waves-effect waves-light full-width" onclick="finalizeStatus('ANULOWANY')">
-          <i class="material-icons left">cancel</i>Anulowany
-        </button>
+    
+    <div class="row">
+      <div class="input-field col s12">
+        <select id="finalStatusSelect">
+          <option value="" disabled selected>Wybierz wynik naprawy</option>
+          <option value="NAPRAWIONY">Naprawiony</option>
+          <option value="NIE_DO_NAPRAWY">Nie do naprawy</option>
+          <option value="ANULOWANY">Anulowany</option>
+        </select>
+        <label>Status końcowy</label>
       </div>
     </div>
+
+    <!-- Sekcja dla Nie do naprawy / Anulowany -->
+    <div id="diagnosticCostSection" style="display: none;">
+      <div class="row">
+        <div class="input-field col s12">
+          <input id="diagnosticCost" type="number" step="0.01" value="70">
+          <label for="diagnosticCost" class="active">Koszt diagnostyki (zł)</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sekcja dla Naprawiony -->
+    <div id="repairFinishedSection" style="display: none;">
+      <div class="row">
+        <div class="input-field col s12 m6">
+          <input id="finalAdvancePayment" type="number" step="0.01" readonly>
+          <label for="finalAdvancePayment" class="active">Wpłacona zaliczka</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="finalEstimatedCost" type="number" step="0.01" readonly>
+          <label for="finalEstimatedCost" class="active">Szacowany koszt naprawy</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-field col s12 m6">
+          <input id="finalRealCost" type="number" step="0.01">
+          <label for="finalRealCost">Realny koszt naprawy (koszt części itp.)</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="finalCustomerPrice" type="number" step="0.01">
+          <label for="finalCustomerPrice">Cena dla klienta (suma)</label>
+        </div>
+      </div>
+    </div>
+
   </div>
   <div class="modal-footer">
     <button class="btn-flat waves-effect" onclick="cancelStatusSelection()">Anuluj</button>
+    <button class="btn blue darken-2 waves-effect waves-light" id="btnConfirmFinalizeStatus">Zatwierdź</button>
   </div>
 </div>
 

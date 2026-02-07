@@ -183,8 +183,16 @@ function renderHistory(repairs) {
                         <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>
                     </div>
                     <div class="col s12 m6">
-                        <p><b>Koszt szacowany:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '---'}</p>
-                        <p><b>Cena ostateczna:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '---'}</p>
+                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY', 'ARCHIWALNA'].includes(repair.status) ? `
+                            <p><b>Koszt szacowany:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '---'}</p>
+                        ` : ''}
+                        
+                        ${repair.status === 'NAPRAWIONY' || (repair.status === 'ARCHIWALNA' && repair.purchasePrice && repair.purchasePrice > 0) ? `
+                            <p><b>Koszt naprawy:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '---'}</p>
+                            <p><b>Cena dla klienta:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '---'}</p>
+                        ` : `
+                            <p><b>Cena ostateczna:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '---'}</p>
+                        `}
                         <p><b>Typ:</b> ${repair.forCustomer ? 'Dla klienta' : 'Na sklep'}</p>
                     </div>
                 </div>
