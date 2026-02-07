@@ -1,7 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
-    loadRepairs();
+    loadCurrentUser().then(user => {
+        if (IS_ADMIN) {
+            document.getElementById('repairLocationSection').style.display = 'block';
+        }
+        
+        // Ustawienie domyślnej lokalizacji w filtrze
+        if (user && user.location) {
+            const filterSelect = document.getElementById('filterLocationSelect');
+            // Musimy poczekać aż lokalizacje się załadują, albo ustawić to po loadLocations
+            // Ale loadLocations jest asynchroniczne.
+        }
+        
+        loadLocations().then(() => {
+            const filterSelect = document.getElementById('filterLocationSelect');
+            if (user && user.location && filterSelect) {
+                filterSelect.value = user.location;
+                M.FormSelect.init(filterSelect);
+            }
+            loadRepairs();
+        });
+    });
 
     document.getElementById('saveRepairBtn').addEventListener('click', saveRepair);
+    
+    const filterSelect = document.getElementById('filterLocationSelect');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', loadRepairs);
+    }
+
     document.getElementById('editRepairBtn').addEventListener('click', () => {
         toggleFields(false);
         document.getElementById('editRepairBtn').style.display = 'none';
@@ -159,8 +185,12 @@ function debounce(func, wait) {
 let repairsData = [];
 
 async function loadRepairs() {
+    const filterSelect = document.getElementById('filterLocationSelect');
+    const locationFilter = filterSelect ? filterSelect.value : '';
+    const url = locationFilter ? `/api/v1/repairs?location=${encodeURIComponent(locationFilter)}` : '/api/v1/repairs';
+    
     try {
-        const response = await fetch('/api/v1/repairs');
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Błąd pobierania danych');
         repairsData = await response.json();
         renderBoard();
@@ -277,7 +307,7 @@ function createCard(repair) {
             <span class="card-title">
                 ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
                 <br>
-                <small style="font-weight: bold; color: #1565c0;">RMA: ${repair.businessId || '-'}</small>
+                <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
             </span>
             <p><b>Klient:</b> ${clientDisplay}</p>
             <p><b>Tel:</b> ${clientPhone}</p>
@@ -368,7 +398,7 @@ function createMobileCard(repair) {
                 <span class="card-title">
                     ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
                     <br>
-                    <small style="font-weight: bold; color: #1565c0;">RMA: ${repair.businessId || '-'}</small>
+                    <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
                 </span>
                 <p><b>Klient:</b> ${clientDisplay}</p>
                 <p><b>Tel:</b> ${clientPhone}</p>
@@ -751,12 +781,18 @@ async function loadLocations() {
         
         const restoreSelect = document.getElementById('restoreLocation');
         const repairSelect = document.getElementById('repairLocation');
+        const filterSelect = document.getElementById('filterLocationSelect');
 
         locations.forEach(loc => {
             const option = document.createElement('option');
             option.value = loc.name; // For repairLocation we use name
             option.text = loc.name;
             repairSelect.appendChild(option);
+
+            const filterOption = document.createElement('option');
+            filterOption.value = loc.name;
+            filterOption.text = loc.name;
+            filterSelect.appendChild(filterOption);
 
             const restoreOption = document.createElement('option');
             restoreOption.value = loc.technicalId; // For restoreLocation we use technicalId
@@ -765,6 +801,7 @@ async function loadLocations() {
         });
         M.FormSelect.init(restoreSelect);
         M.FormSelect.init(repairSelect);
+        M.FormSelect.init(filterSelect);
     } catch (error) {
         console.error(error);
     }

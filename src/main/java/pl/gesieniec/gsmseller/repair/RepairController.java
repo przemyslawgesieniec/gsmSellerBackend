@@ -28,8 +28,8 @@ public class RepairController {
     private final RepairService service;
 
     @GetMapping
-    public List<RepairDto> getAllRepairs() {
-        return service.getAllRepairs();
+    public List<RepairDto> getAllRepairs(@RequestParam(required = false) String location) {
+        return service.getAllRepairs(location);
     }
 
     @GetMapping("/history")

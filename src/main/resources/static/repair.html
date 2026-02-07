@@ -154,6 +154,17 @@
   <h4 class="center-align">Zlecenia Serwisowe</h4>
 
   <!-- Desktop Kanban Board -->
+  <div class="row" style="margin-top: 20px;">
+    <div class="col s12 m4 l3">
+      <div class="input-field" id="filterLocationWrapper">
+        <select id="filterLocationSelect">
+          <option value="">Wszystkie lokalizacje</option>
+        </select>
+        <label>Filtruj wg lokalizacji</label>
+      </div>
+    </div>
+  </div>
+
   <div class="kanban-board">
     <div class="kanban-column" id="col-DO_NAPRAWY" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
       <div class="kanban-column-header blue-text text-darken-2">DO NAPRAWY</div>
