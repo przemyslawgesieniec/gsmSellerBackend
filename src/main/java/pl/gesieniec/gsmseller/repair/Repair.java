@@ -70,13 +70,14 @@ public class Repair {
 
     private BigDecimal purchasePrice;
     private BigDecimal repairPrice;
+    private String location;
 
     private Repair(RepairClient client, String manufacturer, String model, String imei, String deviceType,
                   String deviceCondition, String problemDescription, String remarks,
                   boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                   String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
                   BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, boolean isForCustomer, UUID phoneTechnicalId,
-                  BigDecimal purchasePrice, BigDecimal repairPrice, String businessId) {
+                  BigDecimal purchasePrice, BigDecimal repairPrice, String businessId, String location) {
         this.technicalId = UUID.randomUUID();
         this.client = client;
         this.manufacturer = manufacturer;
@@ -105,6 +106,7 @@ public class Repair {
         this.repairPrice = repairPrice;
         this.status = RepairStatus.DO_NAPRAWY;
         this.createDateTime = LocalDateTime.now();
+        this.location = location;
     }
 
     public static Repair create(RepairClient client, String manufacturer, String model, String imei, String deviceType,
@@ -112,19 +114,19 @@ public class Repair {
                                boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                                String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
                                BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, UUID phoneTechnicalId,
-                               BigDecimal purchasePrice, BigDecimal repairPrice, String businessId) {
+                               BigDecimal purchasePrice, BigDecimal repairPrice, String businessId, String location) {
         return new Repair(client, manufacturer, model, imei, deviceType, deviceCondition, problemDescription, remarks,
                 moistureTraces, warrantyRepair, turnsOn, anonymous, lockCode, receiptDate, estimatedRepairDate,
-                estimatedCost, advancePayment, photoUrls, true, phoneTechnicalId, purchasePrice, repairPrice, businessId);
+                estimatedCost, advancePayment, photoUrls, true, phoneTechnicalId, purchasePrice, repairPrice, businessId, location);
     }
 
     public static Repair createInHouseRepair(String model, String imei,
                                             BigDecimal purchasePrice, BigDecimal repairPrice,
                                             String problemDescription, String deviceCondition,
-                                            String lockCode, UUID phoneTechnicalId, String businessId) {
+                                            String lockCode, UUID phoneTechnicalId, String businessId, String location) {
         return new Repair(null, null, model, imei, "TELEFON", deviceCondition, problemDescription, null,
                 false, false, false, false, lockCode, null, null, null, null, null, false,
-                phoneTechnicalId, purchasePrice, repairPrice, businessId);
+                phoneTechnicalId, purchasePrice, repairPrice, businessId, location);
     }
 
     public void updateStatus(RepairStatus newStatus) {
@@ -143,7 +145,7 @@ public class Repair {
                        Boolean moistureTraces, Boolean warrantyRepair, Boolean turnsOn, Boolean anonymous,
                        String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
                        BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, UUID phoneTechnicalId,
-                       BigDecimal purchasePrice, BigDecimal repairPrice) {
+                       BigDecimal purchasePrice, BigDecimal repairPrice, String location) {
         this.client = client;
         if (manufacturer != null) this.manufacturer = manufacturer;
         if (model != null) this.model = model;
@@ -168,6 +170,7 @@ public class Repair {
         if (phoneTechnicalId != null) this.phoneTechnicalId = phoneTechnicalId;
         if (purchasePrice != null) this.purchasePrice = purchasePrice;
         if (repairPrice != null) this.repairPrice = repairPrice;
+        if (location != null) this.location = location;
     }
 
     public String getDamageDescription() {

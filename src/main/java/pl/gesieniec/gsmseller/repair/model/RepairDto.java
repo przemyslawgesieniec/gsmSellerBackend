@@ -52,6 +52,7 @@ public class RepairDto {
     // For compatibility with old fields if necessary
     private BigDecimal purchasePrice;
     private BigDecimal repairPrice;
+    private String location;
     private String damageDescription;
     private String repairOrderDescription;
     private String pinPassword;
