@@ -45,20 +45,32 @@ public class RepairService {
     }
 
     @Transactional(readOnly = true)
-    public List<RepairDto> getAllRepairs() {
-        String location = null;
+    public List<RepairDto> getAllRepairs(String requestedLocation) {
+        String userLocation = null;
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = false;
         if (auth != null && auth.isAuthenticated()) {
-            location = userRepository.findByUsername(auth.getName())
+            userLocation = userRepository.findByUsername(auth.getName())
                     .map(User::getLocation)
                     .map(LocationEntity::getName)
                     .orElse(null);
+            isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         }
 
-        final String finalLocation = location;
+        final String finalUserLocation = userLocation;
+        final boolean finalIsAdmin = isAdmin;
+
         return repository.findAll().stream()
             .filter(r -> r.getStatus() != RepairStatus.ARCHIWALNA)
-            .filter(r -> finalLocation == null || finalLocation.equals(r.getLocation()))
+            .filter(r -> {
+                // Jeśli Admin prosi o konkretną lokalizację (lub puste = wszystkie)
+                if (finalIsAdmin) {
+                    return requestedLocation == null || requestedLocation.isBlank() || requestedLocation.equals(r.getLocation());
+                }
+                // Jeśli zwykły użytkownik prosi o lokalizację, może prosić tylko o swoją lub dostanie swoją domyślnie
+                String filterLocation = (requestedLocation != null && !requestedLocation.isBlank()) ? requestedLocation : finalUserLocation;
+                return filterLocation == null || filterLocation.equals(r.getLocation());
+            })
             .map(mapper::toDto)
             .collect(Collectors.toList());
     }

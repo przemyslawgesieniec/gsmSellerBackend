@@ -176,7 +176,7 @@ function renderHistory(repairs) {
             <div class="collapsible-body">
                 <div class="row">
                     <div class="col s12 m6">
-                        <p><b>RMA:</b> ${repair.businessId || '-'}</p>
+                        <p> ${repair.businessId || '-'}</p>
                         <p><b>IMEI:</b> ${repair.imei || 'Brak'}</p>
                         <p><b>Klient:</b> ${repair.clientName} ${repair.clientSurname} (${repair.clientPhoneNumber || 'Brak telefonu'})</p>
                         <p><b>Opis problemu:</b> ${repair.problemDescription || repair.damageDescription || 'Brak'}</p>
