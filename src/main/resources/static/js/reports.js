@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const { from, to } = getCurrentMonthRange();
     loadSalesSummary(from, to);
     loadProfitPerDay(from, to);
+    loadRepairSummary(from, to);
     loadDashboard();
 });
 
@@ -34,6 +35,25 @@ function initDatePicker() {
         }
     });
 
+    flatpickr("#repairDateRangePicker", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        locale: flatpickr.l10ns.pl,
+        monthSelectorType: "dropdown",
+        defaultDate: [
+            getCurrentMonthRange().from,
+            getCurrentMonthRange().to
+        ],
+        onClose(selectedDates) {
+            if (selectedDates.length === 2) {
+                const from = formatDate(selectedDates[0]);
+                const to = formatDate(selectedDates[1]);
+
+                loadRepairSummary(from, to);
+            }
+        }
+    });
+
 }
 
 /* =========================
@@ -50,6 +70,26 @@ function loadSalesSummary(from, to) {
             setText("miscGrossAmount", formatCurrency(data.miscGrossAmount));
         })
         .catch(err => console.error("Sales summary error", err));
+}
+
+/* =========================
+   REPAIR SUMMARY
+========================= */
+
+function loadRepairSummary(from, to) {
+    fetch(`/api/reports/repair-summary?from=${from}&to=${to}`)
+        .then(handleJsonResponse)
+        .then(data => {
+            setText("totalRepairs", data.totalRepairs);
+            setText("repairProfit", formatCurrency(data.totalProfit));
+
+            // Status counts
+            setText("repairedCount", data.statusCounts["NAPRAWIONY"] || 0);
+            setText("cancelledCount", data.statusCounts["ANULOWANY"] || 0);
+            setText("notRepairedCount", data.statusCounts["NIE_DO_NAPRAWY"] || 0);
+            setText("inRepairCount", data.statusCounts["W_NAPRAWIE"] || 0);
+        })
+        .catch(err => console.error("Repair summary error", err));
 }
 
 /* =========================

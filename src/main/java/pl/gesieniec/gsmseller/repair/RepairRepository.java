@@ -5,10 +5,13 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 
 @Repository
 public interface RepairRepository extends JpaRepository<Repair, Long>, JpaSpecificationExecutor<Repair> {
     Optional<Repair> findByTechnicalId(UUID technicalId);
 
     long countByCreateDateTimeBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+
+    java.util.List<Repair> findAllByStatusAndCreateDateTimeBetween(RepairStatus repairStatus, java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

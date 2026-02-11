@@ -197,6 +197,64 @@
     </div>
   </div>
 
+  <!-- =========================
+     SERVICE (REPAIRS)
+========================= -->
+
+  <h5 class="blue-text text-darken-2">Serwis</h5>
+
+  <!-- DATE RANGE PICKER -->
+  <div class="row">
+    <div class="col s12 m4">
+      <label class="active">Zakres dat (Serwis)</label>
+      <input
+              type="text"
+              id="repairDateRangePicker"
+              class="datepicker"
+              placeholder="Wybierz zakres dat dla serwisu"
+              readonly
+      />
+    </div>
+  </div>
+
+  <!-- SERVICE CARDS -->
+  <div class="row">
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">build</i>
+          <h6>Ilość napraw serwisowych</h6>
+          <h5 id="totalRepairs">—</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">assignment</i>
+          <h6>Statusy napraw</h6>
+          <div id="repairStatuses" style="font-size: 0.9rem; margin-top: 10px;">
+            <p>Naprawione: <span id="repairedCount">0</span></p>
+            <p>Anulowane: <span id="cancelledCount">0</span></p>
+            <p>Nie naprawione: <span id="notRepairedCount">0</span></p>
+            <p>W naprawie: <span id="inRepairCount">0</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col s12 m4">
+      <div class="card center-align">
+        <div class="card-content">
+          <i class="material-icons large blue-text text-darken-2">trending_up</i>
+          <h6>Zysk z serwisu</h6>
+          <h5 id="repairProfit">—</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- LIBS -->
