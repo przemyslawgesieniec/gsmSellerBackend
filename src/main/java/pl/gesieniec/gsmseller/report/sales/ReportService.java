@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,9 @@ import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 import java.math.RoundingMode;
 import pl.gesieniec.gsmseller.phone.stock.StockReportService;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
+import pl.gesieniec.gsmseller.repair.Repair;
+import pl.gesieniec.gsmseller.repair.RepairRepository;
+import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +27,7 @@ import pl.gesieniec.gsmseller.phone.stock.model.Status;
 public class ReportService {
 
     private final StockReportService stockReportService;
+    private final RepairRepository repairRepository;
 
     public SalesSummaryDto getSalesSummary(
         LocalDate from,
@@ -128,4 +134,20 @@ public class ReportService {
             .toList();
     }
 
+    public RepairReportDto getRepairSummary(LocalDate from, LocalDate to) {
+        LocalDateTime fromDt = from.atStartOfDay();
+        LocalDateTime toDt = to.atTime(LocalTime.MAX);
+
+        List<Repair> repairs = repairRepository.findAllByStatusAndCreateDateTimeBetween(RepairStatus.ARCHIWALNA,fromDt, toDt);
+
+        Map<pl.gesieniec.gsmseller.repair.model.RepairStatus, Long> statusCounts = repairs.stream()
+            .collect(Collectors.groupingBy(Repair::getStatus, Collectors.counting()));
+
+        BigDecimal totalProfit = repairs.stream()
+            .filter(r -> r.getRepairPrice() != null)
+            .map(r -> r.getRepairPrice().subtract(Optional.ofNullable(r.getPurchasePrice()).orElse(BigDecimal.ZERO)))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new RepairReportDto((long) repairs.size(), statusCounts, totalProfit);
+    }
 }

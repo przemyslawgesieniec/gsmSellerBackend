@@ -69,5 +69,23 @@ public class ReportController {
         return reportService.getProfitPerDay(from, to);
     }
 
+    @GetMapping("/repair-summary")
+    public RepairReportDto repairSummary(
+        @RequestParam(required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate from,
 
+        @RequestParam(required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate to
+    ) {
+        LocalDate now = LocalDate.now();
+
+        if (from == null || to == null) {
+            from = now.withDayOfMonth(1);
+            to = now.withDayOfMonth(now.lengthOfMonth());
+        }
+
+        return reportService.getRepairSummary(from, to);
+    }
 }
