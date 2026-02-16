@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface LocationRepository extends JpaRepository<LocationEntity, Long> {
     Optional<LocationEntity> findByTechnicalId(UUID technicalId);
+    Optional<LocationEntity> findByName(String name);
 }
 
 

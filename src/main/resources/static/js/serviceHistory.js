@@ -150,11 +150,11 @@ function renderHistory(repairs) {
 
     repairs.forEach(repair => {
         const li = document.createElement('li');
-        const statusColor = getStatusColor(repair.status);
+§        const statusColor = getStatusColor(repair.status, repair.isArchived);
         const handoverDateStr = repair.handoverDate ? new Date(repair.handoverDate).toLocaleDateString() : '---';
         const receiptDateStr = repair.receiptDate ? new Date(repair.receiptDate).toLocaleDateString() : '---';
 
-        const isArchived = repair.status === 'ARCHIWALNA';
+        const isArchived = repair.isArchived;
         const goToBoardBtn = !isArchived ? `
             <button class="btn-small orange darken-2 waves-effect waves-light" onclick="goToBoard('${repair.technicalId}')" style="margin-right: 10px;">
                 <i class="material-icons left">dashboard</i>Do tablicy
@@ -171,7 +171,7 @@ function renderHistory(repairs) {
                 <span class="grey-text hide-on-small-only" style="margin-right: 20px;">
                     Przyjęto: ${receiptDateStr} | Oddano: ${handoverDateStr}
                 </span>
-                <span class="badge ${statusColor} white-text" style="border-radius: 4px; min-width: 100px;">${repair.status}</span>
+                <span class="badge ${statusColor} white-text" style="border-radius: 4px; min-width: 100px;">${repair.isArchived ? 'ARCHIWALNA' : repair.status}</span>
             </div>
             <div class="collapsible-body">
                 <div class="row">
@@ -183,11 +183,11 @@ function renderHistory(repairs) {
                         <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>
                     </div>
                     <div class="col s12 m6">
-                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY', 'ARCHIWALNA'].includes(repair.status) ? `
+                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) && !repair.isArchived ? `
                             <p><b>Koszt szacowany:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '---'}</p>
                         ` : ''}
                         
-                        ${repair.status === 'NAPRAWIONY' || (repair.status === 'ARCHIWALNA' && repair.purchasePrice && repair.purchasePrice > 0) ? `
+                        ${repair.status === 'NAPRAWIONY' || (repair.isArchived && repair.purchasePrice && repair.purchasePrice > 0) ? `
                             <p><b>Koszt naprawy:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '---'}</p>
                             <p><b>Cena dla klienta:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '---'}</p>
                         ` : `
@@ -213,14 +213,14 @@ function goToBoard(technicalId) {
     window.location.href = `repair.html?highlight=${technicalId}`;
 }
 
-function getStatusColor(status) {
+function getStatusColor(status, isArchived) {
+    if (isArchived) return 'blue-grey';
     switch (status) {
         case 'DO_NAPRAWY': return 'blue';
         case 'W_NAPRAWIE': return 'orange';
         case 'NAPRAWIONY': return 'green';
         case 'NIE_DO_NAPRAWY': return 'red';
         case 'ANULOWANY': return 'grey';
-        case 'ARCHIWALNA': return 'blue-grey';
         default: return 'blue';
     }
 }

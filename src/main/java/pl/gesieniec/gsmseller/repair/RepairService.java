@@ -33,6 +33,7 @@ public class RepairService {
     private final RepairRepository repository;
     private final RepairMapper mapper;
     private final RepairPdfService pdfService;
+    private final RepairHandoverPdfService handoverPdfService;
     private final PhoneStockRepository phoneStockRepository;
     private final LocationRepository locationRepository;
     private final RepairClientRepository clientRepository;
@@ -61,7 +62,7 @@ public class RepairService {
         final boolean finalIsAdmin = isAdmin;
 
         return repository.findAll().stream()
-            .filter(r -> r.getStatus() != RepairStatus.ARCHIWALNA)
+            .filter(r -> !r.isArchived())
             .filter(r -> {
                 // Jeśli Admin prosi o konkretną lokalizację (lub puste = wszystkie)
                 if (finalIsAdmin) {
@@ -94,10 +95,10 @@ public class RepairService {
         }
         
         if (List.of(RepairStatus.NAPRAWIONY, RepairStatus.ANULOWANY, RepairStatus.NIE_DO_NAPRAWY).contains(repair.getStatus())) {
-            repair.updateStatus(RepairStatus.ARCHIWALNA);
+            repair.archive();
         }
         
-        return pdfService.generateRepairHandoverPdf(repair);
+        return handoverPdfService.generateRepairHandoverPdf(repair);
     }
 
     @Transactional
@@ -274,6 +275,6 @@ public class RepairService {
 
         repository.save(repair);
         phoneStockRepository.save(phone);
-        repair.updateStatus(RepairStatus.ARCHIWALNA);
+        repair.archive();
     }
 }

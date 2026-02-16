@@ -22,7 +22,6 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -33,19 +32,14 @@ import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 
 @Service
 @RequiredArgsConstructor
-public class RepairPdfService {
+public class RepairHandoverPdfService {
 
     private final LocationRepository locationRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @SneakyThrows
-    public byte[] generateRepairReceiptPdf(Repair repair) {
-        return generatePdf(repair, "POKWITOWANIE PRZYJĘCIA TELEFONU NA SERWIS");
-    }
-
-    @SneakyThrows
-    private byte[] generatePdf(Repair repair, String title) {
+    public byte[] generateRepairHandoverPdf(Repair repair) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         PdfWriter writer = new PdfWriter(out);
@@ -58,22 +52,35 @@ public class RepairPdfService {
         Rectangle pageSize = page.getPageSize();
         float marginH = 50f;
         float marginV = 20f;
+        float middleY = pageSize.getHeight() / 2;
 
         // Egzemplarz 1 (Góra)
         Rectangle rectUpper =
-            new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, pageSize.getHeight() - 2 * marginV);
+            new Rectangle(marginH, middleY + marginV, pageSize.getWidth() - 2 * marginH, middleY - 2 * marginV);
         Canvas canvasUpper = new Canvas(page, rectUpper);
-        drawContent(canvasUpper, repair, title, font, rectUpper, true);
+        canvasUpper.setFont(font);
+        drawContent(canvasUpper, repair, "POTWIERDZENIE ODBIORU URZĄDZENIA Z SERWISU", rectUpper);
         canvasUpper.close();
+
+        // Linia przerywana
+        PdfCanvas pdfCanvas = new PdfCanvas(page);
+        pdfCanvas.setLineDash(3, 3);
+        pdfCanvas.moveTo(0, middleY);
+        pdfCanvas.lineTo(pageSize.getWidth(), middleY);
+        pdfCanvas.stroke();
+
+        // Egzemplarz 2 (Dół)
+        Rectangle rectLower = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, middleY - 2 * marginV);
+        Canvas canvasLower = new Canvas(page, rectLower);
+        drawContent(canvasLower, repair, "POTWIERDZENIE ODBIORU URZĄDZENIA Z SERWISU", rectLower);
+        canvasLower.close();
 
         pdfDoc.close();
         return out.toByteArray();
     }
 
     @SneakyThrows
-    private void drawContent(Canvas canvas, Repair repair, String title, PdfFont font, Rectangle rootRect,
-                             boolean withLegalNote) {
-        canvas.setFont(font);
+    private void drawContent(Canvas canvas, Repair repair, String title, Rectangle rootRect) {
 
         // Logo
         drawLogo(canvas, rootRect);
@@ -86,7 +93,7 @@ public class RepairPdfService {
             .setBold()
             .setFontSize(14)
             .setTextAlignment(TextAlignment.CENTER)
-            .setMarginTop(20));
+            .setMarginTop(10));
 
 
         // Dane urządzenia
@@ -101,7 +108,7 @@ public class RepairPdfService {
             (repair.getManufacturer() != null ? repair.getManufacturer() + " " : "") +
             (repair.getModel() != null ? repair.getModel() : ""));
         addTableRow(table, "IMEI:", repair.getImei());
-        
+
         if (repair.getClient() != null) {
             addTableRow(table, "Klient:", repair.getClient().getName() + " " + repair.getClient().getSurname());
             addTableRow(table, "Tel. klienta:", repair.getClient().getPhoneNumber());
@@ -133,37 +140,6 @@ public class RepairPdfService {
                 .setFontSize(9));
             canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
-        } else {
-            // Domyślnie (np. DO_NAPRAWY - pokwitowanie przyjęcia)
-            canvas.add(new Paragraph("\nOpis uszkodzenia:").setBold().setFontSize(10));
-            canvas.add(new Paragraph(repair.getDamageDescription() != null ? repair.getDamageDescription() : "---")
-                .setFontSize(9));
-
-            Paragraph costParagraph = new Paragraph("Przewidywany koszt: " +
-                (repair.getEstimatedCost() != null ? repair.getEstimatedCost() + " zł" : "do ustalenia"))
-                .setFontSize(10).setBold();
-            if (repair.getAdvancePayment() != null && repair.getAdvancePayment().compareTo(BigDecimal.ZERO) > 0) {
-                costParagraph.add(new Paragraph(" | Zaliczka: " + repair.getAdvancePayment() + " zł").setBold());
-            }
-            canvas.add(costParagraph);
-        }
-
-        // Notka prawna
-        if (withLegalNote) {
-            canvas.add(new Paragraph(
-                "Informujemy że nie ponosimy odpowiedzialności za pozostawione karty sim i karty pamięci w serwisie gsm. " +
-                    "Serwis nie odpowiada za ukryte wady urządzenia, których nie stwierdzono przy przyjęciu sprzętu do naprawy. " +
-                    "Na urządzenie zawilgocone i/lub po ingerencji osób trzecich serwis nie udziela gwarancji na naprawę. " +
-                    "Informuje się , że nie dokonanie odbioru telefonu po 3 miesiącach (90 dni) od momentu poinformowania klienta o możliwości odbioru skutkuje przejęciem telefonu na własność serwisu. " +
-                    "Serwis nie ponosi odpowiedzialności za utratę danych z telefonu , ani dalszych strat , które w wyniku tego mogą nastąpić " +
-                    "Wyrażam zgodę na przetwarzania moich danych osobowych zgodnie z rozporządzeniem o ochronie danych z dnia 27 kwietnia 2016 r., tzw. rozporządzeniem RODO przez firmę Teleakcesoria Paweł Jarocki z siedzibą w Stryków ul. Krótka 5A w celu wykonania zleconych uslug. " +
-                    "Oświadczam, że firma Teleakcesoria Paweł Jarocki poinformowała mnie o dobrowolności podania danych, przysługujących mi prawach w szczególności o prawie dostępu do treści danych ,ich poprawiania i usuwania. " +
-                    "Wyrażam równocześnie zgodę na otrzymywanie od firmy Teleakcesoria Paweł Jarocki informacji dotyczących zleconych usług za pomocą środków komunikacji elektronicznej oraz oświadczam, ze zapoznałem(łam) sie z regulaminem serwisu." +
-                    "Administratorem Twoich danych osobowych jest Teleakcesoria Paweł Jarocki z siedzibą w Stryków ul. Krótka 5A (Administrator Danych Osobowych/ADO). " +
-                    "We wszystkich kwestiach związanych z przetwarzaniem Twoich danych osobowych możesz się skontaktować z ADO poprzez adres poczty elektronicznej teleakcesoriamorena@gmail.com.")
-                .setFontSize(6)
-                .setFontColor(ColorConstants.GRAY)
-                .setMarginTop(10));
         }
 
         // Podpisy
@@ -212,6 +188,7 @@ public class RepairPdfService {
         Table signatureTable = new Table(new float[] {1, 1});
         signatureTable.setWidth(UnitValue.createPercentValue(100));
         
+        // Ustawienie podpisów powyżej stopki (stopka zaczyna się na 45 od dołu prostokąta)
         signatureTable.setFixedPosition(rootRect.getLeft(), rootRect.getBottom() + 65, rootRect.getWidth());
 
         signatureTable.addCell(new Cell().add(new Paragraph("........................................\nPodpis klienta")
@@ -219,7 +196,7 @@ public class RepairPdfService {
         signatureTable.addCell(
             new Cell().add(new Paragraph("........................................\nPieczątka i podpis serwisu")
                 .setTextAlignment(TextAlignment.CENTER).setFontSize(8)).setBorder(Border.NO_BORDER));
-
+        
         canvas.add(signatureTable);
     }
 

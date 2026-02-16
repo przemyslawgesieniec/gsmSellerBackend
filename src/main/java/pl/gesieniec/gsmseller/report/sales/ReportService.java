@@ -151,9 +151,9 @@ public class ReportService {
         LocalDateTime fromDt = from.atStartOfDay();
         LocalDateTime toDt = to.atTime(LocalTime.MAX);
 
-        List<Repair> repairs = repairRepository.findAllByStatusAndCreateDateTimeBetween(RepairStatus.ARCHIWALNA,fromDt, toDt);
+        List<Repair> repairs = repairRepository.findAllByIsArchivedAndCreateDateTimeBetween(true, fromDt, toDt);
 
-        Map<pl.gesieniec.gsmseller.repair.model.RepairStatus, Long> statusCounts = repairs.stream()
+        Map<RepairStatus, Long> statusCounts = repairs.stream()
             .collect(Collectors.groupingBy(Repair::getStatus, Collectors.counting()));
 
         BigDecimal totalProfit = repairs.stream()

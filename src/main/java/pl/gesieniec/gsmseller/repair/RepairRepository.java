@@ -13,5 +13,5 @@ public interface RepairRepository extends JpaRepository<Repair, Long>, JpaSpecif
 
     long countByCreateDateTimeBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
 
-    java.util.List<Repair> findAllByStatusAndCreateDateTimeBetween(RepairStatus repairStatus, java.time.LocalDateTime start, java.time.LocalDateTime end);
+    java.util.List<Repair> findAllByIsArchivedAndCreateDateTimeBetween(boolean isArchived, java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

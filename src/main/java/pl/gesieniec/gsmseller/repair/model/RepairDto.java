@@ -44,6 +44,7 @@ public class RepairDto {
     private List<String> photoUrls;
 
     private RepairStatus status;
+    private boolean isArchived;
     private boolean forCustomer;
     private UUID phoneTechnicalId;
     private LocalDateTime createDateTime;

@@ -12,7 +12,7 @@ public class LocationService {
     private final LocationRepository locationRepository;
 
     public LocationEntity createLocation(LocationRequest request) {
-        LocationEntity locationEntity = new LocationEntity(request.getName(),request.getCity());
+        LocationEntity locationEntity = new LocationEntity(request.getName(), request.getCity(), request.getPhoneNumber());
         return locationRepository.save(locationEntity);
     }
 
@@ -20,6 +20,8 @@ public class LocationService {
         LocationEntity location = getLocationByTechnicalId(technicalId);
 
         location.setName(request.getName());
+        location.setCity(request.getCity());
+        location.setPhoneNumber(request.getPhoneNumber());
 
         return locationRepository.save(location);
     }
@@ -35,7 +37,8 @@ public class LocationService {
             .map(l -> new LocationDto(
                 l.getTechnicalId(),
                 l.getName(),
-                l.getCity()
+                l.getCity(),
+                l.getPhoneNumber()
             ))
             .toList();
     }
