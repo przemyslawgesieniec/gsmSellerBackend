@@ -44,7 +44,16 @@ public class RepairDto {
     private List<String> photoUrls;
 
     private RepairStatus status;
-    private boolean isArchived;
+    private boolean archived;
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
+
     private boolean forCustomer;
     private UUID phoneTechnicalId;
     private LocalDateTime createDateTime;

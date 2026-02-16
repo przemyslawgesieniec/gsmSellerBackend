@@ -12,6 +12,10 @@ public class RepairSpecifications {
         return (root, query, cb) -> status == null ? null : cb.equal(root.get("status"), status);
     }
 
+    public static Specification<Repair> archived(Boolean archived) {
+        return (root, query, cb) -> archived == null ? null : cb.equal(root.get("archived"), archived);
+    }
+
     public static Specification<Repair> hasClientNameOrPhone(String query) {
         return (root, q, cb) -> {
             if (query == null || query.isBlank()) return null;

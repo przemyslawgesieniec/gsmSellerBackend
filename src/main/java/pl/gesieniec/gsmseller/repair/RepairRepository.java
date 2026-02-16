@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 
 @Repository
 public interface RepairRepository extends JpaRepository<Repair, Long>, JpaSpecificationExecutor<Repair> {
@@ -13,5 +12,5 @@ public interface RepairRepository extends JpaRepository<Repair, Long>, JpaSpecif
 
     long countByCreateDateTimeBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
 
-    java.util.List<Repair> findAllByIsArchivedAndCreateDateTimeBetween(boolean isArchived, java.time.LocalDateTime start, java.time.LocalDateTime end);
+    java.util.List<Repair> findAllByArchivedAndCreateDateTimeBetween(boolean archived, java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

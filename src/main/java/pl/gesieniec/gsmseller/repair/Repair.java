@@ -66,7 +66,7 @@ public class Repair {
     private RepairStatus status;
 
     @Column(nullable = false)
-    private boolean isArchived = false;
+    private boolean archived = false;
 
     private LocalDateTime createDateTime;
     private LocalDateTime handoverDate;
@@ -136,9 +136,18 @@ public class Repair {
         this.status = newStatus;
     }
 
+    public boolean isArchived() {
+        return archived;
+    }
+
     public void archive() {
-        this.isArchived = true;
+        this.archived = true;
         this.handoverDate = LocalDateTime.now();
+    }
+
+    public void unarchive() {
+        this.archived = false;
+        this.handoverDate = null;
     }
 
     public void setHandoverDate(LocalDateTime handoverDate) {

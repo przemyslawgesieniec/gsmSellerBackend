@@ -35,17 +35,25 @@
   <!-- Filtry -->
   <div class="card-panel">
     <div class="row" style="margin-bottom: 0;">
-      <div class="input-field col s12 m4">
+      <div class="input-field col s12 m3">
         <i class="material-icons prefix">search</i>
         <input type="text" id="historySearch" class="autocomplete" placeholder="Klient (imię, nazwisko, tel)">
         <label for="historySearch">Wyszukaj</label>
       </div>
-      <div class="input-field col s12 m4">
+      <div class="input-field col s12 m3">
+        <select id="archiveFilter">
+          <option value="all" selected>Wszystkie</option>
+          <option value="true">Tylko archiwalne</option>
+          <option value="false">Tylko aktywne</option>
+        </select>
+        <label>Status archiwum</label>
+      </div>
+      <div class="input-field col s12 m3">
         <i class="material-icons prefix">event</i>
         <input type="text" id="receiptDateRange" class="datepicker" placeholder="Wybierz zakres dat przyjęcia" readonly>
         <label for="receiptDateRange" class="active">Data przyjęcia</label>
       </div>
-      <div class="input-field col s12 m4">
+      <div class="input-field col s12 m3">
         <i class="material-icons prefix">event_available</i>
         <input type="text" id="handoverDateRange" class="datepicker" placeholder="Wybierz zakres dat oddania" readonly>
         <label for="handoverDateRange" class="active">Data oddania</label>

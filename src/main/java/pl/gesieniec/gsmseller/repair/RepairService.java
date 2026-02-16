@@ -228,6 +228,14 @@ public class RepairService {
         return mapper.toDto(repair);
     }
 
+    @Transactional
+    public RepairDto unarchiveRepair(UUID technicalId) {
+        Repair repair = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
+        repair.unarchive();
+        return mapper.toDto(repair);
+    }
+
     @Transactional(readOnly = true)
     public RepairDto getRepair(UUID technicalId) {
         return repository.findByTechnicalId(technicalId)

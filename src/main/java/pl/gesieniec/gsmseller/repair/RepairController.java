@@ -35,6 +35,7 @@ public class RepairController {
     @GetMapping("/history")
     public Page<RepairDto> getHistory(
         @RequestParam(required = false) String query,
+        @RequestParam(required = false) Boolean archived,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateFrom,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateTo,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime handoverDateFrom,
@@ -43,6 +44,7 @@ public class RepairController {
     ) {
         Specification<Repair> spec = Specification.allOf(
             RepairSpecifications.hasClientNameOrPhone(query),
+            RepairSpecifications.archived(archived),
             RepairSpecifications.receiptDateBetween(receiptDateFrom, receiptDateTo),
             RepairSpecifications.handoverDateBetween(handoverDateFrom, handoverDateTo)
         );
@@ -71,6 +73,12 @@ public class RepairController {
     public RepairDto updateStatus(@PathVariable UUID technicalId, @RequestParam RepairStatus status) {
         log.info("Zmiana statusu naprawy {} na {}", technicalId, status);
         return service.updateStatus(technicalId, status);
+    }
+
+    @PatchMapping("/{technicalId}/unarchive")
+    public RepairDto unarchiveRepair(@PathVariable UUID technicalId) {
+        log.info("Przywracanie naprawy z archiwum: {}", technicalId);
+        return service.unarchiveRepair(technicalId);
     }
 
     @GetMapping(value = "/{technicalId}/receipt", produces = MediaType.APPLICATION_PDF_VALUE)

@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
-import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 import java.math.RoundingMode;
 import pl.gesieniec.gsmseller.phone.stock.StockReportService;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
@@ -151,7 +150,7 @@ public class ReportService {
         LocalDateTime fromDt = from.atStartOfDay();
         LocalDateTime toDt = to.atTime(LocalTime.MAX);
 
-        List<Repair> repairs = repairRepository.findAllByIsArchivedAndCreateDateTimeBetween(true, fromDt, toDt);
+        List<Repair> repairs = repairRepository.findAllByArchivedAndCreateDateTimeBetween(true, fromDt, toDt);
 
         Map<RepairStatus, Long> statusCounts = repairs.stream()
             .collect(Collectors.groupingBy(Repair::getStatus, Collectors.counting()));

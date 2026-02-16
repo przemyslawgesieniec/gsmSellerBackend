@@ -5,6 +5,7 @@ let selectedClientsMap = {};
 
 document.addEventListener('DOMContentLoaded', function() {
     M.Collapsible.init(document.querySelectorAll('.collapsible'));
+    M.FormSelect.init(document.querySelectorAll('select'));
     initDatePickers();
     initClientAutocomplete();
     
@@ -18,8 +19,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadHistory();
 
+    document.getElementById('archiveFilter').addEventListener('change', () => {
+        currentPage = 0;
+        loadHistory();
+    });
+
     document.getElementById('clearFiltersBtn').addEventListener('click', () => {
         document.getElementById('historySearch').value = '';
+        document.getElementById('archiveFilter').value = 'all';
+        M.FormSelect.init(document.getElementById('archiveFilter'));
         if (receiptPicker) receiptPicker.clear();
         if (handoverPicker) handoverPicker.clear();
         currentPage = 0;
@@ -97,10 +105,12 @@ function initDatePickers() {
 
 async function loadHistory() {
     const query = document.getElementById('historySearch').value;
+    const archiveFilter = document.getElementById('archiveFilter').value;
     
     let url = `/api/v1/repairs/history?page=${currentPage}&size=${pageSize}&sort=handoverDate,DESC`;
 
     if (query) url += `&query=${encodeURIComponent(query)}`;
+    if (archiveFilter !== 'all') url += `&archived=${archiveFilter}`;
     
     if (receiptPicker && receiptPicker.selectedDates.length === 2) {
         const from = formatDate(receiptPicker.selectedDates[0]);
@@ -150,14 +160,20 @@ function renderHistory(repairs) {
 
     repairs.forEach(repair => {
         const li = document.createElement('li');
-§        const statusColor = getStatusColor(repair.status, repair.isArchived);
+        const statusColor = getStatusColor(repair.status, repair.archived);
         const handoverDateStr = repair.handoverDate ? new Date(repair.handoverDate).toLocaleDateString() : '---';
         const receiptDateStr = repair.receiptDate ? new Date(repair.receiptDate).toLocaleDateString() : '---';
 
-        const isArchived = repair.isArchived;
-        const goToBoardBtn = !isArchived ? `
+        const archived = repair.archived;
+        const goToBoardBtn = !archived ? `
             <button class="btn-small orange darken-2 waves-effect waves-light" onclick="goToBoard('${repair.technicalId}')" style="margin-right: 10px;">
                 <i class="material-icons left">dashboard</i>Do tablicy
+            </button>
+        ` : '';
+
+        const unarchiveBtn = archived ? `
+            <button class="btn-small teal waves-effect waves-light" onclick="unarchiveRepair('${repair.technicalId}')" style="margin-right: 10px;">
+                <i class="material-icons left">unarchive</i>Przywróć
             </button>
         ` : '';
 
@@ -171,7 +187,10 @@ function renderHistory(repairs) {
                 <span class="grey-text hide-on-small-only" style="margin-right: 20px;">
                     Przyjęto: ${receiptDateStr} | Oddano: ${handoverDateStr}
                 </span>
-                <span class="badge ${statusColor} white-text" style="border-radius: 4px; min-width: 100px;">${repair.isArchived ? 'ARCHIWALNA' : repair.status}</span>
+                <span class="badge ${statusColor} white-text" style="border-radius: 4px; min-width: 100px;">
+                    ${repair.archived ? '<i class="material-icons tiny left" style="margin-right: 4px;">archive</i> archiwalna ' : ''}
+                    ${repair.status}
+                </span>
             </div>
             <div class="collapsible-body">
                 <div class="row">
@@ -183,11 +202,11 @@ function renderHistory(repairs) {
                         <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>
                     </div>
                     <div class="col s12 m6">
-                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) && !repair.isArchived ? `
+                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) && !repair.archived ? `
                             <p><b>Koszt szacowany:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '---'}</p>
                         ` : ''}
                         
-                        ${repair.status === 'NAPRAWIONY' || (repair.isArchived && repair.purchasePrice && repair.purchasePrice > 0) ? `
+                        ${repair.status === 'NAPRAWIONY' || (repair.archived && repair.purchasePrice && repair.purchasePrice > 0) ? `
                             <p><b>Koszt naprawy:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '---'}</p>
                             <p><b>Cena dla klienta:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '---'}</p>
                         ` : `
@@ -198,6 +217,7 @@ function renderHistory(repairs) {
                 </div>
                 <div class="right-align">
                     ${goToBoardBtn}
+                    ${unarchiveBtn}
                     <button class="btn-small blue darken-2 waves-effect waves-light" onclick="downloadPdf('${repair.technicalId}')">
                         <i class="material-icons left">description</i>Pobierz dokument
                     </button>
@@ -213,15 +233,37 @@ function goToBoard(technicalId) {
     window.location.href = `repair.html?highlight=${technicalId}`;
 }
 
-function getStatusColor(status, isArchived) {
-    if (isArchived) return 'blue-grey';
+async function unarchiveRepair(technicalId) {
+    if (!confirm('Czy na pewno chcesz przywrócić tę naprawę do aktywnych zleceń?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}/unarchive`, {
+            method: 'PATCH'
+        });
+
+        if (response.ok) {
+            M.toast({html: 'Naprawa została przywrócona', classes: 'green'});
+            loadHistory();
+        } else {
+            const error = await response.text();
+            M.toast({html: 'Błąd: ' + error, classes: 'red'});
+        }
+    } catch (error) {
+        console.error('Error unarchiving repair:', error);
+        M.toast({html: 'Błąd serwera', classes: 'red'});
+    }
+}
+
+function getStatusColor(status, archived) {
     switch (status) {
         case 'DO_NAPRAWY': return 'blue';
         case 'W_NAPRAWIE': return 'orange';
         case 'NAPRAWIONY': return 'green';
         case 'NIE_DO_NAPRAWY': return 'red';
         case 'ANULOWANY': return 'grey';
-        default: return 'blue';
+        default: return archived ? 'blue-grey' : 'blue';
     }
 }
 
