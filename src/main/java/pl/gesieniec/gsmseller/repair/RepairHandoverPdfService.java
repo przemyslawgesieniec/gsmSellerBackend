@@ -96,51 +96,62 @@ public class RepairHandoverPdfService {
             .setMarginTop(10));
 
 
-        // Dane urządzenia
-        canvas.add(new Paragraph("Dane urządzenia:").setBold().setUnderline().setFontSize(10).setMarginTop(5));
+        // Dane urządzenia i szczegóły naprawy w dwóch kolumnach
+        Table layoutTable = new Table(new float[]{1, 1});
+        layoutTable.setWidth(UnitValue.createPercentValue(100));
+        layoutTable.setMarginTop(5);
 
-        float[] colWidths = {120f, 300f};
-        Table table = new Table(colWidths);
-        table.setWidth(UnitValue.createPercentValue(100));
-        table.setFontSize(9);
+        // Lewa kolumna: Dane urządzenia
+        Cell leftCell = new Cell().setBorder(Border.NO_BORDER);
+        leftCell.add(new Paragraph("Dane urządzenia:").setBold().setUnderline().setFontSize(10));
 
-        addTableRow(table, "Urządzenie:", (repair.getDeviceType() != null ? repair.getDeviceType() + " " : "") +
+        float[] deviceTableColWidths = {60f, 150f};
+        Table deviceTable = new Table(deviceTableColWidths);
+        deviceTable.setWidth(UnitValue.createPercentValue(100));
+        deviceTable.setFontSize(9);
+
+        addTableRow(deviceTable, "Urządzenie:", (repair.getDeviceType() != null ? repair.getDeviceType() + " " : "") +
             (repair.getManufacturer() != null ? repair.getManufacturer() + " " : "") +
             (repair.getModel() != null ? repair.getModel() : ""));
-        addTableRow(table, "IMEI:", repair.getImei());
+        addTableRow(deviceTable, "IMEI:", repair.getImei());
 
         if (repair.getClient() != null) {
-            addTableRow(table, "Klient:", repair.getClient().getName() + " " + repair.getClient().getSurname());
-            addTableRow(table, "Tel. klienta:", repair.getClient().getPhoneNumber());
+            addTableRow(deviceTable, "Klient:", repair.getClient().getName() + " " + repair.getClient().getSurname());
+            addTableRow(deviceTable, "Tel. klienta:", repair.getClient().getPhoneNumber());
         }
+        leftCell.add(deviceTable);
+        layoutTable.addCell(leftCell);
 
-        canvas.add(table);
+        // Prawa kolumna: Opis naprawy i status
+        Cell rightCell = new Cell().setBorder(Border.NO_BORDER).setPaddingLeft(20);
 
-        // Status-specific content
         if (repair.getStatus() == RepairStatus.NAPRAWIONY) {
-            canvas.add(new Paragraph("\nOpis naprawy:").setBold().setFontSize(10));
-            canvas.add(
+            rightCell.add(new Paragraph("Opis naprawy:").setBold().setFontSize(10));
+            rightCell.add(
                 new Paragraph(repair.getRepairOrderDescription() != null ? repair.getRepairOrderDescription() : "---")
                     .setFontSize(9));
             if (repair.getRepairPrice() != null) {
-                canvas.add(new Paragraph("Koszt naprawy: " + repair.getRepairPrice() + " zł")
+                rightCell.add(new Paragraph("Koszt naprawy: " + repair.getRepairPrice() + " zł")
                     .setBold().setFontSize(10));
             }
-            canvas.add(new Paragraph("\nPotwierdzam odbiór sprawnego urządzenia.")
+            rightCell.add(new Paragraph("\nPotwierdzam odbiór sprawnego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.ANULOWANY) {
-            canvas.add(new Paragraph("\nStatus: ANULOWANO").setBold().setFontSize(10));
-            canvas.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
+            rightCell.add(new Paragraph("Status: ANULOWANO").setBold().setFontSize(10));
+            rightCell.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
                 .setFontSize(9));
-            canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
+            rightCell.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.NIE_DO_NAPRAWY) {
-            canvas.add(new Paragraph("\nStatus: NIE DO NAPRAWY").setBold().setFontSize(10));
-            canvas.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
+            rightCell.add(new Paragraph("Status: NIE DO NAPRAWY").setBold().setFontSize(10));
+            rightCell.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
                 .setFontSize(9));
-            canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
+            rightCell.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
         }
+        layoutTable.addCell(rightCell);
+
+        canvas.add(layoutTable);
 
         // Podpisy
         drawSignatures(canvas, rootRect);
