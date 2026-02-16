@@ -62,6 +62,14 @@ public class RepairHandoverPdfService {
         drawContent(canvasUpper, repair, "POTWIERDZENIE ODBIORU URZĄDZENIA Z SERWISU", rectUpper);
         canvasUpper.close();
 
+        // Egzemplarz 2 (Dół)
+        Rectangle rectLower = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, middleY - 2 * marginV);
+        Canvas canvasLower = new Canvas(page, rectLower);
+        canvasLower.setFont(font);
+        drawContent(canvasLower, repair, "POTWIERDZENIE ODBIORU URZĄDZENIA Z SERWISU", rectLower);
+        canvasLower.close();
+
+
         // Linia przerywana
         PdfCanvas pdfCanvas = new PdfCanvas(page);
         pdfCanvas.setLineDash(3, 3);
@@ -69,11 +77,6 @@ public class RepairHandoverPdfService {
         pdfCanvas.lineTo(pageSize.getWidth(), middleY);
         pdfCanvas.stroke();
 
-        // Egzemplarz 2 (Dół)
-        Rectangle rectLower = new Rectangle(marginH, marginV, pageSize.getWidth() - 2 * marginH, middleY - 2 * marginV);
-        Canvas canvasLower = new Canvas(page, rectLower);
-        drawContent(canvasLower, repair, "POTWIERDZENIE ODBIORU URZĄDZENIA Z SERWISU", rectLower);
-        canvasLower.close();
 
         pdfDoc.close();
         return out.toByteArray();
