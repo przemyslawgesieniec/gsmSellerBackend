@@ -157,6 +157,7 @@ public class ReportService {
 
         BigDecimal totalProfit = repairs.stream()
             .filter(r -> r.getRepairPrice() != null)
+            .filter(Repair::isForCustomer)
             .map(r -> r.getRepairPrice().subtract(Optional.ofNullable(r.getPurchasePrice()).orElse(BigDecimal.ZERO)))
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
