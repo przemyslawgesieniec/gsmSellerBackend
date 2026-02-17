@@ -15,6 +15,7 @@ import pl.gesieniec.gsmseller.phone.stock.PhoneStockService;
 import java.math.RoundingMode;
 import pl.gesieniec.gsmseller.phone.stock.StockReportService;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
+import pl.gesieniec.gsmseller.receipt.ReceiptRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ import pl.gesieniec.gsmseller.phone.stock.model.Status;
 public class ReportService {
 
     private final StockReportService stockReportService;
+    private final ReceiptRepository receiptRepository;
 
     public SalesSummaryDto getSalesSummary(
         LocalDate from,
@@ -50,11 +52,17 @@ public class ReportService {
                 .multiply(BigDecimal.valueOf(100));
         }
 
+        BigDecimal miscGrossAmount = receiptRepository.sumMiscGrossAmountBetween(fromDate, toDate);
+        if (miscGrossAmount == null) {
+            miscGrossAmount = BigDecimal.ZERO;
+        }
+
         return new SalesSummaryDto(
             turnover,
             cost,
             profit,
-            marginPercent
+            marginPercent,
+            miscGrossAmount
         );
     }
 
@@ -87,12 +95,18 @@ public class ReportService {
                 .multiply(BigDecimal.valueOf(100));
         }
 
+        BigDecimal miscGrossAmount = receiptRepository.sumMiscGrossAmountBetween(fromDate, toDate);
+        if (miscGrossAmount == null) {
+            miscGrossAmount = BigDecimal.ZERO;
+        }
+
         // ===== magazyn / aktywność =====
         return new SalesDashboardDto(
             turnover,
             cost,
             profit,
             marginPercent,
+            miscGrossAmount,
 
             stockReportService.getStockCount(),
             stockReportService.getStockValue(),

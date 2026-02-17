@@ -9,6 +9,7 @@ public record SalesDashboardDto(
     BigDecimal cost,
     BigDecimal profit,
     BigDecimal marginPercent,
+    BigDecimal miscGrossAmount,
 
     // magazyn
     long stockCount,

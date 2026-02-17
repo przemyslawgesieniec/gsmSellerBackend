@@ -47,6 +47,7 @@ function loadSalesSummary(from, to) {
             setText("turnover", formatCurrency(data.turnover));
             setText("cost", formatCurrency(data.cost));
             setText("profit", formatCurrency(data.profit));
+            setText("miscGrossAmount", formatCurrency(data.miscGrossAmount));
         })
         .catch(err => console.error("Sales summary error", err));
 }
@@ -66,6 +67,7 @@ function loadDashboard() {
             setText("soldTodayCount", d.soldTodayCount);
             setText("todayTurnover", formatCurrency(d.todayTurnover));
             setText("todayProfit", formatCurrency(d.todayProfit));
+            setText("miscGrossAmount", formatCurrency(d.miscGrossAmount));
         })
         .catch(err => console.error("Dashboard error", err));
 }

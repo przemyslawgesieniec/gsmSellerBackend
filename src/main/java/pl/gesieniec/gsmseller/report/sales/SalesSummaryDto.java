@@ -6,5 +6,6 @@ public record SalesSummaryDto(
     BigDecimal turnover,
     BigDecimal cost,
     BigDecimal profit,
-    BigDecimal marginPercent
+    BigDecimal marginPercent,
+    BigDecimal miscGrossAmount
 ) {}
