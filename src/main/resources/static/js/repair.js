@@ -307,8 +307,15 @@ function createCard(repair) {
         'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
     };
     const statusLabel = statusLabels[repair.status] || '';
-    const clientDisplay = repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta';
-    const clientPhone = repair.clientPhoneNumber ? repair.clientPhoneNumber : '-';
+    
+    let clientSection = `
+        <p><b>Klient:</b> ${repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta'}</p>
+        <p><b>Tel:</b> ${repair.clientPhoneNumber ? repair.clientPhoneNumber : '-'}</p>
+    `;
+    
+    if (repair.forCustomer === false) {
+        clientSection = `<p class="blue-text text-darken-2"><b>Naprawa własna</b></p>`;
+    }
 
     div.innerHTML = `
         <div class="card-content">
@@ -326,8 +333,7 @@ function createCard(repair) {
                 <br>
                 <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
             </span>
-            <p><b>Klient:</b> ${clientDisplay}</p>
-            <p><b>Tel:</b> ${clientPhone}</p>
+            ${clientSection}
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
             <div class="divider" style="margin: 5px 0;"></div>
             ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
@@ -407,8 +413,15 @@ function createMobileCard(repair) {
         'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
     };
     const statusLabel = statusLabels[repair.status] || '';
-    const clientDisplay = repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta';
-    const clientPhone = repair.clientPhoneNumber ? repair.clientPhoneNumber : '-';
+    
+    let clientSection = `
+        <p><b>Klient:</b> ${repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta'}</p>
+        <p><b>Tel:</b> ${repair.clientPhoneNumber ? repair.clientPhoneNumber : '-'}</p>
+    `;
+    
+    if (repair.forCustomer === false) {
+        clientSection = `<p class="blue-text text-darken-2"><b>Naprawa własna</b></p>`;
+    }
 
     div.innerHTML = `
         <div class="card z-depth-1 status-${repair.status} ${overdueClass}" onclick="openRepairDetails('${repair.technicalId}')">
@@ -427,8 +440,7 @@ function createMobileCard(repair) {
                     <br>
                     <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
                 </span>
-                <p><b>Klient:</b> ${clientDisplay}</p>
-                <p><b>Tel:</b> ${clientPhone}</p>
+                ${clientSection}
                 <div class="row" style="margin-bottom: 0;">
                     <div class="col s6">
                         <p><b>IMEI:</b> ${repair.imei || '-'}</p>
@@ -525,6 +537,35 @@ window.drop = async function(ev) {
         // Fill pre-filled fields
         document.getElementById('finalAdvancePayment').value = repair.advancePayment || 0;
         document.getElementById('finalEstimatedCost').value = repair.estimatedCost || 0;
+
+        // Custom logic for shop repairs (forCustomer === false)
+        const statusSelectionWrapper = document.getElementById('finalStatusSelectionWrapper');
+        const finishedCustomerFields = document.getElementById('repairFinishedCustomerFields');
+        const customerPriceWrapper = document.getElementById('finalCustomerPriceWrapper');
+        const realCostWrapper = document.getElementById('finalRealCostWrapper');
+
+        if (repair.forCustomer === false) {
+            // Hide status selection and set it to NAPRAWIONY automatically
+            statusSelectionWrapper.style.display = 'none';
+            document.getElementById('finalStatusSelect').value = 'NAPRAWIONY';
+            
+            // Show repair section but hide customer specific fields
+            document.getElementById('repairFinishedSection').style.display = 'block';
+            finishedCustomerFields.style.display = 'none';
+            customerPriceWrapper.style.display = 'none';
+            
+            // Adjust real cost field layout to full width or just keep it
+            realCostWrapper.className = 'input-field col s12';
+            document.querySelector('#finalRealCostWrapper label').innerText = 'Całkowity koszt naprawy';
+        } else {
+            // Restore default view for customer repairs
+            statusSelectionWrapper.style.display = 'block';
+            finishedCustomerFields.style.display = 'flex';
+            customerPriceWrapper.style.display = 'block';
+            realCostWrapper.className = 'input-field col s12 m6';
+            document.querySelector('#finalRealCostWrapper label').innerText = 'Realny koszt naprawy (koszt części itp.)';
+        }
+
         M.updateTextFields();
 
         M.Modal.getInstance(document.getElementById('statusSelectionModal')).open();
@@ -589,13 +630,21 @@ async function handleFinalizeStatus() {
         const realCost = document.getElementById('finalRealCost').value;
         const customerPrice = document.getElementById('finalCustomerPrice').value;
 
-        if (!realCost || !customerPrice) {
-            M.toast({html: 'Podaj wszystkie koszty', classes: 'orange'});
-            return;
+        if (repair.forCustomer === false) {
+            if (!realCost) {
+                M.toast({html: 'Podaj całkowity koszt naprawy', classes: 'orange'});
+                return;
+            }
+            updateData.purchasePrice = realCost;
+            updateData.repairPrice = 0; // Or whatever is appropriate for shop repairs
+        } else {
+            if (!realCost || !customerPrice) {
+                M.toast({html: 'Podaj wszystkie koszty', classes: 'orange'});
+                return;
+            }
+            updateData.purchasePrice = realCost;
+            updateData.repairPrice = customerPrice;
         }
-
-        updateData.purchasePrice = realCost;
-        updateData.repairPrice = customerPrice;
     } else {
         const diagnosticCost = document.getElementById('diagnosticCost').value;
         if (!diagnosticCost) {
@@ -645,6 +694,15 @@ async function openRepairDetails(technicalId) {
     document.getElementById('isForCustomer').value = repair.forCustomer;
     document.getElementById('phoneTechnicalId').value = repair.phoneTechnicalId || '';
     
+    // Obsługa widoczności sekcji klienta dla napraw własnych
+    if (repair.forCustomer === false) {
+        document.getElementById('repairClientSectionWrapper').style.display = 'none';
+        document.getElementById('ownRepairInfo').style.display = 'block';
+    } else {
+        document.getElementById('repairClientSectionWrapper').style.display = 'block';
+        document.getElementById('ownRepairInfo').style.display = 'none';
+    }
+
     if (repair.businessId) {
         document.getElementById('rmaDisplay').style.display = 'block';
         document.getElementById('repairRma').value = repair.businessId;
@@ -837,6 +895,8 @@ function resetForm() {
     document.getElementById('clientSearch').value = '';
     document.getElementById('repairFinalPriceWrapper').style.display = 'none';
     document.getElementById('shopRepairFields').style.display = 'none';
+    document.getElementById('repairClientSectionWrapper').style.display = 'block';
+    document.getElementById('ownRepairInfo').style.display = 'none';
     document.getElementById('isForCustomer').value = 'true';
     document.getElementById('phoneTechnicalId').value = '';
     
@@ -916,19 +976,15 @@ window.openRestoreModal = function(technicalId) {
     if (!repair) return;
 
     document.getElementById('restoreRepairId').value = technicalId;
-    document.getElementById('restoreRepairPrice').value = repair.repairPrice || '';
-    document.getElementById('restoreSellingPrice').value = repair.purchasePrice || ''; // TODO: check if we should prefill with phone's selling price
-    
-    // Actually, the requirement says: pre-filled with "selling price" from the moment of adding.
-    // We need to fetch the associated phone to get its selling price if we want to be accurate, 
-    // but the repair object currently only stores purchasePrice.
-    // Let's fetch the phone if phoneTechn  icalId is present.
+    document.getElementById('restoreRepairPrice').value = repair.purchasePrice || '';
+    document.getElementById('restorePurchasePrice').value = ''; 
     
     if (repair.phoneTechnicalId) {
         fetch(`/api/v1/phones/${repair.phoneTechnicalId}`)
             .then(res => res.json())
             .then(phone => {
                 document.getElementById('restoreSellingPrice').value = phone.sellingPrice;
+                document.getElementById('restorePurchasePrice').value = phone.purchasePrice;
                 M.updateTextFields();
             })
             .catch(err => console.error('Błąd pobierania danych telefonu', err));
