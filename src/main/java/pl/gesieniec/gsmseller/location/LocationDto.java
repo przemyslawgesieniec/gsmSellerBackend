@@ -10,4 +10,5 @@ public class LocationDto {
     private UUID technicalId;
     private String name;
     private String city;
+    private String phoneNumber;
 }

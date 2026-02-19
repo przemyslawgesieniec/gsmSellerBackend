@@ -1,0 +1,192 @@
+package pl.gesieniec.gsmseller.repair;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import pl.gesieniec.gsmseller.repair.client.RepairClient;
+import pl.gesieniec.gsmseller.repair.model.RepairStatus;
+
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Entity
+@Table(name = "repairs")
+public class Repair {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private UUID technicalId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id")
+    private RepairClient client;
+
+    private String manufacturer;
+    private String model;
+    private String imei;
+    private String deviceType;
+
+    private String deviceCondition;
+    private String problemDescription;
+    private String remarks;
+
+    private boolean moistureTraces;
+    private boolean warrantyRepair;
+    private boolean turnsOn;
+    private boolean anonymous;
+
+    private String lockCode;
+
+    private LocalDateTime receiptDate;
+    private LocalDateTime estimatedRepairDate;
+    private BigDecimal estimatedCost;
+    private BigDecimal advancePayment;
+    private String businessId;
+
+    @Column(nullable = false)
+    private boolean forCustomer;
+
+    private UUID phoneTechnicalId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RepairStatus status;
+
+    @Column(nullable = false)
+    private boolean archived = false;
+
+    private LocalDateTime createDateTime;
+    private LocalDateTime handoverDate;
+
+    private BigDecimal purchasePrice;
+    private BigDecimal repairPrice;
+    private String location;
+    private String repairDescription;
+
+    private Repair(RepairClient client, String manufacturer, String model, String imei, String deviceType,
+                  String deviceCondition, String problemDescription, String remarks,
+                  boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
+                  String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
+                  BigDecimal estimatedCost, BigDecimal advancePayment, boolean isForCustomer, UUID phoneTechnicalId,
+                  BigDecimal purchasePrice, BigDecimal repairPrice, String businessId, String location, String repairDescription) {
+        this.technicalId = UUID.randomUUID();
+        this.client = client;
+        this.manufacturer = manufacturer;
+        this.model = model;
+        this.imei = imei;
+        this.deviceType = deviceType;
+        this.deviceCondition = deviceCondition;
+        this.problemDescription = problemDescription;
+        this.remarks = remarks;
+        this.moistureTraces = moistureTraces;
+        this.warrantyRepair = warrantyRepair;
+        this.turnsOn = turnsOn;
+        this.anonymous = anonymous;
+        this.lockCode = lockCode;
+        this.receiptDate = receiptDate != null ? receiptDate : LocalDateTime.now();
+        this.estimatedRepairDate = estimatedRepairDate != null ? estimatedRepairDate : LocalDateTime.now().plusDays(7);
+        this.estimatedCost = estimatedCost;
+        this.advancePayment = advancePayment;
+        this.businessId = businessId;
+        this.forCustomer = isForCustomer;
+        this.phoneTechnicalId = phoneTechnicalId;
+        this.purchasePrice = purchasePrice;
+        this.repairPrice = repairPrice;
+        this.status = RepairStatus.DO_NAPRAWY;
+        this.createDateTime = LocalDateTime.now();
+        this.location = location;
+        this.repairDescription = repairDescription;
+    }
+
+    public static Repair create(RepairClient client, String manufacturer, String model, String imei, String deviceType,
+                               String deviceCondition, String problemDescription, String remarks,
+                               boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
+                               String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
+                               BigDecimal estimatedCost, BigDecimal advancePayment, UUID phoneTechnicalId,
+                               BigDecimal purchasePrice, BigDecimal repairPrice, String businessId, String location, String repairDescription) {
+        return new Repair(client, manufacturer, model, imei, deviceType, deviceCondition, problemDescription, remarks,
+                moistureTraces, warrantyRepair, turnsOn, anonymous, lockCode, receiptDate, estimatedRepairDate,
+                estimatedCost, advancePayment, true, phoneTechnicalId, purchasePrice, repairPrice, businessId, location, repairDescription);
+    }
+
+    public static Repair createInHouseRepair(String model, String imei,
+                                            BigDecimal purchasePrice, BigDecimal repairPrice,
+                                            String problemDescription, String deviceCondition,
+                                            String lockCode, UUID phoneTechnicalId, String businessId, String location) {
+        return new Repair(null, null, model, imei, "TELEFON", deviceCondition, problemDescription, null,
+                false, false, false, false, lockCode, null, null, null, null, false,
+                phoneTechnicalId, purchasePrice, repairPrice, businessId, location, null);
+    }
+
+    public void updateStatus(RepairStatus newStatus) {
+        this.status = newStatus;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void archive() {
+        this.archived = true;
+        this.handoverDate = LocalDateTime.now();
+    }
+
+    public void unarchive() {
+        this.archived = false;
+        this.handoverDate = null;
+    }
+
+    public void setHandoverDate(LocalDateTime handoverDate) {
+        this.handoverDate = handoverDate;
+    }
+
+    public void update(RepairClient client, String manufacturer, String model, String imei, String deviceType,
+                       String deviceCondition, String problemDescription, String remarks,
+                       Boolean moistureTraces, Boolean warrantyRepair, Boolean turnsOn, Boolean anonymous,
+                       String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
+                       BigDecimal estimatedCost, BigDecimal advancePayment, UUID phoneTechnicalId,
+                       BigDecimal purchasePrice, BigDecimal repairPrice, String location, String repairDescription) {
+        this.client = client;
+        if (manufacturer != null) this.manufacturer = manufacturer;
+        if (model != null) this.model = model;
+        if (imei != null) this.imei = imei;
+        if (deviceType != null) this.deviceType = deviceType;
+        if (deviceCondition != null) this.deviceCondition = deviceCondition;
+        if (problemDescription != null) this.problemDescription = problemDescription;
+        if (remarks != null) this.remarks = remarks;
+        if (moistureTraces != null) this.moistureTraces = moistureTraces;
+        if (warrantyRepair != null) this.warrantyRepair = warrantyRepair;
+        if (turnsOn != null) this.turnsOn = turnsOn;
+        if (anonymous != null) this.anonymous = anonymous;
+        if (lockCode != null) this.lockCode = lockCode;
+        if (receiptDate != null) this.receiptDate = receiptDate;
+        if (estimatedRepairDate != null) this.estimatedRepairDate = estimatedRepairDate;
+        if (estimatedCost != null) this.estimatedCost = estimatedCost;
+        if (advancePayment != null) this.advancePayment = advancePayment;
+        if (phoneTechnicalId != null) this.phoneTechnicalId = phoneTechnicalId;
+        if (purchasePrice != null) this.purchasePrice = purchasePrice;
+        if (repairPrice != null) this.repairPrice = repairPrice;
+        if (location != null) this.location = location;
+        if (repairDescription != null) this.repairDescription = repairDescription;
+    }
+
+    public String getDamageDescription() {
+        return problemDescription;
+    }
+
+    public String getRepairOrderDescription() {
+        return remarks;
+    }
+
+    public String getPinPassword() {
+        return lockCode;
+    }
+}

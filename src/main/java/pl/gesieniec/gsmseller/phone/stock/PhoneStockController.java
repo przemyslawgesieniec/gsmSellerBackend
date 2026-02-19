@@ -55,6 +55,11 @@ public class PhoneStockController {
     }
 
 
+    @GetMapping("/{technicalId}")
+    public PhoneStockDto getPhone(@PathVariable UUID technicalId) {
+        return service.getByTechnicalId(technicalId);
+    }
+
     @PatchMapping("/{technicalId}")
     public PhoneStockDto updatePhone(
         @PathVariable UUID technicalId,

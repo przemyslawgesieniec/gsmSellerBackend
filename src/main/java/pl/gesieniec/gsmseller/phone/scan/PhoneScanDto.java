@@ -35,6 +35,8 @@ public class PhoneScanDto {
     private String batteryCondition;
     @Setter
     private boolean used;
+    @Setter
+    private boolean damaged;
 
 
     public PhoneScanDto(String model, String ram, String memory, String color, String imei) {

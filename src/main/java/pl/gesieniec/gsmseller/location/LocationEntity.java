@@ -22,10 +22,12 @@ public class LocationEntity {
     private String name;
 
     private String city;
+    private String phoneNumber;
 
-    public LocationEntity(String name, String city) {
+    public LocationEntity(String name, String city, String phoneNumber) {
         this.technicalId = UUID.randomUUID();
         this.name = name;
         this.city = city;
+        this.phoneNumber = phoneNumber;
     }
 }

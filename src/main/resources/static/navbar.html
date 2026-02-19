@@ -16,6 +16,22 @@
   </li>
 </ul>
 
+<ul id="dropdown-serwis" class="dropdown-content custom-dropdown">
+  <li>
+    <a href="repair.html" class="dropdown-item">
+      <i class="material-icons left">build</i>
+      Bieżący serwis
+    </a>
+  </li>
+  <li class="divider"></li>
+  <li>
+    <a href="serviceHistory.html" class="dropdown-item">
+      <i class="material-icons left">history</i>
+      Historia serwisu
+    </a>
+  </li>
+</ul>
+
 <!-- NAVBAR -->
 <nav class="custom-navbar ">
   <div class="nav-wrapper">
@@ -30,11 +46,11 @@
     <ul class="right hide-on-med-and-down">
 
       <li><a href="index.html">
-        <i class="material-icons left">inventory_2</i> Stan magazynowy
+        <i class="material-icons left">inventory_2</i> Magazyn
       </a></li>
 
       <li><a href="addPhones.html">
-        <i class="material-icons left">add_circle</i> Dodaj telefon
+        <i class="material-icons left">add_circle</i> Telefon
       </a></li>
 
       <li>
@@ -48,6 +64,13 @@
         <a href="/reports.html">
           <i class="material-icons left">bar_chart</i>
           Raporty
+        </a>
+      </li>
+
+      <li>
+        <a class="dropdown-trigger" href="#!" data-target="dropdown-serwis">
+          <i class="material-icons left">build</i> Serwis
+          <i class="material-icons right">arrow_drop_down</i>
         </a>
       </li>
 
@@ -65,7 +88,6 @@
           </button>
         </form>
       </li>
-
     </ul>
   </div>
 </nav>
@@ -83,7 +105,7 @@
     <li>
       <a href="index.html">
         <i class="material-icons">inventory_2</i>
-        Stan magazynowy
+        Magazyn
       </a>
     </li>
 
@@ -91,7 +113,7 @@
   <li>
     <a href="addPhones.html">
       <i class="material-icons">add_circle</i>
-      Dodaj telefon
+      Dodaj
     </a>
   </li>
 
@@ -119,6 +141,26 @@
     <a href="reports.html">
       <i class="material-icons">bar_chart</i>
       Raporty
+    </a>
+  </li>
+
+  <!-- NAGŁÓWEK SEKCJI SERWISU -->
+  <li class="sidenav-section">
+    Serwis
+  </li>
+
+  <!-- PODOPCJE Z WCIECIEM -->
+  <li class="mobile-subitem">
+    <a href="repair.html">
+      <i class="material-icons">build</i>
+      Tablica serwisowa
+    </a>
+  </li>
+
+  <li class="mobile-subitem">
+    <a href="serviceHistory.html">
+      <i class="material-icons">history</i>
+      Wszystkie naprawy
     </a>
   </li>
 

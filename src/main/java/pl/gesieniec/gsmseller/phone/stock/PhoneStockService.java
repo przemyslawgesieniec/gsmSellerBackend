@@ -26,6 +26,8 @@ import pl.gesieniec.gsmseller.phone.stock.handler.PhoneSoldHandler;
 import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
+import pl.gesieniec.gsmseller.repair.Repair;
+import pl.gesieniec.gsmseller.repair.RepairRepository;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 
@@ -38,6 +40,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     private final PhoneStockMapper phoneStockMapper;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RepairRepository repairRepository;
+    private final pl.gesieniec.gsmseller.repair.RepairService repairService;
 
 
     public PhoneStockDto getByTechnicalId(UUID id) {
@@ -106,14 +110,34 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             .map(User::getLocation)
             .orElse(null);
 
-        phoneScanDtoList.stream()
-            .map(phoneStockMapper::toPhoneStock)
-            .forEach(entity -> {
-                if (locationEntity != null) {
-                    entity.acceptAtLocation(locationEntity);
-                }
-                repository.save(entity);
-            });
+        phoneScanDtoList.forEach(dto -> {
+            PhoneStock entity = phoneStockMapper.toPhoneStock(dto);
+            if (locationEntity != null) {
+                entity.acceptAtLocation(locationEntity);
+            }
+
+            if (dto.isDamaged()) {
+                entity.moveToService();
+            }
+
+            repository.save(entity);
+
+            if (dto.isDamaged()) {
+                Repair repair = Repair.createInHouseRepair(
+                    entity.getModel(),
+                    entity.getImei(),
+                    entity.getPurchasePrice(),
+                    null, // repairPrice not known yet
+                    "Telefon dodany jako uszkodzony",
+                    null,
+                    null,
+                    entity.getTechnicalId(),
+                    repairService.getNextBusinessId(),
+                    locationEntity != null ? locationEntity.getName() : null
+                );
+                repairRepository.save(repair);
+            }
+        });
     }
 
     @Override
@@ -265,7 +289,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
         return repository.findImeisByStatusIn(
             imeis,
-            List.of(Status.DOSTĘPNY, Status.WPROWADZONY)
+            List.of(Status.DOSTĘPNY, Status.WPROWADZONY, Status.SERWIS)
         );
     }
 

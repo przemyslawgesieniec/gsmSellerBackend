@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archiwalny serwis</title>
+
+  <!-- Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Flatpickr (calendar range picker) -->
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+
+  <!-- Nasze style -->
+  <link href="css/style.css" rel="stylesheet">
+  <style>
+    .collapsible-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .p-10 { padding: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
+
+<div class="container wide-layout">
+  <h4 class="center-align">Archiwalny serwis</h4>
+
+  <!-- Filtry -->
+  <div class="card-panel">
+    <div class="row" style="margin-bottom: 0;">
+      <div class="input-field col s12 m3">
+        <i class="material-icons prefix">search</i>
+        <input type="text" id="historySearch" class="autocomplete" placeholder="Klient (imię, nazwisko, tel)">
+        <label for="historySearch">Wyszukaj</label>
+      </div>
+      <div class="input-field col s12 m3">
+        <select id="archiveFilter">
+          <option value="all" selected>Wszystkie</option>
+          <option value="true">Tylko archiwalne</option>
+          <option value="false">Tylko aktywne</option>
+        </select>
+        <label>Status archiwum</label>
+      </div>
+      <div class="input-field col s12 m3">
+        <i class="material-icons prefix">event</i>
+        <input type="text" id="receiptDateRange" class="datepicker" placeholder="Wybierz zakres dat przyjęcia" readonly>
+        <label for="receiptDateRange" class="active">Data przyjęcia</label>
+      </div>
+      <div class="input-field col s12 m3">
+        <i class="material-icons prefix">event_available</i>
+        <input type="text" id="handoverDateRange" class="datepicker" placeholder="Wybierz zakres dat oddania" readonly>
+        <label for="handoverDateRange" class="active">Data oddania</label>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom: 0;">
+      <div class="col s12 right-align">
+        <button class="btn waves-effect waves-light grey" id="clearFiltersBtn">Wyczyść</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista napraw -->
+  <ul class="collapsible" id="historyCollapsible">
+    <!-- Tu trafią elementy historii -->
+  </ul>
+
+  <!-- Paginacja -->
+  <div id="paginationContainer" class="center-align" style="margin-top: 20px;"></div>
+</div>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<!-- Flatpickr -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pl.js"></script>
+<script src="js/serviceHistory.js"></script>
+
+</body>
+</html>
