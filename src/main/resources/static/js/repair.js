@@ -629,6 +629,7 @@ async function handleFinalizeStatus() {
     if (status === 'NAPRAWIONY') {
         const realCost = document.getElementById('finalRealCost').value;
         const customerPrice = document.getElementById('finalCustomerPrice').value;
+        updateData.repairDescription = document.getElementById('repairDescriptionFinished').value;
 
         if (repair.forCustomer === false) {
             if (!realCost) {
@@ -647,6 +648,7 @@ async function handleFinalizeStatus() {
         }
     } else {
         const diagnosticCost = document.getElementById('diagnosticCost').value;
+        updateData.repairDescription = document.getElementById('repairDescriptionDiagnostic').value;
         if (!diagnosticCost) {
             M.toast({html: 'Podaj koszt diagnostyki', classes: 'orange'});
             return;

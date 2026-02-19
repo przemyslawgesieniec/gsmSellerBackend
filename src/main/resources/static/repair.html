@@ -477,9 +477,13 @@
     <!-- Sekcja dla Nie do naprawy / Anulowany -->
     <div id="diagnosticCostSection" style="display: none;">
       <div class="row">
-        <div class="input-field col s12">
+        <div class="input-field col s12 m6">
           <input id="diagnosticCost" type="number" step="0.01" value="70">
           <label for="diagnosticCost" class="active">Koszt diagnostyki (zł)</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <textarea id="repairDescriptionDiagnostic" class="materialize-textarea"></textarea>
+          <label for="repairDescriptionDiagnostic">Opis naprawy (widoczny na pokwitowaniu)</label>
         </div>
       </div>
     </div>
@@ -504,6 +508,12 @@
         <div class="input-field col s12 m6" id="finalCustomerPriceWrapper">
           <input id="finalCustomerPrice" type="number" step="0.01">
           <label for="finalCustomerPrice">Cena dla klienta (suma)</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-field col s12">
+          <textarea id="repairDescriptionFinished" class="materialize-textarea"></textarea>
+          <label for="repairDescriptionFinished">Opis naprawy (widoczny na pokwitowaniu)</label>
         </div>
       </div>
     </div>

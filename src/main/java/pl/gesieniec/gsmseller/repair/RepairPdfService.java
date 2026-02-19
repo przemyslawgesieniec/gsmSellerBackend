@@ -112,9 +112,11 @@ public class RepairPdfService {
         // Status-specific content
         if (repair.getStatus() == RepairStatus.NAPRAWIONY) {
             canvas.add(new Paragraph("\nOpis naprawy:").setBold().setFontSize(10));
-            canvas.add(
-                new Paragraph(repair.getRepairOrderDescription() != null ? repair.getRepairOrderDescription() : "---")
-                    .setFontSize(9));
+            String description = repair.getRepairDescription();
+            if (description == null || description.isBlank()) {
+                description = repair.getRepairOrderDescription() != null ? repair.getRepairOrderDescription() : "---";
+            }
+            canvas.add(new Paragraph(description).setFontSize(9));
             if (repair.getRepairPrice() != null) {
                 canvas.add(new Paragraph("Koszt naprawy: " + repair.getRepairPrice() + " zł")
                     .setBold().setFontSize(10));
@@ -123,14 +125,22 @@ public class RepairPdfService {
                 .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.ANULOWANY) {
             canvas.add(new Paragraph("\nStatus: ANULOWANO").setBold().setFontSize(10));
-            canvas.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
-                .setFontSize(9));
+            if (repair.getRepairDescription() != null && !repair.getRepairDescription().isBlank()) {
+                canvas.add(new Paragraph("Opis: " + repair.getRepairDescription()).setFontSize(9));
+            } else {
+                canvas.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
+                        .setFontSize(9));
+            }
             canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.NIE_DO_NAPRAWY) {
             canvas.add(new Paragraph("\nStatus: NIE DO NAPRAWY").setBold().setFontSize(10));
-            canvas.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
-                .setFontSize(9));
+            if (repair.getRepairDescription() != null && !repair.getRepairDescription().isBlank()) {
+                canvas.add(new Paragraph("Opis: " + repair.getRepairDescription()).setFontSize(9));
+            } else {
+                canvas.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
+                        .setFontSize(9));
+            }
             canvas.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
         } else {

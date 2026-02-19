@@ -148,7 +148,8 @@ public class RepairService {
             dto.getPurchasePrice(),
             dto.getRepairPrice(),
             generateBusinessId(),
-            location
+            location,
+            dto.getRepairDescription()
         );
         Repair saved = repository.save(repair);
         return mapper.toDto(saved);
@@ -209,7 +210,8 @@ public class RepairService {
             dto.getPhoneTechnicalId(),
             dto.getPurchasePrice(),
             dto.getRepairPrice(),
-            location
+            location,
+            dto.getRepairDescription()
         );
 
         if (dto.getStatus() != null) {

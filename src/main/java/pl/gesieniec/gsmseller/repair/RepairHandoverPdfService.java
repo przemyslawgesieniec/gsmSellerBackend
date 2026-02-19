@@ -130,9 +130,11 @@ public class RepairHandoverPdfService {
 
         if (repair.getStatus() == RepairStatus.NAPRAWIONY) {
             rightCell.add(new Paragraph("Opis naprawy:").setBold().setFontSize(10));
-            rightCell.add(
-                new Paragraph(repair.getRepairOrderDescription() != null ? repair.getRepairOrderDescription() : "---")
-                    .setFontSize(9));
+            String description = repair.getRepairDescription();
+            if (description == null || description.isBlank()) {
+                description = repair.getRepairOrderDescription() != null ? repair.getRepairOrderDescription() : "---";
+            }
+            rightCell.add(new Paragraph(description).setFontSize(9));
             if (repair.getRepairPrice() != null) {
                 rightCell.add(new Paragraph("Koszt naprawy: " + repair.getRepairPrice() + " zł")
                     .setBold().setFontSize(10));
@@ -141,14 +143,22 @@ public class RepairHandoverPdfService {
                 .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.ANULOWANY) {
             rightCell.add(new Paragraph("Status: ANULOWANO").setBold().setFontSize(10));
-            rightCell.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
-                .setFontSize(9));
+            if (repair.getRepairDescription() != null && !repair.getRepairDescription().isBlank()) {
+                rightCell.add(new Paragraph("Opis: " + repair.getRepairDescription()).setFontSize(9));
+            } else {
+                rightCell.add(new Paragraph("Naprawa została anulowana na prośbę klienta lub z przyczyn technicznych.")
+                        .setFontSize(9));
+            }
             rightCell.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
         } else if (repair.getStatus() == RepairStatus.NIE_DO_NAPRAWY) {
             rightCell.add(new Paragraph("Status: NIE DO NAPRAWY").setBold().setFontSize(10));
-            rightCell.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
-                .setFontSize(9));
+            if (repair.getRepairDescription() != null && !repair.getRepairDescription().isBlank()) {
+                rightCell.add(new Paragraph("Opis: " + repair.getRepairDescription()).setFontSize(9));
+            } else {
+                rightCell.add(new Paragraph("Urządzenie zostało sprawdzone, jednak naprawa jest niemożliwa lub nieopłacalna.")
+                        .setFontSize(9));
+            }
             rightCell.add(new Paragraph("\nPotwierdzam odbiór nienaprawionego urządzenia.")
                 .setBold().setFontSize(9).setItalic());
         }

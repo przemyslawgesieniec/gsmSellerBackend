@@ -63,6 +63,7 @@ public class RepairDto {
     private BigDecimal purchasePrice;
     private BigDecimal repairPrice;
     private String location;
+    private String repairDescription;
     private String damageDescription;
     private String repairOrderDescription;
     private String pinPassword;
