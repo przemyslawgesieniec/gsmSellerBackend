@@ -28,6 +28,7 @@ public class ReportService {
 
     private final StockReportService stockReportService;
     private final RepairRepository repairRepository;
+    private final ReceiptRepository receiptRepository;
 
     public SalesSummaryDto getSalesSummary(
         LocalDate from,

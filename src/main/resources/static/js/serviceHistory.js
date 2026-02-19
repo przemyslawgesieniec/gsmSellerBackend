@@ -177,12 +177,18 @@ function renderHistory(repairs) {
             </button>
         ` : '';
 
+        const clientNameDisplay = (repair.anonymous || (!repair.clientName && !repair.clientSurname)) 
+            ? 'Anonimowy klient' 
+            : `${repair.clientName || ''} ${repair.clientSurname || ''}`.trim();
+
         li.innerHTML = `
             <div class="collapsible-header">
                 <i class="material-icons ${statusColor}-text">history</i>
-                <span style="flex: 1">
-                    <b>${repair.manufacturer || ''} ${repair.model}</b> - ${repair.clientName} ${repair.clientSurname}
-                    ${repair.businessId ? `<span class="blue-text" style="margin-left: 10px;">[${repair.businessId}]</span>` : ''}
+                <span style="flex: 1; display: flex; align-items: center; gap: 10px;">
+                    <b>${repair.manufacturer || ''} ${repair.model}</b>
+                    <span class="grey-text">|</span>
+                    <span>${clientNameDisplay}</span>
+                    ${repair.businessId ? `<span class="blue-text" style="margin-left: auto; padding-right: 10px;">[${repair.businessId}]</span>` : ''}
                 </span>
                 <span class="grey-text hide-on-small-only" style="margin-right: 20px;">
                     Przyjęto: ${receiptDateStr} | Oddano: ${handoverDateStr}
@@ -197,7 +203,7 @@ function renderHistory(repairs) {
                     <div class="col s12 m6">
                         <p> ${repair.businessId || '-'}</p>
                         <p><b>IMEI:</b> ${repair.imei || 'Brak'}</p>
-                        <p><b>Klient:</b> ${repair.clientName} ${repair.clientSurname} (${repair.clientPhoneNumber || 'Brak telefonu'})</p>
+                        <p><b>Klient:</b> ${clientNameDisplay} (${repair.clientPhoneNumber || 'Brak telefonu'})</p>
                         <p><b>Opis problemu:</b> ${repair.problemDescription || repair.damageDescription || 'Brak'}</p>
                         <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>
                     </div>

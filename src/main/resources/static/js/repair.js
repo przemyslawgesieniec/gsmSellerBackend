@@ -308,8 +308,12 @@ function createCard(repair) {
     };
     const statusLabel = statusLabels[repair.status] || '';
     
+    const clientNameDisplay = (repair.anonymous || (!repair.clientName && !repair.clientSurname)) 
+        ? 'Anonimowy klient' 
+        : `${repair.clientName || ''} ${repair.clientSurname || ''}`.trim();
+    
     let clientSection = `
-        <p><b>Klient:</b> ${repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta'}</p>
+        <p><b>Klient:</b> ${clientNameDisplay}</p>
         <p><b>Tel:</b> ${repair.clientPhoneNumber ? repair.clientPhoneNumber : '-'}</p>
     `;
     
@@ -413,9 +417,13 @@ function createMobileCard(repair) {
         'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
     };
     const statusLabel = statusLabels[repair.status] || '';
-    
+
+    const clientNameDisplay = (repair.anonymous || (!repair.clientName && !repair.clientSurname)) 
+        ? 'Anonimowy klient' 
+        : `${repair.clientName || ''} ${repair.clientSurname || ''}`.trim();
+
     let clientSection = `
-        <p><b>Klient:</b> ${repair.clientName ? `${repair.clientName} ${repair.clientSurname}` : 'Brak danych klienta'}</p>
+        <p><b>Klient:</b> ${clientNameDisplay}</p>
         <p><b>Tel:</b> ${repair.clientPhoneNumber ? repair.clientPhoneNumber : '-'}</p>
     `;
     

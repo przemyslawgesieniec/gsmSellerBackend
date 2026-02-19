@@ -51,11 +51,6 @@ public class Repair {
     private BigDecimal advancePayment;
     private String businessId;
 
-    @ElementCollection
-    @CollectionTable(name = "repair_photos", joinColumns = @JoinColumn(name = "repair_id"))
-    @Column(name = "photo_url")
-    private List<String> photoUrls = new ArrayList<>();
-
     @Column(nullable = false)
     private boolean forCustomer;
 
@@ -80,7 +75,7 @@ public class Repair {
                   String deviceCondition, String problemDescription, String remarks,
                   boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                   String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
-                  BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, boolean isForCustomer, UUID phoneTechnicalId,
+                  BigDecimal estimatedCost, BigDecimal advancePayment, boolean isForCustomer, UUID phoneTechnicalId,
                   BigDecimal purchasePrice, BigDecimal repairPrice, String businessId, String location, String repairDescription) {
         this.technicalId = UUID.randomUUID();
         this.client = client;
@@ -101,9 +96,6 @@ public class Repair {
         this.estimatedCost = estimatedCost;
         this.advancePayment = advancePayment;
         this.businessId = businessId;
-        if (photoUrls != null) {
-            this.photoUrls = new ArrayList<>(photoUrls);
-        }
         this.forCustomer = isForCustomer;
         this.phoneTechnicalId = phoneTechnicalId;
         this.purchasePrice = purchasePrice;
@@ -118,11 +110,11 @@ public class Repair {
                                String deviceCondition, String problemDescription, String remarks,
                                boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                                String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
-                               BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, UUID phoneTechnicalId,
+                               BigDecimal estimatedCost, BigDecimal advancePayment, UUID phoneTechnicalId,
                                BigDecimal purchasePrice, BigDecimal repairPrice, String businessId, String location, String repairDescription) {
         return new Repair(client, manufacturer, model, imei, deviceType, deviceCondition, problemDescription, remarks,
                 moistureTraces, warrantyRepair, turnsOn, anonymous, lockCode, receiptDate, estimatedRepairDate,
-                estimatedCost, advancePayment, photoUrls, true, phoneTechnicalId, purchasePrice, repairPrice, businessId, location, repairDescription);
+                estimatedCost, advancePayment, true, phoneTechnicalId, purchasePrice, repairPrice, businessId, location, repairDescription);
     }
 
     public static Repair createInHouseRepair(String model, String imei,
@@ -130,7 +122,7 @@ public class Repair {
                                             String problemDescription, String deviceCondition,
                                             String lockCode, UUID phoneTechnicalId, String businessId, String location) {
         return new Repair(null, null, model, imei, "TELEFON", deviceCondition, problemDescription, null,
-                false, false, false, false, lockCode, null, null, null, null, null, false,
+                false, false, false, false, lockCode, null, null, null, null, false,
                 phoneTechnicalId, purchasePrice, repairPrice, businessId, location, null);
     }
 
@@ -160,7 +152,7 @@ public class Repair {
                        String deviceCondition, String problemDescription, String remarks,
                        Boolean moistureTraces, Boolean warrantyRepair, Boolean turnsOn, Boolean anonymous,
                        String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
-                       BigDecimal estimatedCost, BigDecimal advancePayment, List<String> photoUrls, UUID phoneTechnicalId,
+                       BigDecimal estimatedCost, BigDecimal advancePayment, UUID phoneTechnicalId,
                        BigDecimal purchasePrice, BigDecimal repairPrice, String location, String repairDescription) {
         this.client = client;
         if (manufacturer != null) this.manufacturer = manufacturer;
@@ -179,10 +171,6 @@ public class Repair {
         if (estimatedRepairDate != null) this.estimatedRepairDate = estimatedRepairDate;
         if (estimatedCost != null) this.estimatedCost = estimatedCost;
         if (advancePayment != null) this.advancePayment = advancePayment;
-        if (photoUrls != null) {
-            this.photoUrls.clear();
-            this.photoUrls.addAll(photoUrls);
-        }
         if (phoneTechnicalId != null) this.phoneTechnicalId = phoneTechnicalId;
         if (purchasePrice != null) this.purchasePrice = purchasePrice;
         if (repairPrice != null) this.repairPrice = repairPrice;

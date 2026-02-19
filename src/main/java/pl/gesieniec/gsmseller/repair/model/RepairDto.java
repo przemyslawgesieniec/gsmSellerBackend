@@ -41,7 +41,6 @@ public class RepairDto {
     private BigDecimal estimatedCost;
     private BigDecimal advancePayment;
     private String businessId;
-    private List<String> photoUrls;
 
     private RepairStatus status;
     private boolean archived;
