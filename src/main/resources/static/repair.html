@@ -9,6 +9,10 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+  <!-- TomSelect -->
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
   <!-- Nasze style -->
   <link href="css/style.css" rel="stylesheet">
   <style>
@@ -156,11 +160,11 @@
   <!-- Desktop Kanban Board -->
   <div class="row" style="margin-top: 20px;">
     <div class="col s12 m4 l3">
-      <div class="input-field" id="filterLocationWrapper">
-        <select id="filterLocationSelect">
+      <div id="filterLocationWrapper">
+        <label>Filtruj wg lokalizacji</label>
+        <select id="filterLocationSelect" class="browser-default">
           <option value="">Wszystkie lokalizacje</option>
         </select>
-        <label>Filtruj wg lokalizacji</label>
       </div>
     </div>
   </div>
@@ -294,14 +298,14 @@
       <!-- Sekcja 2: Urządzenie -->
       <div class="section-title blue-text text-darken-2">Sekcja 2 - Urządzenie</div>
       <div class="row card-panel grey lighten-5" style="box-shadow: none; border: 1px solid #ddd;">
-        <div class="input-field col s12 m6">
-          <select id="repairDeviceType">
+        <div class="col s12 m6">
+          <label>Typ urządzenia</label>
+          <select id="repairDeviceType" class="browser-default">
             <option value="TELEFON" selected>Telefon</option>
             <option value="TABLET">Tablet</option>
             <option value="SMARTWATCH">Smartwatch</option>
             <option value="INNE">Inne</option>
           </select>
-          <label>Typ urządzenia</label>
         </div>
         <div class="input-field col s12 m6">
           <input id="repairManufacturer" type="text">
@@ -315,11 +319,11 @@
           <input id="repairImei" type="text">
           <label for="repairImei">IMEI</label>
         </div>
-        <div class="input-field col s12 m6" id="repairLocationSection" style="display: none;">
-          <select id="repairLocation">
+        <div class="col s12 m6" id="repairLocationSection" style="display: none;">
+          <label>Lokalizacja (tylko Admin)</label>
+          <select id="repairLocation" class="browser-default">
             <option value="" disabled selected>Wybierz lokalizację</option>
           </select>
-          <label>Lokalizacja (tylko Admin)</label>
         </div>
       </div>
 
@@ -428,11 +432,11 @@
           <input id="restoreSellingPrice" type="number" step="0.01">
           <label for="restoreSellingPrice">Ostateczna cena sprzedaży</label>
         </div>
-        <div class="input-field col s12">
-          <select id="restoreLocation">
+        <div class="col s12">
+          <label>Lokalizacja</label>
+          <select id="restoreLocation" class="browser-default">
             <option value="" disabled selected>Wybierz lokalizację</option>
           </select>
-          <label>Lokalizacja</label>
         </div>
       </form>
     </div>
@@ -450,14 +454,14 @@
     <input type="hidden" id="statusSelectionRepairId">
     
     <div class="row" id="finalStatusSelectionWrapper">
-      <div class="input-field col s12">
-        <select id="finalStatusSelect">
+      <div class="col s12">
+        <label>Status końcowy</label>
+        <select id="finalStatusSelect" class="browser-default">
           <option value="" disabled selected>Wybierz wynik naprawy</option>
           <option value="NAPRAWIONY">Naprawiony</option>
           <option value="NIE_DO_NAPRAWY">Nie do naprawy</option>
           <option value="ANULOWANY">Anulowany</option>
         </select>
-        <label>Status końcowy</label>
       </div>
     </div>
 

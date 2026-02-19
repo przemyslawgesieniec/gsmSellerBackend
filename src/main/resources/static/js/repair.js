@@ -12,10 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         loadLocations().then(() => {
-            const filterSelect = document.getElementById('filterLocationSelect');
-            if (user && user.location && filterSelect) {
-                filterSelect.value = user.location;
-                M.FormSelect.init(filterSelect);
+            if (user && user.location && tsFilterLocation) {
+                tsFilterLocation.setValue(user.location);
             }
             loadRepairs();
         });
@@ -27,6 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (filterSelect) {
         filterSelect.addEventListener('change', loadRepairs);
     }
+
+    // Inicjalizacja selectów TomSelect
+    initAllSelects();
 
     document.getElementById('editRepairBtn').addEventListener('click', () => {
         toggleFields(false);
@@ -85,9 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     initClientAutocomplete();
     initClientToggles();
-    
-    // Inicjalizacja selectów Materialize
-    M.FormSelect.init(document.querySelectorAll('select'));
 
     loadCurrentUser().then(() => {
         if (IS_ADMIN) {
@@ -95,6 +93,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function initSimpleSelect(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+
+    return new TomSelect(el, {
+        controlInput: null,
+        create: false,
+        searchField: [],
+        shouldSort: false,
+        hideSelected: true,
+        closeAfterSelect: true,
+        allowEmptyOption: true
+    });
+}
+
+let tsFilterLocation, tsRepairDeviceType, tsRepairLocation, tsRestoreLocation, tsFinalStatus;
+
+function initAllSelects() {
+    tsFilterLocation = initSimpleSelect('#filterLocationSelect');
+    tsRepairDeviceType = initSimpleSelect('#repairDeviceType');
+    tsRepairLocation = initSimpleSelect('#repairLocation');
+    tsRestoreLocation = initSimpleSelect('#restoreLocation');
+    tsFinalStatus = initSimpleSelect('#finalStatusSelect');
+}
 
 function initClientAutocomplete() {
     const el = document.getElementById('clientSearch');
@@ -534,8 +557,9 @@ window.drop = async function(ev) {
         document.getElementById('statusSelectionRepairId').value = id;
         
         // Reset modal fields
-        document.getElementById('finalStatusSelect').value = '';
-        M.FormSelect.init(document.getElementById('finalStatusSelect'));
+        if (tsFinalStatus) {
+            tsFinalStatus.setValue('');
+        }
         document.getElementById('diagnosticCostSection').style.display = 'none';
         document.getElementById('repairFinishedSection').style.display = 'none';
         document.getElementById('diagnosticCost').value = '70';
@@ -731,9 +755,8 @@ async function openRepairDetails(technicalId) {
         nameSurnameFields.style.display = 'block';
     }
 
-    if (repair.deviceType) {
-        document.getElementById('repairDeviceType').value = repair.deviceType;
-        M.FormSelect.init(document.getElementById('repairDeviceType'));
+    if (repair.deviceType && tsRepairDeviceType) {
+        tsRepairDeviceType.setValue(repair.deviceType);
     }
 
     // Klient
@@ -751,12 +774,8 @@ async function openRepairDetails(technicalId) {
     document.getElementById('repairModel').value = repair.model || '';
     document.getElementById('repairImei').value = repair.imei || '';
 
-    if (repair.location) {
-        document.getElementById('repairLocation').value = repair.location;
-        M.FormSelect.init(document.getElementById('repairLocation'));
-    } else {
-        document.getElementById('repairLocation').value = "";
-        M.FormSelect.init(document.getElementById('repairLocation'));
+    if (tsRepairLocation) {
+        tsRepairLocation.setValue(repair.location || '');
     }
 
     // Naprawa
@@ -911,8 +930,9 @@ function resetForm() {
     document.getElementById('phoneTechnicalId').value = '';
     
     // Resetuj device type do domyślnego
-    document.getElementById('repairDeviceType').value = 'TELEFON';
-    M.FormSelect.init(document.getElementById('repairDeviceType'));
+    if (tsRepairDeviceType) {
+        tsRepairDeviceType.setValue('TELEFON');
+    }
 
     // Resetuj anonimowego klienta
     document.getElementById('clientAnonymous').checked = false;
@@ -927,6 +947,14 @@ function toggleFields(disabled) {
             el.disabled = disabled;
         }
     });
+
+    // Obsługa TomSelect dla zablokowanych pól
+    if (tsRepairDeviceType) {
+        disabled ? tsRepairDeviceType.disable() : tsRepairDeviceType.enable();
+    }
+    if (tsRepairLocation) {
+        disabled ? tsRepairLocation.disable() : tsRepairLocation.enable();
+    }
     
     // Specyficzna obsługa dla chipa usuwania klienta
     const clearClient = document.getElementById('clearSelectedClient');
@@ -953,29 +981,36 @@ async function loadLocations() {
         if (!response.ok) throw new Error('Błąd pobierania lokalizacji');
         const locations = await response.json();
         
-        const restoreSelect = document.getElementById('restoreLocation');
-        const repairSelect = document.getElementById('repairLocation');
-        const filterSelect = document.getElementById('filterLocationSelect');
+        if (tsRepairLocation) tsRepairLocation.clearOptions();
+        if (tsFilterLocation) tsFilterLocation.clearOptions();
+        if (tsRestoreLocation) tsRestoreLocation.clearOptions();
+
+        if (tsFilterLocation) {
+            tsFilterLocation.addOption({ value: '', text: 'Wszystkie lokalizacje' });
+        }
+        if (tsRepairLocation) {
+            tsRepairLocation.addOption({ value: '', text: 'Wybierz lokalizację' });
+        }
+        if (tsRestoreLocation) {
+            tsRestoreLocation.addOption({ value: '', text: 'Wybierz lokalizację' });
+        }
 
         locations.forEach(loc => {
-            const option = document.createElement('option');
-            option.value = loc.name; // For repairLocation we use name
-            option.text = loc.name;
-            repairSelect.appendChild(option);
-
-            const filterOption = document.createElement('option');
-            filterOption.value = loc.name;
-            filterOption.text = loc.name;
-            filterSelect.appendChild(filterOption);
-
-            const restoreOption = document.createElement('option');
-            restoreOption.value = loc.technicalId; // For restoreLocation we use technicalId
-            restoreOption.text = loc.name;
-            restoreSelect.appendChild(restoreOption);
+            if (tsRepairLocation) {
+                tsRepairLocation.addOption({ value: loc.name, text: loc.name });
+            }
+            if (tsFilterLocation) {
+                tsFilterLocation.addOption({ value: loc.name, text: loc.name });
+            }
+            if (tsRestoreLocation) {
+                tsRestoreLocation.addOption({ value: loc.technicalId, text: loc.name });
+            }
         });
-        M.FormSelect.init(restoreSelect);
-        M.FormSelect.init(repairSelect);
-        M.FormSelect.init(filterSelect);
+
+        if (tsRepairLocation) tsRepairLocation.refreshOptions(false);
+        if (tsFilterLocation) tsFilterLocation.refreshOptions(false);
+        if (tsRestoreLocation) tsRestoreLocation.refreshOptions(false);
+
     } catch (error) {
         console.error(error);
     }
@@ -1000,6 +1035,9 @@ window.openRestoreModal = function(technicalId) {
             .catch(err => console.error('Błąd pobierania danych telefonu', err));
     }
 
+    if (tsRestoreLocation) {
+        tsRestoreLocation.setValue(user.locationTechnicalId || '');
+    }
     M.updateTextFields();
     M.Modal.getInstance(document.getElementById('restoreToShopModal')).open();
 }
