@@ -19,15 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadHistory();
 
-    document.getElementById('archiveFilter').addEventListener('change', () => {
-        currentPage = 0;
-        loadHistory();
-    });
-
     document.getElementById('clearFiltersBtn').addEventListener('click', () => {
         document.getElementById('historySearch').value = '';
-        document.getElementById('archiveFilter').value = 'all';
-        M.FormSelect.init(document.getElementById('archiveFilter'));
         if (receiptPicker) receiptPicker.clear();
         if (handoverPicker) handoverPicker.clear();
         currentPage = 0;
@@ -105,12 +98,10 @@ function initDatePickers() {
 
 async function loadHistory() {
     const query = document.getElementById('historySearch').value;
-    const archiveFilter = document.getElementById('archiveFilter').value;
     
     let url = `/api/v1/repairs/history?page=${currentPage}&size=${pageSize}&sort=handoverDate,DESC`;
 
     if (query) url += `&query=${encodeURIComponent(query)}`;
-    if (archiveFilter !== 'all') url += `&archived=${archiveFilter}`;
     
     if (receiptPicker && receiptPicker.selectedDates.length === 2) {
         const from = formatDate(receiptPicker.selectedDates[0]);
