@@ -165,13 +165,15 @@ public class ReceiptService {
     // ===============================
 
     private String prepareNumber(LocalDate sellDate) {
+        int currentMonth = sellDate.getMonthValue();
+        int currentYear = sellDate.getYear();
+
         return receiptRepository.findFirstByOrderByCreateDateDesc()
-            .map(e -> incrementInvoiceNumber(e.getNumber()))
-            .orElse("001/" + sellDate.getMonthValue() + "/" + sellDate.getYear());
+            .map(e -> generateNextNumber(e.getNumber(), currentMonth, currentYear))
+            .orElse(String.format("%03d/%d/%d", 1, currentMonth, currentYear));
     }
 
-
-    private String incrementInvoiceNumber(String lastNumber) {
+    private String generateNextNumber(String lastNumber, int currentMonth, int currentYear) {
         log.info("🔢 Ostatni numer dokumentu: {}", lastNumber);
 
         if (lastNumber == null || lastNumber.isBlank()) {
@@ -183,11 +185,21 @@ public class ReceiptService {
             throw new IllegalArgumentException("Invalid invoice number: " + lastNumber);
         }
 
-        int n = Integer.parseInt(parts[0]) + 1;
+        int lastNumberPart = Integer.parseInt(parts[0]);
+        int lastMonth = Integer.parseInt(parts[1]);
+        int lastYear = Integer.parseInt(parts[2]);
 
-        String newNumber = String.format("%03d", n) + "/" + parts[1] + "/" + parts[2];
+        int newNumberPart;
+
+        if (lastMonth == currentMonth && lastYear == currentYear) {
+            newNumberPart = lastNumberPart + 1;
+        } else {
+            newNumberPart = 1;
+        }
+
+        String newNumber = String.format("%03d/%d/%d", newNumberPart, currentMonth, currentYear);
+
         log.info("🔢 Nowy numer dokumentu: {}", newNumber);
-
         return newNumber;
     }
 

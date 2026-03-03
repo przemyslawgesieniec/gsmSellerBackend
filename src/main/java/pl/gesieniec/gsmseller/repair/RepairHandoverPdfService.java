@@ -179,15 +179,6 @@ public class RepairHandoverPdfService {
             .setTextAlignment(TextAlignment.RIGHT)
             .setFontSize(9));
 
-        locationRepository.findByName(repair.getLocation())
-            .map(LocationEntity::getPhoneNumber)
-            .ifPresent(phoneNumber -> {
-                canvas.add(new Paragraph("kontakt: " + phoneNumber)
-                    .setTextAlignment(TextAlignment.RIGHT)
-                    .setFontSize(9));
-            });
-
-
         if (repair.getBusinessId() != null) {
             canvas.add(new Paragraph(repair.getBusinessId())
                 .setTextAlignment(TextAlignment.RIGHT)

@@ -165,34 +165,12 @@ public class RepairPdfService {
                 Regulamin jest dostępny w siedzibie serwisu.
                 W sprawach nieuregulowanych niniejszym regulaminem zastosowanie mają przepisy Kodeksu cywilnego oraz ustawy o prawach konsumenta.
                 
-                Klient, oddając sprzęt do naprawy, oświadcza, że zapoznał się z regulaminem i akceptuje jego treść.
-                Regulamin jest dostępny w siedzibie serwisu.
-                W sprawach nieuregulowanych niniejszym regulaminem zastosowanie mają przepisy Kodeksu cywilnego oraz ustawy o prawach konsumenta.
-                            
-                Klient, oddając sprzęt do naprawy, oświadcza, że zapoznał się z regulaminem i akceptuje jego treść.
-                Regulamin jest dostępny w siedzibie serwisu.
-                W sprawach nieuregulowanych niniejszym regulaminem zastosowanie mają przepisy Kodeksu cywilnego oraz ustawy o prawach konsumenta.
-                
                 Dane osobowe klientów przetwarzane są wyłącznie w celu realizacji usług serwisowych, zgodnie z art. 6 ust. 1 lit. b RODO.
                 Administratorem danych jest Serwis. Klient ma prawo dostępu do swoich danych, ich sprostowania, ograniczenia przetwarzania oraz żądania usunięcia.
                 """)
                 .setFontSize(6)
                 .setFontColor(ColorConstants.GRAY)
                 .setMarginTop(10));
-//            canvas.add(new Paragraph(
-//                "Informujemy że nie ponosimy odpowiedzialności za pozostawione karty sim i karty pamięci w serwisie gsm. " +
-//                    "Serwis nie odpowiada za ukryte wady urządzenia, których nie stwierdzono przy przyjęciu sprzętu do naprawy. " +
-//                    "Na urządzenie zawilgocone i/lub po ingerencji osób trzecich serwis nie udziela gwarancji na naprawę. " +
-//                    "Informuje się , że nie dokonanie odbioru telefonu po 3 miesiącach (90 dni) od momentu poinformowania klienta o możliwości odbioru skutkuje przejęciem telefonu na własność serwisu. " +
-//                    "Serwis nie ponosi odpowiedzialności za utratę danych z telefonu , ani dalszych strat , które w wyniku tego mogą nastąpić " +
-//                    "Wyrażam zgodę na przetwarzania moich danych osobowych zgodnie z rozporządzeniem o ochronie danych z dnia 27 kwietnia 2016 r., tzw. rozporządzeniem RODO przez firmę Teleakcesoria Paweł Jarocki z siedzibą w Stryków ul. Krótka 5A w celu wykonania zleconych uslug. " +
-//                    "Oświadczam, że firma Teleakcesoria Paweł Jarocki poinformowała mnie o dobrowolności podania danych, przysługujących mi prawach w szczególności o prawie dostępu do treści danych ,ich poprawiania i usuwania. " +
-//                    "Wyrażam równocześnie zgodę na otrzymywanie od firmy Teleakcesoria Paweł Jarocki informacji dotyczących zleconych usług za pomocą środków komunikacji elektronicznej oraz oświadczam, ze zapoznałem(łam) sie z regulaminem serwisu." +
-//                    "Administratorem Twoich danych osobowych jest Teleakcesoria Paweł Jarocki z siedzibą w Stryków ul. Krótka 5A (Administrator Danych Osobowych/ADO). " +
-//                    "We wszystkich kwestiach związanych z przetwarzaniem Twoich danych osobowych możesz się skontaktować z ADO poprzez adres poczty elektronicznej teleakcesoriamorena@gmail.com.")
-//                .setFontSize(6)
-//                .setFontColor(ColorConstants.GRAY)
-//                .setMarginTop(10));
         }
 
         // Podpisy
@@ -211,7 +189,7 @@ public class RepairPdfService {
         locationRepository.findByName(repair.getLocation())
             .map(LocationEntity::getPhoneNumber)
             .ifPresent(phoneNumber -> {
-                canvas.add(new Paragraph("kontakt: " + phoneNumber)
+                canvas.add(new Paragraph("numer do serwisu: " + phoneNumber)
                     .setTextAlignment(TextAlignment.RIGHT)
                     .setFontSize(9));
             });
