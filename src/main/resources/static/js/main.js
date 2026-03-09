@@ -248,9 +248,19 @@ function renderPhones(phones) {
 
                 <p><i class="material-icons tiny">palette</i> <b>Kolor:</b> ${phone.color}</p>
                 
-                <p><i class="material-icons tiny">receipt</i> <b>Forma zakupu:</b>
-                  ${PURCHASE_TYPE_LABELS[phone.purchaseType] ?? "—"}
-                </p>
+            <p>
+              <i class="material-icons tiny">receipt</i>
+              <b>Forma zakupu:</b>
+              ${PURCHASE_TYPE_LABELS[phone.purchaseType] ?? "—"}
+
+              ${
+                PURCHASE_TYPE_LABELS[phone.purchaseType] !== "Gotówka"
+                  ? `<i class="material-icons tiny orange-text tooltipped"
+                       data-position="top"
+                       data-tooltip="Zakup nie był gotówkowy">warning</i>`
+                  : ""
+              }
+            </p>
                 
                 <p><i class="material-icons tiny">fingerprint</i> <b>IMEI:</b> ${phone.imei}</p>
                 
