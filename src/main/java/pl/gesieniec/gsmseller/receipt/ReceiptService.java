@@ -237,7 +237,11 @@ public class ReceiptService {
             );
         }
 
-        if (!receipt.getCreatedBy().equals(username)) {
+        String userRole = userService.getUserByUsername(username).map(User::getRole).orElse("NON_ADMIN");
+
+        if (!receipt.getCreatedBy().equals(username) || !userRole.equals("ROLE_ADMIN")) {
+            log.info("Anulowanie może zostać wykonane wyłącznie przez pracownika," +
+                "który dokonał sprzedaży lub przez administratora");
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
