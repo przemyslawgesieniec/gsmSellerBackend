@@ -772,15 +772,19 @@ function compressImage(file, options = {}) {
 }
 
 async function convertHeicToJpeg(file) {
-    const convertedBlob = await heic2any({
+    let convertedBlob = await heic2any({
         blob: file,
         toType: "image/jpeg",
         quality: 0.8
     });
 
+    if (Array.isArray(convertedBlob)) {
+        convertedBlob = convertedBlob[0];
+    }
+
     return new File(
         [convertedBlob],
-        file.name.replace(/\.heic$/i, ".jpg"),
+        file.name.replace(/\.(heic|heif)$/i, ".jpg"),
         { type: "image/jpeg" }
     );
 }
