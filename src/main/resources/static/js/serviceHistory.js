@@ -45,7 +45,7 @@ function initClientAutocomplete() {
             currentPage = 0;
             loadHistory();
         },
-        minLength: 1
+        minLength: 2
     });
 
     el.addEventListener('input', debounce(async (e) => {
@@ -55,7 +55,7 @@ function initClientAutocomplete() {
         currentPage = 0;
         loadHistory();
 
-        if (query.length < 1) return;
+        if (query.length < 2) return;
 
         try {
             const response = await fetch(`/api/v1/repair-clients/search?query=${encodeURIComponent(query)}`);

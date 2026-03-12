@@ -16,11 +16,11 @@ public class RepairSpecifications {
         return (root, query, cb) -> archived == null ? null : cb.equal(root.get("archived"), archived);
     }
 
-    public static Specification<Repair> hasClientNameOrPhone(String query) {
+    public static Specification<Repair> hasClientNameOrPhoneOrRmaOrModel(String query) {
         return (root, q, cb) -> {
             if (query == null || query.isBlank()) return null;
             
-            Join<Repair, RepairClient> clientJoin = root.join("client");
+            Join<Repair, RepairClient> clientJoin = root.join("client", jakarta.persistence.criteria.JoinType.LEFT);
 
             // Obsługa formatu z autocomplete: Imię Nazwisko (Telefon)
             if (query.contains("(") && query.contains(")")) {
@@ -31,10 +31,31 @@ public class RepairSpecifications {
             }
 
             String pattern = "%" + query.toLowerCase() + "%";
+            
+            // Wyszukiwanie łączone (producent + model)
+            String[] parts = query.toLowerCase().split("\\s+");
+            if (parts.length > 1) {
+                return cb.or(
+                    cb.like(cb.lower(clientJoin.get("name")), pattern),
+                    cb.like(cb.lower(clientJoin.get("surname")), pattern),
+                    cb.like(clientJoin.get("phoneNumber"), pattern),
+                    cb.like(cb.lower(root.get("businessId")), pattern),
+                    cb.like(cb.lower(root.get("manufacturer")), pattern),
+                    cb.like(cb.lower(root.get("model")), pattern),
+                    cb.and(
+                        cb.like(cb.lower(root.get("manufacturer")), "%" + parts[0] + "%"),
+                        cb.like(cb.lower(root.get("model")), "%" + parts[1] + "%")
+                    )
+                );
+            }
+
             return cb.or(
                 cb.like(cb.lower(clientJoin.get("name")), pattern),
                 cb.like(cb.lower(clientJoin.get("surname")), pattern),
-                cb.like(clientJoin.get("phoneNumber"), pattern)
+                cb.like(clientJoin.get("phoneNumber"), pattern),
+                cb.like(cb.lower(root.get("businessId")), pattern),
+                cb.like(cb.lower(root.get("manufacturer")), pattern),
+                cb.like(cb.lower(root.get("model")), pattern)
             );
         };
     }

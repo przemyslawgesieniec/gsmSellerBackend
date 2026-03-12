@@ -43,7 +43,7 @@ public class RepairController {
         @PageableDefault(sort = "createDateTime", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Specification<Repair> spec = Specification.allOf(
-            RepairSpecifications.hasClientNameOrPhone(query),
+            RepairSpecifications.hasClientNameOrPhoneOrRmaOrModel(query),
             RepairSpecifications.archived(archived),
             RepairSpecifications.receiptDateBetween(receiptDateFrom, receiptDateTo),
             RepairSpecifications.handoverDateBetween(handoverDateFrom, handoverDateTo)
