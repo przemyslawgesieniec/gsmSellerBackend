@@ -84,7 +84,6 @@ function loadRepairSummary(from, to) {
             setText("repairProfit", formatCurrency(data.totalProfit));
 
             // Status counts
-            setText("repairedCount", data.statusCounts["NAPRAWIONY"] || 0);
             setText("cancelledCount", data.statusCounts["ANULOWANY"] || 0);
             setText("notRepairedCount", data.statusCounts["NIE_DO_NAPRAWY"] || 0);
             setText("inRepairCount", data.statusCounts["W_NAPRAWIE"] || 0);
