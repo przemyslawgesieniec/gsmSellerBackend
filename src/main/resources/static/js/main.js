@@ -615,6 +615,9 @@ function editPhone(technicalId) {
         document.getElementById("editImei").value =
             card.dataset.imei || "";
 
+        document.getElementById("editSource").value =
+            card.dataset.source || "";
+
         document.getElementById("editPrice").value =
             card.dataset.sellingPrice || "";
 
@@ -701,6 +704,7 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
         model: model,
         color: document.getElementById("editColor").value.trim(),
         imei: document.getElementById("editImei").value.trim(),
+        source: document.getElementById("editSource").value.trim(),
         sellingPrice: parseFloat(
             document.getElementById("editPrice").value
         ),
