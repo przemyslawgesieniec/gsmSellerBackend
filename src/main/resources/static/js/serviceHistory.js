@@ -177,6 +177,7 @@ function renderHistory(repairs) {
                 <i class="material-icons ${statusColor}-text">history</i>
                 <span style="flex: 1; display: flex; align-items: center; gap: 10px;">
                     <b>${repair.manufacturer || ''} ${repair.model}</b>
+                    ${repair.color ? `<span class="grey-text">(${repair.color})</span>` : ''}
                     <span class="grey-text">|</span>
                     <span>${clientNameDisplay}</span>
                     ${repair.businessId ? `<span class="blue-text" style="margin-left: auto; padding-right: 10px;">[${repair.businessId}]</span>` : ''}
@@ -194,6 +195,7 @@ function renderHistory(repairs) {
                     <div class="col s12 m6">
                         <p> ${repair.businessId || '-'}</p>
                         <p><b>IMEI:</b> ${repair.imei || 'Brak'}</p>
+                        ${repair.color ? `<p><b>Kolor:</b> ${repair.color}</p>` : ''}
                         <p><b>Klient:</b> ${clientNameDisplay} (${repair.clientPhoneNumber || 'Brak telefonu'})</p>
                         <p><b>Opis problemu:</b> ${repair.problemDescription || repair.damageDescription || 'Brak'}</p>
                         <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>

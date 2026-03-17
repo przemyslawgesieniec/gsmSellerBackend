@@ -24,6 +24,7 @@ public class RepairDto {
     private String model;
     private String imei;
     private String deviceType;
+    private String color;
 
     private String deviceCondition;
     private String problemDescription;

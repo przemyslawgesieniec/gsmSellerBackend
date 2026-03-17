@@ -126,6 +126,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                 Repair repair = Repair.createInHouseRepair(
                     entity.getModel(),
                     entity.getImei(),
+                    entity.getColor(),
                     entity.getPurchasePrice(),
                     null, // repairPrice not known yet
                     "Telefon dodany jako uszkodzony",

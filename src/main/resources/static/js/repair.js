@@ -362,6 +362,7 @@ function createCard(repair) {
             </span>
             ${clientSection}
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
+            <p><b>Kolor:</b> ${repair.color || '-'} </p>
             <div class="divider" style="margin: 5px 0;"></div>
             ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
                 <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
@@ -773,6 +774,7 @@ async function openRepairDetails(technicalId) {
     document.getElementById('repairManufacturer').value = repair.manufacturer || '';
     document.getElementById('repairModel').value = repair.model || '';
     document.getElementById('repairImei').value = repair.imei || '';
+    document.getElementById('repairColor').value = repair.color || '';
 
     if (tsRepairLocation) {
         tsRepairLocation.setValue(repair.location || '');
@@ -843,6 +845,7 @@ async function saveRepair() {
         manufacturer: document.getElementById('repairManufacturer').value,
         model: document.getElementById('repairModel').value,
         imei: document.getElementById('repairImei').value,
+        color: document.getElementById('repairColor').value,
         
         problemDescription: document.getElementById('repairProblemDescription').value,
         deviceCondition: document.getElementById('repairDeviceCondition').value,

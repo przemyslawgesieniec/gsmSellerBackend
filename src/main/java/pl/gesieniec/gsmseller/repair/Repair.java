@@ -33,6 +33,7 @@ public class Repair {
     private String model;
     private String imei;
     private String deviceType;
+    private String color;
 
     private String deviceCondition;
     private String problemDescription;
@@ -71,7 +72,7 @@ public class Repair {
     private String location;
     private String repairDescription;
 
-    private Repair(RepairClient client, String manufacturer, String model, String imei, String deviceType,
+    private Repair(RepairClient client, String manufacturer, String model, String imei, String deviceType, String color,
                   String deviceCondition, String problemDescription, String remarks,
                   boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                   String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
@@ -83,6 +84,7 @@ public class Repair {
         this.model = model;
         this.imei = imei;
         this.deviceType = deviceType;
+        this.color = color;
         this.deviceCondition = deviceCondition;
         this.problemDescription = problemDescription;
         this.remarks = remarks;
@@ -106,22 +108,22 @@ public class Repair {
         this.repairDescription = repairDescription;
     }
 
-    public static Repair create(RepairClient client, String manufacturer, String model, String imei, String deviceType,
+    public static Repair create(RepairClient client, String manufacturer, String model, String imei, String deviceType, String color,
                                String deviceCondition, String problemDescription, String remarks,
                                boolean moistureTraces, boolean warrantyRepair, boolean turnsOn, boolean anonymous,
                                String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
                                BigDecimal estimatedCost, BigDecimal advancePayment, UUID phoneTechnicalId,
                                BigDecimal purchasePrice, BigDecimal repairPrice, String businessId, String location, String repairDescription) {
-        return new Repair(client, manufacturer, model, imei, deviceType, deviceCondition, problemDescription, remarks,
+        return new Repair(client, manufacturer, model, imei, deviceType, color, deviceCondition, problemDescription, remarks,
                 moistureTraces, warrantyRepair, turnsOn, anonymous, lockCode, receiptDate, estimatedRepairDate,
                 estimatedCost, advancePayment, true, phoneTechnicalId, purchasePrice, repairPrice, businessId, location, repairDescription);
     }
 
-    public static Repair createInHouseRepair(String model, String imei,
+    public static Repair createInHouseRepair(String model, String imei, String color,
                                             BigDecimal purchasePrice, BigDecimal repairPrice,
                                             String problemDescription, String deviceCondition,
                                             String lockCode, UUID phoneTechnicalId, String businessId, String location) {
-        return new Repair(null, null, model, imei, "TELEFON", deviceCondition, problemDescription, null,
+        return new Repair(null, null, model, imei, "TELEFON", color, deviceCondition, problemDescription, null,
                 false, false, false, false, lockCode, null, null, null, null, false,
                 phoneTechnicalId, purchasePrice, repairPrice, businessId, location, null);
     }
@@ -148,7 +150,7 @@ public class Repair {
         this.handoverDate = handoverDate;
     }
 
-    public void update(RepairClient client, String manufacturer, String model, String imei, String deviceType,
+    public void update(RepairClient client, String manufacturer, String model, String imei, String deviceType, String color,
                        String deviceCondition, String problemDescription, String remarks,
                        Boolean moistureTraces, Boolean warrantyRepair, Boolean turnsOn, Boolean anonymous,
                        String lockCode, LocalDateTime receiptDate, LocalDateTime estimatedRepairDate,
@@ -159,6 +161,7 @@ public class Repair {
         if (model != null) this.model = model;
         if (imei != null) this.imei = imei;
         if (deviceType != null) this.deviceType = deviceType;
+        if (color != null) this.color = color;
         if (deviceCondition != null) this.deviceCondition = deviceCondition;
         if (problemDescription != null) this.problemDescription = problemDescription;
         if (remarks != null) this.remarks = remarks;
