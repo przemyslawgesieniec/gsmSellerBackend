@@ -157,11 +157,35 @@ public class RepairService {
 
     private String generateBusinessId() {
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        java.time.LocalDateTime startOfYear = now.with(java.time.temporal.TemporalAdjusters.firstDayOfYear()).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        java.time.LocalDateTime endOfYear = now.with(java.time.temporal.TemporalAdjusters.lastDayOfYear()).withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        int currentYear = now.getYear();
+        try {
+            List<String> businessIds = repository.findBusinessIdsByYear(currentYear);
 
-        long count = repository.countByCreateDateTimeBetween(startOfYear, endOfYear);
-        return String.format("RMA/%d/%d", count + 1, now.getYear());
+            int nextNumber = 1;
+            if (!businessIds.isEmpty()) {
+                nextNumber = businessIds.stream()
+                    .map(id -> {
+                        try {
+                            String[] parts = id.split("/");
+                            return Integer.parseInt(parts[1]);
+                        } catch (Exception e) {
+                            return getRandomRmaNumber();
+                        }
+                    })
+                    .max(Integer::compareTo)
+                    .orElse(getRandomRmaNumber()) + 1;
+            }
+
+            return String.format("RMA/%d/%d", nextNumber, currentYear);
+        } catch (Exception e) {
+            log.error("Nie udało się wygenerować poprawnego numeru RMA. Wybieranie losowego 5 cyfrowego numeru.", e);
+            int randomNumber = getRandomRmaNumber();
+            return String.format("RMA/%d/%d", randomNumber, currentYear);
+        }
+    }
+
+    private static int getRandomRmaNumber() {
+       return (int) (Math.random() * 90000) + 10000;
     }
 
     public String getNextBusinessId() {

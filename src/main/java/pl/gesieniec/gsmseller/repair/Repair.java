@@ -50,6 +50,7 @@ public class Repair {
     private LocalDateTime estimatedRepairDate;
     private BigDecimal estimatedCost;
     private BigDecimal advancePayment;
+    @Column(unique = true, nullable = false)
     private String businessId;
 
     @Column(nullable = false)
