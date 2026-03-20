@@ -35,6 +35,7 @@ public class RepairController {
     @GetMapping("/history")
     public Page<RepairDto> getHistory(
         @RequestParam(required = false) String query,
+        @RequestParam(required = false) String location,
         @RequestParam(required = false) Boolean archived,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateFrom,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateTo,
@@ -44,6 +45,7 @@ public class RepairController {
     ) {
         Specification<Repair> spec = Specification.allOf(
             RepairSpecifications.hasClientNameOrPhoneOrRmaOrModel(query),
+            RepairSpecifications.hasLocation(location),
             RepairSpecifications.archived(archived),
             RepairSpecifications.receiptDateBetween(receiptDateFrom, receiptDateTo),
             RepairSpecifications.handoverDateBetween(handoverDateFrom, handoverDateTo)

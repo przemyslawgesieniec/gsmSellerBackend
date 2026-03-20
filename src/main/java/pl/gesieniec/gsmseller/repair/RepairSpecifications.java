@@ -60,6 +60,10 @@ public class RepairSpecifications {
         };
     }
 
+    public static Specification<Repair> hasLocation(String location) {
+        return (root, query, cb) -> (location == null || location.isBlank()) ? null : cb.equal(root.get("location"), location);
+    }
+
     public static Specification<Repair> receiptDateBetween(LocalDateTime from, LocalDateTime to) {
         return (root, query, cb) -> {
             if (from == null && to == null) return null;

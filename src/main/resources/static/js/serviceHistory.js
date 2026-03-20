@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     M.FormSelect.init(document.querySelectorAll('select'));
     initDatePickers();
     initClientAutocomplete();
+    initLocationFilter();
     
     // Obsługa parametru query z URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -21,12 +22,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('clearFiltersBtn').addEventListener('click', () => {
         document.getElementById('historySearch').value = '';
+        const locationFilter = document.getElementById('locationFilter');
+        if (locationFilter) {
+            locationFilter.value = '';
+            M.FormSelect.init(locationFilter);
+        }
         if (receiptPicker) receiptPicker.clear();
         if (handoverPicker) handoverPicker.clear();
         currentPage = 0;
         loadHistory();
     });
 });
+
+async function initLocationFilter() {
+    const select = document.getElementById('locationFilter');
+    try {
+        const response = await fetch('/api/v1/locations');
+        const locations = await response.json();
+        
+        locations.forEach(loc => {
+            const opt = document.createElement('option');
+            opt.value = loc.name;
+            opt.textContent = loc.name;
+            select.appendChild(opt);
+        });
+        
+        M.FormSelect.init(select);
+        
+        select.addEventListener('change', () => {
+            currentPage = 0;
+            loadHistory();
+        });
+    } catch (error) {
+        console.error('Error fetching locations:', error);
+    }
+}
 
 function debounce(func, wait) {
     let timeout;
@@ -98,10 +128,12 @@ function initDatePickers() {
 
 async function loadHistory() {
     const query = document.getElementById('historySearch').value;
+    const location = document.getElementById('locationFilter').value;
     
     let url = `/api/v1/repairs/history?page=${currentPage}&size=${pageSize}&sort=handoverDate,DESC`;
 
     if (query) url += `&query=${encodeURIComponent(query)}`;
+    if (location) url += `&location=${encodeURIComponent(location)}`;
     
     if (receiptPicker && receiptPicker.selectedDates.length === 2) {
         const from = formatDate(receiptPicker.selectedDates[0]);
@@ -180,6 +212,8 @@ function renderHistory(repairs) {
                     ${repair.color ? `<span class="grey-text">(${repair.color})</span>` : ''}
                     <span class="grey-text">|</span>
                     <span>${clientNameDisplay}</span>
+                    <span class="grey-text">|</span>
+                    <span class="grey-text"><i class="material-icons tiny" style="vertical-align: middle;">location_on</i> ${repair.location || 'Brak'}</span>
                     ${repair.businessId ? `<span class="blue-text" style="margin-left: auto; padding-right: 10px;">[${repair.businessId}]</span>` : ''}
                 </span>
                 <span class="grey-text hide-on-small-only" style="margin-right: 20px;">
@@ -197,6 +231,7 @@ function renderHistory(repairs) {
                         <p><b>IMEI:</b> ${repair.imei || 'Brak'}</p>
                         ${repair.color ? `<p><b>Kolor:</b> ${repair.color}</p>` : ''}
                         <p><b>Klient:</b> ${clientNameDisplay} (${repair.clientPhoneNumber || 'Brak telefonu'})</p>
+                        <p><b>Lokalizacja:</b> ${repair.location || 'Brak'}</p>
                         <p><b>Opis problemu:</b> ${repair.problemDescription || repair.damageDescription || 'Brak'}</p>
                         <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>
                     </div>
