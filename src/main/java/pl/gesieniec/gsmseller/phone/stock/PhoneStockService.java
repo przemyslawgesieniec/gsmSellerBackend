@@ -124,7 +124,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
             if (dto.isDamaged()) {
                 Repair repair = Repair.createInHouseRepair(
-                    entity.getModel(),
+                    entity.getName(),
                     entity.getImei(),
                     entity.getColor(),
                     entity.getPurchasePrice(),
