@@ -302,7 +302,7 @@ function createCard(repair) {
     
     // Sprawdzenie czy karta jest "przestarzała" (> 7 dni w statusie DO_NAPRAWY lub W_NAPRAWIE)
     let overdueClass = '';
-    let overdueIcon = '';
+    let overdueDisplay = '';
     if (['DO_NAPRAWY', 'W_NAPRAWIE'].includes(repair.status) && repair.createDateTime) {
         const createDate = new Date(repair.createDateTime);
         const now = new Date();
@@ -310,10 +310,10 @@ function createCard(repair) {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
             overdueClass = 'overdue';
-            overdueIcon = `
-                <div class="overdue-container" style="position: absolute; top: 5px; right: 5px; display: flex; align-items: center; color: #f57f17;">
+            overdueDisplay = `
+                <div class="overdue-container" style="display: flex; align-items: center; justify-content: flex-end; color: #f57f17; margin-top: 2px;">
                     <span style="font-size: 0.8rem; font-weight: bold; margin-right: 2px;">${diffDays} dni</span>
-                    <i class="material-icons" style="font-size: 24px;">warning</i>
+                    <i class="material-icons" style="font-size: 20px;">warning</i>
                 </div>`;
         }
     }
@@ -346,14 +346,16 @@ function createCard(repair) {
 
     div.innerHTML = `
         <div class="card-content">
-            ${overdueIcon}
+            <div style="position: absolute; top: 10px; right: 10px; text-align: right;">
+                ${repair.location ? `
+                    <p class="location" style="margin: 0; display: flex; align-items: center; justify-content: flex-end;">
+                        <i class="material-icons tiny blue-text">place</i>
+                        <b>${repair.location}</b>
+                    </p>
+                ` : ''}
+                ${overdueDisplay}
+            </div>
             ${statusLabel}
-            ${repair.location ? `
-                <p class="location" style="position: absolute; top: 10px; right: 10px; margin: 0; display: flex; align-items: center;">
-                    <i class="material-icons tiny blue-text">place</i>
-                    <b>${repair.location}</b>
-                </p>
-            ` : ''}
             <div style="clear: both;"></div>
             <span class="card-title">
                 ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
@@ -419,7 +421,7 @@ function createMobileCard(repair) {
     
     // Sprawdzenie czy karta jest "przestarzała"
     let overdueClass = '';
-    let overdueIcon = '';
+    let overdueDisplay = '';
     if (['DO_NAPRAWY', 'W_NAPRAWIE'].includes(repair.status) && repair.createDateTime) {
         const createDate = new Date(repair.createDateTime);
         const now = new Date();
@@ -427,10 +429,10 @@ function createMobileCard(repair) {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
             overdueClass = 'overdue';
-            overdueIcon = `
-                <div class="overdue-container" style="position: absolute; top: 5px; right: 5px; display: flex; align-items: center; color: #f57f17;">
+            overdueDisplay = `
+                <div class="overdue-container" style="display: flex; align-items: center; justify-content: flex-end; color: #f57f17; margin-top: 2px;">
                     <span style="font-size: 0.8rem; font-weight: bold; margin-right: 2px;">${diffDays} dni</span>
-                    <i class="material-icons" style="font-size: 24px;">warning</i>
+                    <i class="material-icons" style="font-size: 20px;">warning</i>
                 </div>`;
         }
     }
@@ -458,14 +460,16 @@ function createMobileCard(repair) {
     div.innerHTML = `
         <div class="card z-depth-1 status-${repair.status} ${overdueClass}" onclick="openRepairDetails('${repair.technicalId}')">
             <div class="card-content">
-                ${overdueIcon}
+                <div style="position: absolute; top: 10px; right: 10px; text-align: right;">
+                    ${repair.location ? `
+                        <p class="location" style="margin: 0; display: flex; align-items: center; justify-content: flex-end;">
+                            <i class="material-icons tiny blue-text">place</i>
+                            <b>${repair.location}</b>
+                        </p>
+                    ` : ''}
+                    ${overdueDisplay}
+                </div>
                 ${statusLabel}
-                ${repair.location ? `
-                    <p class="location" style="position: absolute; top: 10px; right: 10px; margin: 0; display: flex; align-items: center;">
-                        <i class="material-icons tiny blue-text">place</i>
-                        <b>${repair.location}</b>
-                    </p>
-                ` : ''}
                 <div style="clear: both;"></div>
                 <span class="card-title">
                     ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
@@ -566,6 +570,8 @@ window.drop = async function(ev) {
         document.getElementById('diagnosticCost').value = '70';
         document.getElementById('finalRealCost').value = '';
         document.getElementById('finalCustomerPrice').value = '';
+        document.getElementById('repairDescriptionDiagnostic').value = '';
+        document.getElementById('repairDescriptionFinished').value = '';
         
         // Fill pre-filled fields
         document.getElementById('finalAdvancePayment').value = repair.advancePayment || 0;
