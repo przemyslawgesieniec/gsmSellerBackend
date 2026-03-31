@@ -39,7 +39,7 @@ public class SecurityConfig {
                     "/css/**",
                     "/js/**",
                     "/images/**",
-//                    "/uploads/**",
+                    "/uploads/**",
                     "/h2-console/**"
                 ).permitAll()
                 .anyRequest().authenticated()
