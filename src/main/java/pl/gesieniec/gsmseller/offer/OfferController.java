@@ -62,35 +62,6 @@ public class OfferController {
         return offerService.updateOffer(technicalId, request, photoFiles);
     }
 
-    @GetMapping
-    public Page<PhoneOffer> getOffers(
-        @RequestParam(required = false) String brand,
-        @RequestParam(required = false) String model,
-        @RequestParam(required = false) String status,
-        @RequestParam(required = false) String location,
-        @RequestParam(required = false) BigDecimal minPrice,
-        @RequestParam(required = false) BigDecimal maxPrice,
-        @RequestParam(required = false) String search,
-        @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        Specification<Offer> spec = Specification.allOf(
-            OfferSpecifications.hasBrand(brand),
-            OfferSpecifications.hasModel(model),
-            OfferSpecifications.hasStatus(status),
-            OfferSpecifications.hasLocation(location),
-            OfferSpecifications.hasPriceBetween(minPrice, maxPrice),
-            OfferSpecifications.search(search)
-        );
-
-        log.info("Searching for offers: {}", spec);
-        return offerService.getOffers(spec, pageable);
-    }
-
-    @GetMapping("/{technicalId}")
-    public PhoneOffer getOffer(@PathVariable UUID technicalId) {
-        return offerService.getOffer(technicalId);
-    }
-
     @GetMapping("/available-phones")
     public Page<pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto> getAvailablePhones(
         @RequestParam(required = false) String search,

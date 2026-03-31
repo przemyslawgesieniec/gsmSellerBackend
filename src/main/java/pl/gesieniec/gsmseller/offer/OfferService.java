@@ -119,11 +119,15 @@ public class OfferService {
     }
 
     private PhoneOffer mapToDto(Offer offer) {
+        PhoneStock phoneStock = offer.getPhoneStock();
         return PhoneOffer.builder()
-            .technicalId(offer.getPhoneStock().getTechnicalId())
-            .price(offer.getPhoneStock().getSellingPrice())
-            .brand(offer.getPhoneStock().getName()) // Przyjmuję, że 'name' zawiera markę lub jest jej odpowiednikiem, PhoneStock nie ma pola 'brand'
-            .model(offer.getPhoneStock().getModel())
+            .technicalId(phoneStock.getTechnicalId())
+            .price(phoneStock.getSellingPrice())
+            .brand(phoneStock.getName())
+            .model(phoneStock.getModel())
+            .status(phoneStock.isUsed() ? "Używany" : "Nowy")
+            .color(phoneStock.getColor())
+            .location(phoneStock.getLocation() != null ? phoneStock.getLocation().getName() : "Dostępny online")
             .screenSize(offer.getScreenSize())
             .batteryCapacity(offer.getBatteryCapacity())
             .screenType(offer.getScreenType())

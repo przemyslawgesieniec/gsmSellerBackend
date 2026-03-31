@@ -174,7 +174,7 @@ function resetForm() {
 async function loadOffers(page = 0) {
     document.getElementById('offersLoader').classList.remove('hide');
     try {
-        const response = await fetch(`/api/v1/offers?page=${page}&size=12`);
+        const response = await fetch(`/api/v1/external/offers?page=${page}&size=12`);
         const data = await response.json();
         renderOffers(data.content);
         renderPagination(data);
@@ -235,7 +235,7 @@ function renderOffers(offers) {
 
 async function editOffer(technicalId) {
     try {
-        const response = await fetch(`/api/v1/offers/${technicalId}`);
+        const response = await fetch(`/api/v1/external/offers/${technicalId}`);
         const offer = await response.json();
         
         document.getElementById('formTitle').textContent = 'Edytuj ofertę';

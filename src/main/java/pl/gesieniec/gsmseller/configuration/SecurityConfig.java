@@ -40,6 +40,7 @@ public class SecurityConfig {
                     "/js/**",
                     "/images/**",
                     "/uploads/**",
+                    "/api/v1/external/**",
                     "/h2-console/**"
                 ).permitAll()
                 .anyRequest().authenticated()
