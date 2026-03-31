@@ -1039,7 +1039,9 @@ window.openRestoreModal = function(technicalId) {
     }
 
     if (tsRestoreLocation) {
-        tsRestoreLocation.setValue(user.locationTechnicalId || '');
+        loadCurrentUser().then(user => {
+            tsRestoreLocation.setValue(user.locationTechnicalId || '');
+        });
     }
     M.updateTextFields();
     M.Modal.getInstance(document.getElementById('restoreToShopModal')).open();
