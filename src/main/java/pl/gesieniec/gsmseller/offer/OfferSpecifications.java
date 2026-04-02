@@ -14,9 +14,8 @@ public class OfferSpecifications {
             if (brand == null || brand.isBlank() || "all".equalsIgnoreCase(brand)) {
                 return null;
             }
-            Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
-            // PhoneStock.name jest używane jako marka (brand) w OfferService.mapToDto
-            return cb.equal(phoneStockJoin.get("name"), brand);
+            // Najpierw sprawdzamy pole brand w encji Offer
+            return cb.equal(root.get("brand"), brand);
         };
     }
 
@@ -80,6 +79,7 @@ public class OfferSpecifications {
             Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
             String pattern = "%" + queryText.toLowerCase() + "%";
             return cb.or(
+                cb.like(cb.lower(root.get("brand")), pattern),
                 cb.like(cb.lower(phoneStockJoin.get("name")), pattern),
                 cb.like(cb.lower(phoneStockJoin.get("model")), pattern)
             );

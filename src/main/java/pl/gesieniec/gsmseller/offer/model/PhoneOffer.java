@@ -1,6 +1,9 @@
 package pl.gesieniec.gsmseller.offer.model;
 
 import lombok.Builder;
+import pl.gesieniec.gsmseller.offer.model.specs.CommunicationSpecs;
+import pl.gesieniec.gsmseller.offer.model.specs.ScreenSpecs;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -14,8 +17,14 @@ public record PhoneOffer(
     String status,
     String color,
     String location,
-    String screenSize,
+    ScreenSpecs screen,
+    String memory,
+    String ram,
+    String simCardType,
+    List<Integer> frontCamerasMpx,
+    List<Integer> backCamerasMpx,
     String batteryCapacity,
-    String screenType,
+    CommunicationSpecs communication,
+    String operatingSystem,
     List<String> photos
 ) {}

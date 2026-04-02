@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.offer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OfferService {
 
@@ -29,64 +31,102 @@ public class OfferService {
 
     @Transactional
     public PhoneOffer createOffer(OfferRequest request, List<MultipartFile> photoFiles) {
+        log.info("Creating offer for phone technicalId: {}", request.phoneStockTechnicalId());
         PhoneStock phoneStock = phoneStockRepository.findByTechnicalId(request.phoneStockTechnicalId())
-            .orElseThrow(() -> new EntityNotFoundException("Phone not found: " + request.phoneStockTechnicalId()));
+            .orElseThrow(() -> {
+                log.error("Phone not found for technicalId: {}", request.phoneStockTechnicalId());
+                return new EntityNotFoundException("Phone not found: " + request.phoneStockTechnicalId());
+            });
 
         List<String> photoNames = new ArrayList<>();
         if (photoFiles != null) {
+            log.debug("Storing {} photo files for new offer", photoFiles.size());
             photoFiles.forEach(file -> photoNames.add(fileStorageService.storeFile(file)));
         }
 
-        Offer offer = new Offer(
-            phoneStock,
-            request.screenSize(),
-            request.batteryCapacity(),
-            request.screenType(),
-            photoNames
-        );
+        Offer offer = Offer.builder()
+            .phoneStock(phoneStock)
+            .screen(request.screen())
+            .memory(request.memory())
+            .ram(request.ram())
+            .simCardType(request.simCardType())
+            .frontCamerasMpx(request.frontCamerasMpx())
+            .backCamerasMpx(request.backCamerasMpx())
+            .batteryCapacity(request.batteryCapacity())
+            .communication(request.communication())
+            .operatingSystem(request.operatingSystem())
+            .brand(request.brand())
+            .photos(photoNames)
+            .build();
 
-        return mapToDto(offerRepository.save(offer));
+        PhoneOffer savedOffer = mapToDto(offerRepository.save(offer));
+        log.info("Offer created successfully for phone technicalId: {}", request.phoneStockTechnicalId());
+        return savedOffer;
     }
 
     @Transactional
     public PhoneOffer updateOffer(UUID technicalId, OfferRequest request, List<MultipartFile> photoFiles) {
+        log.info("Updating offer for technicalId: {}", technicalId);
         Offer offer = offerRepository.findByPhoneStockTechnicalId(technicalId)
-            .orElseThrow(() -> new EntityNotFoundException("Offer not found: " + technicalId));
+            .orElseThrow(() -> {
+                log.error("Offer not found for update, technicalId: {}", technicalId);
+                return new EntityNotFoundException("Offer not found: " + technicalId);
+            });
 
         List<String> currentPhotos = offer.getPhotos();
         List<String> requestedExistingPhotos = request.photos() != null ? request.photos() : new ArrayList<>();
 
         // Usuń pliki, których nie ma już w request
-        currentPhotos.stream()
+        long removedPhotosCount = currentPhotos.stream()
             .filter(photo -> !requestedExistingPhotos.contains(photo))
-            .forEach(fileStorageService::deleteFile);
+            .peek(photo -> log.debug("Deleting photo file: {}", photo))
+            .peek(fileStorageService::deleteFile)
+            .count();
+        if (removedPhotosCount > 0) {
+            log.info("Removed {} photo files during offer update", removedPhotosCount);
+        }
 
         List<String> finalPhotos = new ArrayList<>(requestedExistingPhotos);
 
         // Dodaj nowe pliki
         if (photoFiles != null) {
+            log.debug("Storing {} new photo files for offer update", photoFiles.size());
             photoFiles.forEach(file -> finalPhotos.add(fileStorageService.storeFile(file)));
         }
 
         offer.update(
-            request.screenSize(),
+            request.screen(),
+            request.memory(),
+            request.ram(),
+            request.simCardType(),
+            request.frontCamerasMpx(),
+            request.backCamerasMpx(),
             request.batteryCapacity(),
-            request.screenType(),
+            request.communication(),
+            request.operatingSystem(),
+            request.brand(),
             finalPhotos
         );
 
-        return mapToDto(offerRepository.save(offer));
+        PhoneOffer updatedOffer = mapToDto(offerRepository.save(offer));
+        log.info("Offer updated successfully for technicalId: {}", technicalId);
+        return updatedOffer;
     }
 
     @Transactional(readOnly = true)
     public PhoneOffer getOffer(UUID technicalId) {
+        log.debug("Fetching offer for technicalId: {}", technicalId);
         return offerRepository.findByPhoneStockTechnicalId(technicalId)
             .map(this::mapToDto)
-            .orElseThrow(() -> new EntityNotFoundException("Offer not found for technicalId: " + technicalId));
+            .orElseThrow(() -> {
+                log.warn("Offer not found for technicalId: {}", technicalId);
+                return new EntityNotFoundException("Offer not found for technicalId: " + technicalId);
+            });
     }
 
     @Transactional(readOnly = true)
     public Page<pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto> getAvailablePhones(String search, Pageable pageable) {
+        log.debug("Fetching available phones with search: '{}', pageable: {}", search, pageable);
         Specification<PhoneStock> spec = (root, query, cb) -> {
             jakarta.persistence.criteria.Subquery<Long> subquery = query.subquery(Long.class);
             jakarta.persistence.criteria.Root<Offer> offerRoot = subquery.from(Offer.class);
@@ -114,6 +154,7 @@ public class OfferService {
 
     @Transactional(readOnly = true)
     public Page<PhoneOffer> getOffers(Specification<Offer> spec, Pageable pageable) {
+        log.info("Fetching offers with spec and pageable: {}", pageable);
         return offerRepository.findAll(spec, pageable)
             .map(this::mapToDto);
     }
@@ -123,14 +164,20 @@ public class OfferService {
         return PhoneOffer.builder()
             .technicalId(phoneStock.getTechnicalId())
             .price(phoneStock.getSellingPrice())
-            .brand(phoneStock.getName())
+            .brand(offer.getBrand())
             .model(phoneStock.getModel())
             .status(phoneStock.isUsed() ? "Używany" : "Nowy")
             .color(phoneStock.getColor())
             .location(phoneStock.getLocation() != null ? phoneStock.getLocation().getName() : "Dostępny online")
-            .screenSize(offer.getScreenSize())
+            .screen(offer.getScreen())
+            .memory(offer.getMemory())
+            .ram(offer.getRam())
+            .simCardType(offer.getSimCardType())
+            .frontCamerasMpx(offer.getFrontCamerasMpx())
+            .backCamerasMpx(offer.getBackCamerasMpx())
             .batteryCapacity(offer.getBatteryCapacity())
-            .screenType(offer.getScreenType())
+            .communication(offer.getCommunication())
+            .operatingSystem(offer.getOperatingSystem())
             .photos(offer.getPhotos())
             .build();
     }

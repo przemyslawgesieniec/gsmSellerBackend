@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.gesieniec.gsmseller.offer.model.OfferRequest;
 import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
+import pl.gesieniec.gsmseller.offer.model.specs.CommunicationSpecs;
+import pl.gesieniec.gsmseller.offer.model.specs.ScreenSpecs;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,16 +32,42 @@ public class OfferController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PhoneOffer createOffer(
         @RequestParam UUID phoneStockTechnicalId,
+        @RequestParam(required = false) String brand,
         @RequestParam(required = false) String screenSize,
-        @RequestParam(required = false) String batteryCapacity,
+        @RequestParam(required = false) String screenResolution,
         @RequestParam(required = false) String screenType,
+        @RequestParam(required = false) String memory,
+        @RequestParam(required = false) String ram,
+        @RequestParam(required = false) String simCardType,
+        @RequestParam(required = false) List<Integer> frontCamerasMpx,
+        @RequestParam(required = false) List<Integer> backCamerasMpx,
+        @RequestParam(required = false) String batteryCapacity,
+        @RequestParam(required = false) String wifi,
+        @RequestParam(required = false) String portType,
+        @RequestParam(required = false) String bluetoothVersion,
+        @RequestParam(required = false) String operatingSystem,
         @RequestParam(required = false) List<MultipartFile> photoFiles
     ) {
         OfferRequest request = OfferRequest.builder()
             .phoneStockTechnicalId(phoneStockTechnicalId)
-            .screenSize(screenSize)
+            .brand(brand)
+            .screen(ScreenSpecs.builder()
+                .size(screenSize)
+                .resolution(screenResolution)
+                .type(screenType)
+                .build())
+            .memory(memory)
+            .ram(ram)
+            .simCardType(simCardType)
+            .frontCamerasMpx(frontCamerasMpx)
+            .backCamerasMpx(backCamerasMpx)
             .batteryCapacity(batteryCapacity)
-            .screenType(screenType)
+            .communication(CommunicationSpecs.builder()
+                .wifi(wifi)
+                .portType(portType)
+                .bluetoothVersion(bluetoothVersion)
+                .build())
+            .operatingSystem(operatingSystem)
             .build();
         return offerService.createOffer(request, photoFiles);
     }
@@ -47,17 +75,43 @@ public class OfferController {
     @PutMapping(value = "/{technicalId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PhoneOffer updateOffer(
         @PathVariable UUID technicalId,
+        @RequestParam(required = false) String brand,
         @RequestParam(required = false) String screenSize,
-        @RequestParam(required = false) String batteryCapacity,
+        @RequestParam(required = false) String screenResolution,
         @RequestParam(required = false) String screenType,
+        @RequestParam(required = false) String memory,
+        @RequestParam(required = false) String ram,
+        @RequestParam(required = false) String simCardType,
+        @RequestParam(required = false) List<Integer> frontCamerasMpx,
+        @RequestParam(required = false) List<Integer> backCamerasMpx,
+        @RequestParam(required = false) String batteryCapacity,
+        @RequestParam(required = false) String wifi,
+        @RequestParam(required = false) String portType,
+        @RequestParam(required = false) String bluetoothVersion,
+        @RequestParam(required = false) String operatingSystem,
         @RequestParam(required = false) List<MultipartFile> photoFiles,
-        @RequestParam(required = false) List<String> existingPhotos
+        @RequestParam(required = false) List<String> photos
     ) {
         OfferRequest request = OfferRequest.builder()
-            .screenSize(screenSize)
+            .brand(brand)
+            .screen(ScreenSpecs.builder()
+                .size(screenSize)
+                .resolution(screenResolution)
+                .type(screenType)
+                .build())
+            .memory(memory)
+            .ram(ram)
+            .simCardType(simCardType)
+            .frontCamerasMpx(frontCamerasMpx)
+            .backCamerasMpx(backCamerasMpx)
             .batteryCapacity(batteryCapacity)
-            .screenType(screenType)
-            .photos(existingPhotos)
+            .communication(CommunicationSpecs.builder()
+                .wifi(wifi)
+                .portType(portType)
+                .bluetoothVersion(bluetoothVersion)
+                .build())
+            .operatingSystem(operatingSystem)
+            .photos(photos)
             .build();
         return offerService.updateOffer(technicalId, request, photoFiles);
     }

@@ -51,6 +51,8 @@ function selectPhone(phone) {
     document.getElementById('selectedPhoneInfo').classList.remove('hide');
     document.getElementById('phoneDetails').textContent = `${phone.name} ${phone.model} (IMEI: ${phone.imei})`;
     document.getElementById('editTechnicalId').value = phone.technicalId;
+    document.getElementById('brand').value = phone.name;
+    M.updateTextFields();
 }
 
 function clearSelectedPhone() {
@@ -125,15 +127,26 @@ async function saveOffer(e) {
     if (!isEdit) {
         formData.append('phoneStockTechnicalId', technicalId);
     }
+    formData.append('brand', document.getElementById('brand').value);
     formData.append('screenSize', document.getElementById('screenSize').value);
-    formData.append('batteryCapacity', document.getElementById('batteryCapacity').value);
+    formData.append('screenResolution', document.getElementById('screenResolution').value);
     formData.append('screenType', document.getElementById('screenType').value);
+    formData.append('memory', document.getElementById('memory').value);
+    formData.append('ram', document.getElementById('ram').value);
+    formData.append('simCardType', document.getElementById('simCardType').value);
+    formData.append('frontCamerasMpx', document.getElementById('frontCamerasMpx').value);
+    formData.append('backCamerasMpx', document.getElementById('backCamerasMpx').value);
+    formData.append('batteryCapacity', document.getElementById('batteryCapacity').value);
+    formData.append('operatingSystem', document.getElementById('operatingSystem').value);
+    formData.append('wifi', document.getElementById('wifi').value);
+    formData.append('portType', document.getElementById('portType').value);
+    formData.append('bluetoothVersion', document.getElementById('bluetoothVersion').value);
     
     photos.forEach(photo => {
         if (photo instanceof File) {
             formData.append('photoFiles', photo);
         } else {
-            formData.append('existingPhotos', photo);
+            formData.append('photos', photo);
         }
     });
     
@@ -219,9 +232,11 @@ function renderOffers(offers) {
                 <div class="card-reveal">
                     <span class="card-title grey-text text-darken-4">${offer.brand} ${offer.model}<i class="material-icons right">close</i></span>
                     <p>
-                        <b>Ekran:</b> ${offer.screenSize || '---'}<br>
-                        <b>Typ:</b> ${offer.screenType || '---'}<br>
-                        <b>Bateria:</b> ${offer.batteryCapacity || '---'}
+                        <b>Ekran:</b> ${(offer.screen && offer.screen.size) || '---'} (${(offer.screen && offer.screen.resolution) || '---'})<br>
+                        <b>Typ:</b> ${(offer.screen && offer.screen.type) || '---'}<br>
+                        <b>Bateria:</b> ${offer.batteryCapacity || '---'}<br>
+                        <b>Pamięć:</b> ${offer.memory || '---'} / ${offer.ram || '---'}<br>
+                        <b>System:</b> ${offer.operatingSystem || '---'}
                     </p>
                     <div class="offer-photos-mini">
                         ${(offer.photos || []).map(p => `<img src="/uploads/${p}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
@@ -242,9 +257,21 @@ async function editOffer(technicalId) {
         document.getElementById('cancelBtn').classList.remove('hide');
         document.getElementById('editTechnicalId').value = offer.technicalId;
         
-        document.getElementById('screenSize').value = offer.screenSize || '';
+        document.getElementById('brand').value = offer.brand || '';
+        document.getElementById('screenSize').value = (offer.screen && offer.screen.size) || '';
+        document.getElementById('screenResolution').value = (offer.screen && offer.screen.resolution) || '';
+        document.getElementById('screenType').value = (offer.screen && offer.screen.type) || '';
+        document.getElementById('memory').value = offer.memory || '';
+        document.getElementById('ram').value = offer.ram || '';
+        document.getElementById('simCardType').value = offer.simCardType || '';
+        document.getElementById('frontCamerasMpx').value = (offer.frontCamerasMpx || []).join(', ');
+        document.getElementById('backCamerasMpx').value = (offer.backCamerasMpx || []).join(', ');
         document.getElementById('batteryCapacity').value = offer.batteryCapacity || '';
-        document.getElementById('screenType').value = offer.screenType || '';
+        document.getElementById('operatingSystem').value = offer.operatingSystem || '';
+        document.getElementById('wifi').value = (offer.communication && offer.communication.wifi) || '';
+        document.getElementById('portType').value = (offer.communication && offer.communication.portType) || '';
+        document.getElementById('bluetoothVersion').value = (offer.communication && offer.communication.bluetoothVersion) || '';
+        
         photos = offer.photos || [];
         renderPhotosPreview();
         

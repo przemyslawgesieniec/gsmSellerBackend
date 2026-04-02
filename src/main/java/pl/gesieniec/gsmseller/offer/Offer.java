@@ -2,8 +2,11 @@ package pl.gesieniec.gsmseller.offer;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pl.gesieniec.gsmseller.offer.model.specs.CommunicationSpecs;
+import pl.gesieniec.gsmseller.offer.model.specs.ScreenSpecs;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 
 import java.util.ArrayList;
@@ -22,27 +25,79 @@ public class Offer {
     @JoinColumn(name = "phone_stock_id", unique = true)
     private PhoneStock phoneStock;
 
-    private String screenSize;
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "size", column = @Column(name = "screen_size")),
+        @AttributeOverride(name = "resolution", column = @Column(name = "screen_resolution")),
+        @AttributeOverride(name = "type", column = @Column(name = "screen_type"))
+    })
+    private ScreenSpecs screen;
+
+    private String memory;
+    private String ram;
+    private String simCardType;
+
+    @ElementCollection
+    @CollectionTable(name = "offer_front_cameras", joinColumns = @JoinColumn(name = "offer_id"))
+    @Column(name = "mpx")
+    private List<Integer> frontCamerasMpx = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "offer_back_cameras", joinColumns = @JoinColumn(name = "offer_id"))
+    @Column(name = "mpx")
+    private List<Integer> backCamerasMpx = new ArrayList<>();
+
     private String batteryCapacity;
-    private String screenType;
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "wifi", column = @Column(name = "comm_wifi")),
+        @AttributeOverride(name = "portType", column = @Column(name = "comm_port_type")),
+        @AttributeOverride(name = "bluetoothVersion", column = @Column(name = "comm_bluetooth_version"))
+    })
+    private CommunicationSpecs communication;
+
+    private String operatingSystem;
+    private String brand;
 
     @ElementCollection
     @CollectionTable(name = "offer_photos", joinColumns = @JoinColumn(name = "offer_id"))
     @Column(name = "photo_url")
     private List<String> photos = new ArrayList<>();
 
-    public Offer(PhoneStock phoneStock, String screenSize, String batteryCapacity, String screenType, List<String> photos) {
+    @Builder
+    public Offer(PhoneStock phoneStock, ScreenSpecs screen, String memory, String ram, String simCardType,
+                 List<Integer> frontCamerasMpx, List<Integer> backCamerasMpx,
+                 String batteryCapacity, CommunicationSpecs communication, String operatingSystem,
+                 String brand, List<String> photos) {
         this.phoneStock = phoneStock;
-        this.screenSize = screenSize;
+        this.screen = screen;
+        this.memory = memory;
+        this.ram = ram;
+        this.simCardType = simCardType;
+        this.frontCamerasMpx = frontCamerasMpx != null ? new ArrayList<>(frontCamerasMpx) : new ArrayList<>();
+        this.backCamerasMpx = backCamerasMpx != null ? new ArrayList<>(backCamerasMpx) : new ArrayList<>();
         this.batteryCapacity = batteryCapacity;
-        this.screenType = screenType;
+        this.communication = communication;
+        this.operatingSystem = operatingSystem;
+        this.brand = brand;
         setPhotos(photos);
     }
 
-    public void update(String screenSize, String batteryCapacity, String screenType, List<String> photos) {
-        this.screenSize = screenSize;
+    public void update(ScreenSpecs screen, String memory, String ram, String simCardType,
+                       List<Integer> frontCamerasMpx, List<Integer> backCamerasMpx,
+                       String batteryCapacity, CommunicationSpecs communication, String operatingSystem,
+                       String brand, List<String> photos) {
+        this.screen = screen;
+        this.memory = memory;
+        this.ram = ram;
+        this.simCardType = simCardType;
+        this.frontCamerasMpx = frontCamerasMpx != null ? new ArrayList<>(frontCamerasMpx) : new ArrayList<>();
+        this.backCamerasMpx = backCamerasMpx != null ? new ArrayList<>(backCamerasMpx) : new ArrayList<>();
         this.batteryCapacity = batteryCapacity;
-        this.screenType = screenType;
+        this.communication = communication;
+        this.operatingSystem = operatingSystem;
+        this.brand = brand;
         setPhotos(photos);
     }
 
