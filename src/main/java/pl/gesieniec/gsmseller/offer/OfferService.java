@@ -15,6 +15,8 @@ import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockRepository;
 import pl.gesieniec.gsmseller.storage.FileStorageService;
 
+import org.springframework.context.event.EventListener;
+import pl.gesieniec.gsmseller.reservation.ReservationCreatedEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -61,6 +63,7 @@ public class OfferService {
             .operatingSystem(request.operatingSystem())
             .brand(request.brand())
             .photos(photos)
+            .isReserved(phoneStock.isReserved())
             .build();
 
         PhoneOffer savedOffer = mapToDto(offerRepository.save(offer));
@@ -184,6 +187,14 @@ public class OfferService {
             .communication(offer.getCommunication())
             .operatingSystem(offer.getOperatingSystem())
             .photos(offer.getPhotos().stream().map(OfferPhoto::getTechnicalId).toList())
+            .isReserved(offer.isReserved())
             .build();
+    }
+
+    @EventListener
+    @Transactional
+    public void onReservationCreated(ReservationCreatedEvent event) {
+        offerRepository.findByPhoneStockTechnicalId(event.technicalId())
+            .ifPresent(offer -> offer.setReserved(event.reserved()));
     }
 }

@@ -56,6 +56,7 @@ public class PhoneStockMapper {
             save.getComment(),
             save.getDescription(),
             save.getBatteryCondition(),
-            save.isUsed());
+            save.isUsed(),
+            save.isReserved());
     }
 }

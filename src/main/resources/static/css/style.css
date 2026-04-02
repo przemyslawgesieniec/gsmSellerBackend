@@ -714,6 +714,27 @@ table td {
     border: 1px solid #ffe0b2;
 }
 
+.reservation-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.reservation-badge .material-icons {
+    font-size: 14px;
+}
+
+.reservation-timer {
+    margin-left: 4px;
+    font-family: monospace;
+}
+
 .phone-left p {
     display: flex;
     align-items: center;

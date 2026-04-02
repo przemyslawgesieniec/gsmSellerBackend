@@ -26,5 +26,6 @@ public record PhoneOffer(
     String batteryCapacity,
     CommunicationSpecs communication,
     String operatingSystem,
-    List<UUID> photos
+    List<UUID> photos,
+    Boolean isReserved
 ) {}

@@ -1,6 +1,7 @@
 const pageSize = 20;
 let currentPage = 0;
 let phoneToHandover = null;
+let phoneToReserve = null;
 
 const listContainer = document.getElementById("phone-list");
 
@@ -43,12 +44,14 @@ async function loadStock(page = 0) {
             comment: phone.comment,
             description: phone.description,
             batteryCondition: phone.batteryCondition,
-            used: phone.used
+            used: phone.used,
+            isReserved: phone.isReserved
         }));
 
 
         renderPhones(phones);
         initDropdowns();
+        startReservationTimers(phones);
         loadPagination(data.number, data.totalPages);
     } catch (error) {
         console.error("Błąd podczas pobierania danych:", error);
@@ -214,6 +217,7 @@ function renderPhones(phones) {
           data-description="${phone.description ?? ""}"
           data-comment="${phone.comment ?? ""}"
           data-used="${phone.used ?? false}"
+          data-is-reserved="${phone.isReserved ?? false}"
           data-battery-condition="${phone.batteryCondition ?? ""}"
           data-selling-price="${phone.sellingPrice ?? ""}"
           data-purchase-price="${phone.purchasePrice ?? ""}"
@@ -226,6 +230,15 @@ function renderPhones(phones) {
                   <span class="condition-badge ${phone.used ? "USED" : "NEW"}">
                     ${phone.used ? "UŻYWANY" : "NOWY"}
                   </span>
+                  ${phone.isReserved ? `
+                  <span class="reservation-badge red lighten-2 white-text tooltipped" 
+                        id="reservation-${phone.technicalId}"
+                        data-position="top">
+                    <i class="material-icons tiny">alarm</i>
+                    <span class="reservation-text">REZERWACJA</span>
+                    <span class="reservation-timer" id="timer-${phone.technicalId}">--:--</span>
+                  </span>
+                  ` : ""}
                 </div>
                 <p><i class="material-icons tiny">smartphone</i> <b>Model:</b> ${phone.model}</p>
 
@@ -360,6 +373,14 @@ function renderPhones(phones) {
                 </a>
               </li>
               ` : ''}
+
+              ${!phone.isReserved && phone.status === 'DOSTĘPNY' ? `
+              <li>
+                <a href="#!" data-action="reserve" data-id="${phone.technicalId}">
+                  Zarezerwuj
+                </a>
+              </li>
+              ` : ''}
             
             </ul>
             
@@ -389,7 +410,48 @@ function renderPhones(phones) {
 
 let cartBtn = null;
 
+function startReservationTimers(phones) {
+    phones.filter(p => p.isReserved).forEach(async (phone) => {
+        try {
+            const response = await fetch(`/api/v1/external/reservations/status/${phone.technicalId}`);
+            if (!response.ok) return;
+            const status = await response.json();
+            
+            const badge = document.getElementById(`reservation-${phone.technicalId}`);
+            if (badge) {
+                badge.setAttribute('data-tooltip', `Rezerwujący: ${status.name} (${status.phoneNumber})`);
+                M.Tooltip.init(badge);
+            }
+
+            const expiryTime = new Date(status.expiryTime).getTime();
+            const timerElement = document.getElementById(`timer-${phone.technicalId}`);
+            
+            if (timerElement) {
+                const interval = setInterval(() => {
+                    const now = new Date().getTime();
+                    const distance = expiryTime - now;
+                    
+                    if (distance < 0) {
+                        clearInterval(interval);
+                        timerElement.innerHTML = "EXPIRED";
+                        return;
+                    }
+                    
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    
+                    timerElement.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
+                }, 1000);
+            }
+        } catch (e) {
+            console.error("Error loading reservation status", e);
+        }
+    });
+}
+
 function initDropdowns() {
+    M.Modal.init(document.querySelectorAll('.modal'));
     const elems = document.querySelectorAll('.dropdown-trigger');
     M.Dropdown.init(elems, {
         constrainWidth: false,
@@ -1069,7 +1131,19 @@ function handleDropdownAction(e) {
             openHandoverModal(id);
             break;
 
+        case "reserve":
+            openReservationModal(id);
+            break;
+
     }
+}
+
+function openReservationModal(technicalId) {
+    phoneToReserve = technicalId;
+    document.getElementById("reservationName").value = "";
+    document.getElementById("reservationPhone").value = "";
+    M.updateTextFields();
+    M.Modal.getInstance(document.getElementById("reservationModal")).open();
 }
 
 function openHandoverModal(technicalId) {
@@ -1151,6 +1225,41 @@ document.getElementById("confirmHandoverBtn")
         } catch (err) {
             console.error(err);
             M.toast({ html: "Błąd przekazania", classes: "red" });
+        }
+    });
+
+document.getElementById("confirmReservationBtn")
+    .addEventListener("click", async () => {
+        const name = document.getElementById("reservationName").value;
+        const phoneNumber = document.getElementById("reservationPhone").value;
+
+        if (!name || !phoneNumber) {
+            M.toast({ html: "Wypełnij wszystkie pola", classes: "orange" });
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/v1/external/reservations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name,
+                    phoneNumber,
+                    technicalId: phoneToReserve
+                })
+            });
+
+            if (response.ok) {
+                M.toast({ html: "Zarezerwowano pomyślnie", classes: "green" });
+                loadStock(currentPage);
+            } else {
+                const err = await response.text();
+                M.toast({ html: `Błąd: ${err}`, classes: "red" });
+            }
+        } catch (e) {
+            M.toast({ html: "Błąd połączenia", classes: "red" });
+        } finally {
+            M.Modal.getInstance(document.getElementById("reservationModal")).close();
         }
     });
 

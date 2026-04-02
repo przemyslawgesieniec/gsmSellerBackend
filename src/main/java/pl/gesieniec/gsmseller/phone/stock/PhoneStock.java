@@ -41,6 +41,8 @@ public class PhoneStock {
     @Column(name = "is_used")
     private boolean used;
 
+    private Boolean isReserved;
+
     @ManyToOne
     @JoinColumn(name = "location_id")
     private LocationEntity location;
@@ -234,6 +236,14 @@ public class PhoneStock {
         this.soldFor = new BigDecimal(price);
         this.sellingPrice = new BigDecimal(price);
         this.soldAt = LocalDateTime.now();
+    }
+
+    public boolean isReserved() {
+        return isReserved != null && isReserved;
+    }
+
+    public void setReserved(boolean reserved) {
+        this.isReserved = reserved;
     }
 
 }

@@ -32,5 +32,6 @@ public class PhoneStockDto {
     private String description;
     private String batteryCondition;
     private Boolean used;
+    private Boolean isReserved;
 
 }

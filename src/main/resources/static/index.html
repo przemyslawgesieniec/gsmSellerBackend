@@ -291,6 +291,28 @@
   </div>
 </div>
 
+<!-- Modal: Rezerwacja -->
+<div id="reservationModal" class="modal">
+  <div class="modal-content">
+    <h5>Zarezerwuj telefon</h5>
+    <p>Rezerwacja wygaśnie automatycznie po 4 godzinach.</p>
+    <div class="row">
+      <div class="input-field col s12 m6">
+        <input id="reservationName" type="text">
+        <label for="reservationName">Imię rezerwującego</label>
+      </div>
+      <div class="input-field col s12 m6">
+        <input id="reservationPhone" type="text">
+        <label for="reservationPhone">Numer telefonu</label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" class="modal-close btn-flat">Anuluj</a>
+    <a href="#!" id="confirmReservationBtn" class="btn blue darken-2">Zarezerwuj</a>
+  </div>
+</div>
+
 
 <!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>

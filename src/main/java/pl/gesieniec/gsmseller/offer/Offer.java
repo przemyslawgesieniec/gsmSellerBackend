@@ -60,6 +60,7 @@ public class Offer {
 
     private String operatingSystem;
     private String brand;
+    private Boolean isReserved;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "offer_id")
@@ -69,7 +70,7 @@ public class Offer {
     public Offer(PhoneStock phoneStock, ScreenSpecs screen, String memory, String ram, String simCardType,
                  List<Integer> frontCamerasMpx, List<Integer> backCamerasMpx,
                  String batteryCapacity, CommunicationSpecs communication, String operatingSystem,
-                 String brand, List<OfferPhoto> photos) {
+                 String brand, List<OfferPhoto> photos, Boolean isReserved) {
         this.phoneStock = phoneStock;
         this.screen = screen;
         this.memory = memory;
@@ -81,6 +82,7 @@ public class Offer {
         this.communication = communication;
         this.operatingSystem = operatingSystem;
         this.brand = brand;
+        this.isReserved = isReserved;
         setPhotos(photos);
     }
 
@@ -109,5 +111,13 @@ public class Offer {
         if (photos != null) {
             this.photos.addAll(photos);
         }
+    }
+
+    public void setReserved(boolean reserved) {
+        this.isReserved = reserved;
+    }
+
+    public boolean isReserved() {
+        return isReserved != null && isReserved;
     }
 }
