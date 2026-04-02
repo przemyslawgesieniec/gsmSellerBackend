@@ -53,6 +53,46 @@ function selectPhone(phone) {
     document.getElementById('editTechnicalId').value = phone.technicalId;
     document.getElementById('brand').value = phone.name;
     M.updateTextFields();
+    fetchAiSpecs(phone.name, phone.model);
+}
+
+async function fetchAiSpecs(name, model) {
+    M.toast({html: 'Pobieranie specyfikacji z AI...', classes: 'blue'});
+    try {
+        const response = await fetch(`/api/v1/offers/ai-specs?name=${encodeURIComponent(name)}&model=${encodeURIComponent(model)}`);
+        if (response.ok) {
+            const specs = await response.json();
+            fillFormWithAiSpecs(specs);
+            M.toast({html: 'Specyfikacja uzupełniona przez AI', classes: 'green'});
+        } else {
+            M.toast({html: 'AI nie mogło znaleźć specyfikacji', classes: 'orange'});
+        }
+    } catch (err) {
+        console.error('Błąd AI:', err);
+        M.toast({html: 'Błąd połączenia z AI', classes: 'red'});
+    }
+}
+
+function fillFormWithAiSpecs(specs) {
+    if (specs.brand) document.getElementById('brand').value = specs.brand;
+    if (specs.screen) {
+        document.getElementById('screenSize').value = specs.screen.size || '';
+        document.getElementById('screenResolution').value = specs.screen.resolution || '';
+        document.getElementById('screenType').value = specs.screen.type || '';
+    }
+    document.getElementById('memory').value = specs.memory || '';
+    document.getElementById('ram').value = specs.ram || '';
+    document.getElementById('simCardType').value = specs.simCardType || '';
+    document.getElementById('frontCamerasMpx').value = (specs.frontCamerasMpx || []).join(', ');
+    document.getElementById('backCamerasMpx').value = (specs.backCamerasMpx || []).join(', ');
+    document.getElementById('batteryCapacity').value = specs.batteryCapacity || '';
+    document.getElementById('operatingSystem').value = specs.operatingSystem || '';
+    if (specs.communication) {
+        document.getElementById('wifi').value = specs.communication.wifi || '';
+        document.getElementById('portType').value = specs.communication.portType || '';
+        document.getElementById('bluetoothVersion').value = specs.communication.bluetoothVersion || '';
+    }
+    M.updateTextFields();
 }
 
 function clearSelectedPhone() {

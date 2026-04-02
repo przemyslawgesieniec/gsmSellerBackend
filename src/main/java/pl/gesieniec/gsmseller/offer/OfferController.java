@@ -28,6 +28,12 @@ import java.util.UUID;
 public class OfferController {
 
     private final OfferService offerService;
+    private final OfferOpenAIParser offerOpenAIParser;
+
+    @GetMapping("/ai-specs")
+    public PhoneOffer getAiSpecs(@RequestParam String name, @RequestParam String model) {
+        return offerOpenAIParser.fetchSpecsFromAi(name, model);
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PhoneOffer createOffer(
