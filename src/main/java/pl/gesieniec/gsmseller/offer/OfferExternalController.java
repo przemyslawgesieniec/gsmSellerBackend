@@ -7,10 +7,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -21,6 +26,24 @@ import java.util.UUID;
 public class OfferExternalController {
 
     private final OfferService offerService;
+
+    @GetMapping("/photos")
+    public ResponseEntity<List<byte[]>> getPhotos(@RequestParam List<UUID> ids) {
+        List<OfferPhoto> photos = offerService.getPhotos(ids);
+        List<byte[]> data = photos.stream().map(OfferPhoto::getData).toList();
+        return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/photos/{id}")
+    public ResponseEntity<byte[]> getPhoto(@PathVariable UUID id) {
+        OfferPhoto photo = offerService.getPhotos(List.of(id)).stream().findFirst()
+            .orElseThrow(() -> new pl.gesieniec.gsmseller.common.EntityNotFoundException("Photo not found: " + id));
+        
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(photo.getContentType()))
+            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000")
+            .body(photo.getData());
+    }
 
     @GetMapping
     public Page<PhoneOffer> getOffers(

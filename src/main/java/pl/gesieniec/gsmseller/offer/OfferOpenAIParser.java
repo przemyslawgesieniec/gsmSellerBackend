@@ -43,8 +43,7 @@ public class OfferOpenAIParser {
                     "messages", List.of(
                             Map.of(
                                     "role", "system",
-                                    "content", "You are a technical expert in mobile phones. Extract structured data and return ONLY valid JSON."
-                            ),
+                                "content", "Jesteś ekspertem technicznym w dziedzinie telefonów komórkowych. Wyodrębnij dane strukturalne i zwróć WYŁĄCZNIE poprawny JSON."                            ),
                             Map.of(
                                     "role", "user",
                                     "content", prompt
@@ -72,38 +71,38 @@ public class OfferOpenAIParser {
 
     private String buildPrompt(String phoneName, String phoneModel) {
         return """
-            Search for technical specifications of the phone: %s %s.
+        Wyszukaj specyfikację techniczną telefonu: %s %s.
 
-            Return ONLY a JSON object with EXACTLY these fields:
-            {
-              "model": string,
-              "screen": {
-                "size": string,
-                "resolution": string,
-                "type": string
-              },
-              "memory": string,
-              "ram": string,
-              "simCardType": string,
-              "frontCamerasMpx": number[],
-              "backCamerasMpx": number[],
-              "batteryCapacity": string,
-              "communication": {
-                "wifi": string,
-                "portType": string,
-                "bluetoothVersion": string
-              },
-              "operatingSystem": string
-            }
+        Zwróć WYŁĄCZNIE obiekt JSON z DOKŁADNIE tymi polami:
+        {
+          "model": string,
+          "screen": {
+            "size": string,
+            "resolution": string,
+            "type": string
+          },
+          "memory": string,
+          "ram": string,
+          "simCardType": string,
+          "frontCamerasMpx": number[],
+          "backCamerasMpx": number[],
+          "batteryCapacity": string,
+          "communication": {
+            "wifi": string,
+            "portType": string,
+            "bluetoothVersion": string
+          },
+          "operatingSystem": string
+        }
 
-            RULES:
-            - "memory" should be a string like "256 GB / 512 GB / 1 TB"
-            - "ram" should be a string like "12 GB / 16 GB"
-            - "frontCamerasMpx" and "backCamerasMpx" MUST be arrays of integers.
-            - If a value is unknown, use null for strings/objects or empty array for lists.
-            - Do NOT add explanations.
-            - Output must be valid JSON only.
-            """.formatted(phoneName, phoneModel);
+        ZASADY:
+        - "memory" powinno być stringiem np. "256 GB / 512 GB / 1 TB"
+        - "ram" powinno być stringiem np. "12 GB / 16 GB"
+        - "frontCamerasMpx" oraz "backCamerasMpx" MUSZĄ być tablicami liczb całkowitych.
+        - Jeśli wartość jest nieznana, użyj null dla stringów/obiektów lub pustej tablicy dla list.
+        - NIE dodawaj żadnych wyjaśnień.
+        - Wynik musi być wyłącznie poprawnym JSON-em.
+        """.formatted(phoneName, phoneModel);
     }
 
     private String extractJsonFromResponse(String response) throws Exception {

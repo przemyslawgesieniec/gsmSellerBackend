@@ -74,6 +74,20 @@ public class FileStorageService {
         return ext.equals("jpg") || ext.equals("jpeg") || ext.equals("png");
     }
 
+    public byte[] compressImageIfImage(MultipartFile file) {
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String extension = StringUtils.getFilenameExtension(originalFilename);
+        try (InputStream is = file.getInputStream()) {
+            if (isImage(extension)) {
+                return compressImage(is, extension);
+            } else {
+                return file.getBytes();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Could not process file", e);
+        }
+    }
+
     private byte[] compressImage(InputStream inputStream, String extension) throws IOException {
         BufferedImage image = ImageIO.read(inputStream);
         if (image == null) {

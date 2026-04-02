@@ -96,7 +96,7 @@ public class OfferController {
         @RequestParam(required = false) String bluetoothVersion,
         @RequestParam(required = false) String operatingSystem,
         @RequestParam(required = false) List<MultipartFile> photoFiles,
-        @RequestParam(required = false) List<String> photos
+        @RequestParam(required = false) List<UUID> photos
     ) {
         OfferRequest request = OfferRequest.builder()
             .brand(brand)

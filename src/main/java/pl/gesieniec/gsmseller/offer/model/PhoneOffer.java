@@ -26,5 +26,5 @@ public record PhoneOffer(
     String batteryCapacity,
     CommunicationSpecs communication,
     String operatingSystem,
-    List<String> photos
+    List<UUID> photos
 ) {}

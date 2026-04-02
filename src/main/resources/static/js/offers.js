@@ -132,7 +132,7 @@ function renderPhotosPreview() {
         if (photo instanceof File) {
             src = URL.createObjectURL(photo);
         } else {
-            src = `/uploads/${photo}`;
+            src = `/api/v1/external/offers/photos/${photo}`;
         }
         
         div.innerHTML = `
@@ -185,7 +185,7 @@ async function saveOffer(e) {
     photos.forEach(photo => {
         if (photo instanceof File) {
             formData.append('photoFiles', photo);
-        } else {
+        } else if (typeof photo === 'string') {
             formData.append('photos', photo);
         }
     });
@@ -248,7 +248,7 @@ function renderOffers(offers) {
     }
     
     offers.forEach(offer => {
-        const mainPhoto = offer.photos && offer.photos.length > 0 ? `/uploads/${offer.photos[0]}` : 'https://via.placeholder.com/300x200?text=Brak+zdjęcia';
+        const mainPhoto = offer.photos && offer.photos.length > 0 ? `/api/v1/external/offers/photos/${offer.photos[0]}` : 'https://via.placeholder.com/300x200?text=Brak+zdjęcia';
         
         const col = document.createElement('div');
         col.className = 'col s12 m6 l4';
@@ -279,7 +279,7 @@ function renderOffers(offers) {
                         <b>System:</b> ${offer.operatingSystem || '---'}
                     </p>
                     <div class="offer-photos-mini">
-                        ${(offer.photos || []).map(p => `<img src="/uploads/${p}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
+                        ${(offer.photos || []).map(p => `<img src="/api/v1/external/offers/photos/${p}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
                     </div>
                 </div>
             </div>

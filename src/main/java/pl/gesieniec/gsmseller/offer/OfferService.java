@@ -25,6 +25,7 @@ import java.util.UUID;
 public class OfferService {
 
     private final OfferRepository offerRepository;
+    private final OfferPhotoRepository offerPhotoRepository;
     private final PhoneStockRepository phoneStockRepository;
     private final pl.gesieniec.gsmseller.phone.stock.PhoneStockMapper phoneStockMapper;
     private final FileStorageService fileStorageService;
@@ -38,10 +39,13 @@ public class OfferService {
                 return new EntityNotFoundException("Phone not found: " + request.phoneStockTechnicalId());
             });
 
-        List<String> photoNames = new ArrayList<>();
+        List<OfferPhoto> photos = new ArrayList<>();
         if (photoFiles != null) {
-            log.debug("Storing {} photo files for new offer", photoFiles.size());
-            photoFiles.forEach(file -> photoNames.add(fileStorageService.storeFile(file)));
+            log.debug("Storing {} photo files for new offer in DB", photoFiles.size());
+            photoFiles.forEach(file -> {
+                byte[] data = fileStorageService.compressImageIfImage(file);
+                photos.add(new OfferPhoto(data, file.getContentType()));
+            });
         }
 
         Offer offer = Offer.builder()
@@ -56,7 +60,7 @@ public class OfferService {
             .communication(request.communication())
             .operatingSystem(request.operatingSystem())
             .brand(request.brand())
-            .photos(photoNames)
+            .photos(photos)
             .build();
 
         PhoneOffer savedOffer = mapToDto(offerRepository.save(offer));
@@ -73,25 +77,20 @@ public class OfferService {
                 return new EntityNotFoundException("Offer not found: " + technicalId);
             });
 
-        List<String> currentPhotos = offer.getPhotos();
-        List<String> requestedExistingPhotos = request.photos() != null ? request.photos() : new ArrayList<>();
+        List<UUID> requestedExistingPhotoIds = request.photos() != null ? request.photos() : new ArrayList<>();
 
-        // Usuń pliki, których nie ma już w request
-        long removedPhotosCount = currentPhotos.stream()
-            .filter(photo -> !requestedExistingPhotos.contains(photo))
-            .peek(photo -> log.debug("Deleting photo file: {}", photo))
-            .peek(fileStorageService::deleteFile)
-            .count();
-        if (removedPhotosCount > 0) {
-            log.info("Removed {} photo files during offer update", removedPhotosCount);
-        }
-
-        List<String> finalPhotos = new ArrayList<>(requestedExistingPhotos);
+        // Znajdź istniejące zdjęcia, które mają zostać zachowane
+        List<OfferPhoto> finalPhotos = new ArrayList<>(offerPhotoRepository.findAllByTechnicalIdIn(requestedExistingPhotoIds));
 
         // Dodaj nowe pliki
         if (photoFiles != null) {
-            log.debug("Storing {} new photo files for offer update", photoFiles.size());
-            photoFiles.forEach(file -> finalPhotos.add(fileStorageService.storeFile(file)));
+            log.debug("Storing {} new photo files for offer update in DB", photoFiles.size());
+            photoFiles.forEach(file -> {
+                if (!file.isEmpty()) {
+                    byte[] data = fileStorageService.compressImageIfImage(file);
+                    finalPhotos.add(new OfferPhoto(data, file.getContentType()));
+                }
+            });
         }
 
         offer.update(
@@ -111,6 +110,12 @@ public class OfferService {
         PhoneOffer updatedOffer = mapToDto(offerRepository.save(offer));
         log.info("Offer updated successfully for technicalId: {}", technicalId);
         return updatedOffer;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OfferPhoto> getPhotos(List<UUID> photoIds) {
+        log.debug("Fetching photos for UUIDs: {}", photoIds);
+        return offerPhotoRepository.findAllByTechnicalIdIn(photoIds);
     }
 
     @Transactional(readOnly = true)
@@ -178,7 +183,7 @@ public class OfferService {
             .batteryCapacity(offer.getBatteryCapacity())
             .communication(offer.getCommunication())
             .operatingSystem(offer.getOperatingSystem())
-            .photos(offer.getPhotos())
+            .photos(offer.getPhotos().stream().map(OfferPhoto::getTechnicalId).toList())
             .build();
     }
 }

@@ -11,6 +11,7 @@ import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -60,16 +61,15 @@ public class Offer {
     private String operatingSystem;
     private String brand;
 
-    @ElementCollection
-    @CollectionTable(name = "offer_photos", joinColumns = @JoinColumn(name = "offer_id"))
-    @Column(name = "photo_url")
-    private List<String> photos = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "offer_id")
+    private List<OfferPhoto> photos = new ArrayList<>();
 
     @Builder
     public Offer(PhoneStock phoneStock, ScreenSpecs screen, String memory, String ram, String simCardType,
                  List<Integer> frontCamerasMpx, List<Integer> backCamerasMpx,
                  String batteryCapacity, CommunicationSpecs communication, String operatingSystem,
-                 String brand, List<String> photos) {
+                 String brand, List<OfferPhoto> photos) {
         this.phoneStock = phoneStock;
         this.screen = screen;
         this.memory = memory;
@@ -87,7 +87,7 @@ public class Offer {
     public void update(ScreenSpecs screen, String memory, String ram, String simCardType,
                        List<Integer> frontCamerasMpx, List<Integer> backCamerasMpx,
                        String batteryCapacity, CommunicationSpecs communication, String operatingSystem,
-                       String brand, List<String> photos) {
+                       String brand, List<OfferPhoto> photos) {
         this.screen = screen;
         this.memory = memory;
         this.ram = ram;
@@ -101,10 +101,13 @@ public class Offer {
         setPhotos(photos);
     }
 
-    public void setPhotos(List<String> photos) {
+    public void setPhotos(List<OfferPhoto> photos) {
         if (photos != null && photos.size() > 5) {
             throw new IllegalArgumentException("Offer cannot have more than 5 photos");
         }
-        this.photos = photos != null ? new ArrayList<>(photos) : new ArrayList<>();
+        this.photos.clear();
+        if (photos != null) {
+            this.photos.addAll(photos);
+        }
     }
 }
