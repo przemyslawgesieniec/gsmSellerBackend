@@ -32,6 +32,22 @@
   </li>
 </ul>
 
+<ul id="dropdown-internet" class="dropdown-content custom-dropdown">
+  <li>
+    <a href="offers.html" class="dropdown-item">
+      <i class="material-icons left">local_offer</i>
+      Oferty
+    </a>
+  </li>
+  <li class="divider"></li>
+  <li>
+    <a href="purchase.html" class="dropdown-item">
+      <i class="material-icons left">shopping_basket</i>
+      Skup
+    </a>
+  </li>
+</ul>
+
 <!-- NAVBAR -->
 <nav class="custom-navbar ">
   <div class="nav-wrapper">
@@ -45,17 +61,12 @@
 
     <ul class="right hide-on-med-and-down">
 
-      <li><a href="index.html">
-        <i class="material-icons left">inventory_2</i> Magazyn
-      </a></li>
-
-      <li><a href="offers.html">
-        <i class="material-icons left">local_offer</i> Oferty
-      </a></li>
-
-      <li><a href="purchase.html">
-        <i class="material-icons left">shopping_basket</i> Skup
-      </a></li>
+      <li>
+        <a class="dropdown-trigger" href="#!" data-target="dropdown-internet">
+          <i class="material-icons left">cloud</i> Internet
+          <i class="material-icons right">arrow_drop_down</i>
+        </a>
+      </li>
 
       <li><a href="addPhones.html">
         <i class="material-icons left">add_circle</i> Telefon
@@ -103,28 +114,25 @@
 <!-- MOBILE NAV (z ikonami) -->
   <ul class="sidenav" id="mobile-nav">
 
-    <!-- MOBILE LOGO -->
     <li class="mobile-logo">
       <a href="index.html" class="brand-logo">
         <img src="/imgs/logo_gsm_black.png" alt="logo" style="height: 40px; margin-right: 10px;">
        </a>
     </li>
 
-    <li>
-      <a href="index.html">
-        <i class="material-icons">inventory_2</i>
-        Magazyn
-      </a>
+    <!-- NAGŁÓWEK SEKCJI INTERNET -->
+    <li class="sidenav-section">
+      Internet
     </li>
 
-    <li>
+    <li class="mobile-subitem">
       <a href="offers.html">
         <i class="material-icons">local_offer</i>
         Oferty
       </a>
     </li>
 
-    <li>
+    <li class="mobile-subitem">
       <a href="purchase.html">
         <i class="material-icons">shopping_basket</i>
         Skup
