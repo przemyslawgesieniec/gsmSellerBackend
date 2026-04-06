@@ -118,7 +118,13 @@ public class OfferService {
     @Transactional(readOnly = true)
     public List<OfferPhoto> getPhotos(List<UUID> photoIds) {
         log.debug("Fetching photos for UUIDs: {}", photoIds);
-        return offerPhotoRepository.findAllByTechnicalIdIn(photoIds);
+        List<OfferPhoto> photos = offerPhotoRepository.findAllByTechnicalIdIn(photoIds);
+        photos.forEach(photo -> {
+            if (photo.getData() != null) {
+                int length = photo.getData().length; // Force load @Lob
+            }
+        });
+        return photos;
     }
 
     @Transactional(readOnly = true)

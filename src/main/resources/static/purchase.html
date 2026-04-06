@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skup Telefonów - Panel Pracownika</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="navbar"></div>
+    <script src="js/loadNavbar.js"></script>
+
+    <div class="container">
+        <h3 class="center-align">Zgłoszenia skupu</h3>
+        
+        <div id="purchase-list-container">
+            <table class="highlight responsive-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Model</th>
+                        <th>Numer telefonu</th>
+                        <th>Opis</th>
+                        <th>Status</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody id="purchase-list">
+                    <!-- Dynamicznie wypełniane -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Szczegółów i Zamykania -->
+    <div id="modal-details" class="modal">
+        <div class="modal-content">
+            <h4>Szczegóły zgłoszenia</h4>
+            <div class="row">
+                <div class="col s12 m6">
+                    <p><strong>Model:</strong> <span id="detail-model"></span></p>
+                    <p><strong>Telefon:</strong> <span id="detail-phone"></span></p>
+                    <p><strong>Data:</strong> <span id="detail-date"></span></p>
+                    <p><strong>Opis:</strong> <span id="detail-description"></span></p>
+                </div>
+                <div class="col s12 m6" id="detail-photos">
+                    <!-- Zdjęcia tutaj -->
+                </div>
+            </div>
+            
+            <div id="closure-section" style="display: none;">
+                <hr>
+                <h5>Zamknij ofertę</h5>
+                <form id="close-purchase-form">
+                    <input type="hidden" id="close-purchase-id">
+                    <div class="input-field col s12">
+                        <textarea id="closure-reason" class="materialize-textarea" required></textarea>
+                        <label for="closure-reason">Powód zamknięcia</label>
+                    </div>
+                    <div class="col s12">
+                        <label>
+                            <input type="checkbox" id="contacted-customer" />
+                            <span>Zadzwoniono do klienta</span>
+                        </label>
+                    </div>
+                    <div class="col s12" style="margin-top: 20px;">
+                        <button type="submit" class="btn waves-effect waves-light red">Zamknij ofertę</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="closed-info-section" style="display: none;">
+                <hr>
+                <h5>Informacje o zamknięciu</h5>
+                <p><strong>Powód:</strong> <span id="info-closure-reason"></span></p>
+                <p><strong>Kontakt:</strong> <span id="info-contacted"></span></p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close waves-effect waves-green btn-flat">Zamknij</a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="js/purchase.js"></script>
+</body>
+</html>
