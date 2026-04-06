@@ -237,6 +237,10 @@ function renderPhones(phones) {
                     <i class="material-icons tiny">alarm</i>
                     <span class="reservation-text">REZERWACJA</span>
                     <span class="reservation-timer" id="timer-${phone.technicalId}">--:--</span>
+                    <i class="material-icons tiny cancel-reservation" 
+                       style="cursor: pointer; margin-left: 5px;"
+                       data-id="${phone.technicalId}"
+                       onclick="confirmCancelReservation('${phone.technicalId}')">close</i>
                   </span>
                   ` : ""}
                 </div>
@@ -1277,6 +1281,29 @@ function initSimpleSelect(selector) {
         closeAfterSelect: true,
         allowEmptyOption: true
     });
+}
+
+function confirmCancelReservation(technicalId) {
+    if (confirm("Czy na pewno chcesz usunąć rezerwację?")) {
+        cancelReservation(technicalId);
+    }
+}
+
+async function cancelReservation(technicalId) {
+    try {
+        const response = await fetch(`/api/v1/reservations/${technicalId}`, {
+            method: 'DELETE'
+        });
+        if (response.ok) {
+            M.toast({ html: "Rezerwacja została usunięta", classes: "green" });
+            loadStock(currentPage);
+        } else {
+            const err = await response.text();
+            M.toast({ html: `Błąd: ${err}`, classes: "red" });
+        }
+    } catch (e) {
+        M.toast({ html: "Błąd połączenia", classes: "red" });
+    }
 }
 
 function getBatteryIcon(percent) {

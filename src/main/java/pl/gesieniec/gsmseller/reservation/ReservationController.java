@@ -22,4 +22,14 @@ public class ReservationController {
     public ReservationStatus getStatus(@PathVariable UUID technicalId) {
         return reservationService.getReservationStatus(technicalId);
     }
+
+    @DeleteMapping("/{technicalId}")
+    public void cancelReservation(@PathVariable UUID technicalId) {
+        String username = "SYSTEM_USER";
+        try {
+            username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        } catch (Exception e) {
+        }
+        reservationService.cancelReservation(technicalId, username);
+    }
 }

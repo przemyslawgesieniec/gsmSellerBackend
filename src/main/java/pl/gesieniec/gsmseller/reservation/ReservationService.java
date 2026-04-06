@@ -25,7 +25,13 @@ public class ReservationService {
         
         reservationRepository.findByTechnicalId(request.technicalId())
                 .ifPresent(r -> {
-                    throw new IllegalStateException("Phone already reserved");
+                    if (r.getExpiryTime().isAfter(LocalDateTime.now())) {
+                        throw new ReservationConflictException("Phone already reserved");
+                    } else {
+                        log.info("Removing expired reservation for phone: {} before creating new one", request.technicalId());
+                        reservationRepository.delete(r);
+                        eventPublisher.publishEvent(new ReservationExpiredEvent(request.technicalId(), false));
+                    }
                 });
 
         Reservation reservation = new Reservation(
@@ -48,9 +54,18 @@ public class ReservationService {
             log.info("Removing {} expired reservations", expired.size());
             expired.forEach(r -> {
                 reservationRepository.delete(r);
-                eventPublisher.publishEvent(new ReservationCreatedEvent(r.getTechnicalId(), false));
+                eventPublisher.publishEvent(new ReservationExpiredEvent(r.getTechnicalId(), false));
             });
         }
+    }
+
+    @Transactional
+    public void cancelReservation(UUID technicalId, String canceledBy) {
+        log.warn("Employee {} is manually removing reservation for phone: {}", canceledBy, technicalId);
+        reservationRepository.findByTechnicalId(technicalId).ifPresent(reservation -> {
+            reservationRepository.delete(reservation);
+            eventPublisher.publishEvent(new ReservationCancelledEvent(technicalId, false, canceledBy));
+        });
     }
 
     public ReservationStatus getReservationStatus(UUID technicalId) {

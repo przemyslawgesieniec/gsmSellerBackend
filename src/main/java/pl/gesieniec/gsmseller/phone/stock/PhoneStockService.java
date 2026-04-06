@@ -20,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import org.springframework.context.event.EventListener;
 import pl.gesieniec.gsmseller.reservation.ReservationCreatedEvent;
+import pl.gesieniec.gsmseller.reservation.ReservationExpiredEvent;
+import pl.gesieniec.gsmseller.reservation.ReservationCancelledEvent;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.event.PhoneRemovedEvent;
@@ -299,6 +301,20 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     @EventListener
     @Transactional
     public void onReservationCreated(ReservationCreatedEvent event) {
+        repository.findByTechnicalId(event.technicalId())
+            .ifPresent(phone -> phone.setReserved(event.reserved()));
+    }
+
+    @EventListener
+    @Transactional
+    public void onReservationExpired(ReservationExpiredEvent event) {
+        repository.findByTechnicalId(event.technicalId())
+            .ifPresent(phone -> phone.setReserved(event.reserved()));
+    }
+
+    @EventListener
+    @Transactional
+    public void onReservationCancelled(ReservationCancelledEvent event) {
         repository.findByTechnicalId(event.technicalId())
             .ifPresent(phone -> phone.setReserved(event.reserved()));
     }

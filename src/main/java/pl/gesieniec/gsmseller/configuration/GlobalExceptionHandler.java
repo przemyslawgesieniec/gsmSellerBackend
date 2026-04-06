@@ -64,10 +64,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public Map<String, Object> handleIllegalState(IllegalStateException ex) {
-        return Map.of(
-            "message", ex.getMessage()
-        );
+    @org.springframework.web.bind.annotation.ResponseBody
+    public String handleIllegalState(IllegalStateException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(pl.gesieniec.gsmseller.reservation.ReservationConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @org.springframework.web.bind.annotation.ResponseBody
+    public String handleReservationConflict(pl.gesieniec.gsmseller.reservation.ReservationConflictException ex) {
+        return ex.getMessage();
     }
 
 
