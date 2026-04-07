@@ -27,6 +27,8 @@ import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.event.PhoneRemovedEvent;
 import pl.gesieniec.gsmseller.phone.stock.handler.PhoneReturnHandler;
 import pl.gesieniec.gsmseller.phone.stock.handler.PhoneSoldHandler;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
@@ -148,7 +150,10 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     @Override
     @Transactional
     public void markPhoneSold(UUID technicalId, BigDecimal soldPrice, String sellingInfo) {
-        repository.findByTechnicalId(technicalId).ifPresent(e -> e.sell(soldPrice, sellingInfo));
+        repository.findByTechnicalId(technicalId).ifPresent(e -> {
+            e.sell(soldPrice, sellingInfo);
+            eventPublisher.publishEvent(new PhoneSoldEvent(technicalId));
+        });
     }
 
     public void acceptPhone(UUID technicalId, String username) {
@@ -277,6 +282,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             );
 
         phone.handover(request.getComment(), request.getPrice());
+
+        eventPublisher.publishEvent(new PhoneHandedOverEvent(technicalId));
 
         log.info(
             "Telefon {} przekazany przez {}. Komentarz: {}",

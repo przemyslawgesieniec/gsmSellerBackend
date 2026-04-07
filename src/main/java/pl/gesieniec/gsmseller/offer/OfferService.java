@@ -11,11 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.offer.model.OfferRequest;
 import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
+import org.springframework.context.event.EventListener;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockRepository;
 import pl.gesieniec.gsmseller.storage.FileStorageService;
-
-import org.springframework.context.event.EventListener;
 import pl.gesieniec.gsmseller.reservation.ReservationCreatedEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -147,9 +148,12 @@ public class OfferService {
             subquery.select(offerRoot.get("phoneStock").get("id"));
 
             jakarta.persistence.criteria.Predicate noOffer = cb.not(root.get("id").in(subquery));
+            jakarta.persistence.criteria.Predicate isAvailable = cb.equal(root.get("status"), pl.gesieniec.gsmseller.phone.stock.model.Status.DOSTĘPNY);
+
+            jakarta.persistence.criteria.Predicate basePredicate = cb.and(noOffer, isAvailable);
 
             if (search == null || search.isBlank()) {
-                return noOffer;
+                return basePredicate;
             }
 
             String pattern = "%" + search.toLowerCase() + "%";
@@ -159,7 +163,7 @@ public class OfferService {
                 cb.like(cb.lower(root.get("imei")), pattern)
             );
 
-            return cb.and(noOffer, searchPredicate);
+            return cb.and(basePredicate, searchPredicate);
         };
 
         return phoneStockRepository.findAll(spec, pageable)
@@ -195,6 +199,27 @@ public class OfferService {
             .photos(offer.getPhotos().stream().map(OfferPhoto::getTechnicalId).toList())
             .isReserved(offer.isReserved())
             .build();
+    }
+
+    @EventListener
+    @Transactional
+    public void onPhoneSold(PhoneSoldEvent event) {
+        removeOfferByPhoneTechnicalId(event.technicalId(), "sold");
+    }
+
+    @EventListener
+    @Transactional
+    public void onPhoneHandedOver(PhoneHandedOverEvent event) {
+        removeOfferByPhoneTechnicalId(event.technicalId(), "handed over");
+    }
+
+    private void removeOfferByPhoneTechnicalId(UUID technicalId, String reason) {
+        log.info("Removing offer for {} phone: {}", reason, technicalId);
+        offerRepository.findByPhoneStockTechnicalId(technicalId)
+            .ifPresent(offer -> {
+                offerRepository.delete(offer);
+                log.info("Offer for phone {} removed successfully", technicalId);
+            });
     }
 
     @EventListener
