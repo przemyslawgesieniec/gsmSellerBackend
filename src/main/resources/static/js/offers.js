@@ -1,5 +1,6 @@
 let photos = [];
 let phoneSelect;
+let currentPage = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
     initPhoneSelect();
@@ -100,6 +101,7 @@ function clearSelectedPhone() {
     document.getElementById('selectedPhoneInfo').classList.add('hide');
     document.getElementById('editTechnicalId').value = '';
     phoneSelect.clear();
+    phoneSelect.clearOptions();
 }
 
 function handleFileSelect(e) {
@@ -202,7 +204,7 @@ async function saveOffer(e) {
         if (response.ok) {
             M.toast({html: isEdit ? 'Oferta zaktualizowana!' : 'Oferta utworzona!', classes: 'green'});
             resetForm();
-            loadOffers();
+            loadOffers(isEdit ? currentPage : 0);
         } else {
             const err = await response.json();
             M.toast({html: 'Błąd: ' + (err.message || 'Nieznany błąd'), classes: 'red'});
@@ -225,10 +227,18 @@ function resetForm() {
 }
 
 async function loadOffers(page = 0) {
+    currentPage = page;
     document.getElementById('offersLoader').classList.remove('hide');
     try {
         const response = await fetch(`/api/v1/external/offers?page=${page}&size=12`);
         const data = await response.json();
+        
+        // Jeśli aktualna strona stała się pusta (np. po usunięciu), wróć do poprzedniej (o ile to nie strona 0)
+        if (data.content.length === 0 && page > 0) {
+            loadOffers(page - 1);
+            return;
+        }
+
         renderOffers(data.content);
         renderPagination(data);
     } catch (err) {
@@ -268,6 +278,7 @@ function renderOffers(offers) {
                 </div>
                 <div class="card-action">
                     <a href="#" onclick="editOffer('${offer.technicalId}')" class="blue-text">Edytuj</a>
+                    <a href="#" onclick="deleteOffer('${offer.technicalId}')" class="red-text right">Usuń</a>
                 </div>
                 <div class="card-reveal">
                     <span class="card-title grey-text text-darken-4">${offer.brand} ${offer.model}<i class="material-icons right">close</i></span>
@@ -324,6 +335,26 @@ async function editOffer(technicalId) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
         M.toast({html: 'Błąd pobierania danych oferty', classes: 'red'});
+    }
+}
+
+async function deleteOffer(technicalId) {
+    if (confirm('Czy na pewno chcesz usunąć tę ofertę? Zdjęcia zostaną również usunięte.')) {
+        try {
+            const response = await fetch(`/api/v1/offers/${technicalId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                M.toast({html: 'Oferta została usunięta', classes: 'green'});
+                loadOffers(currentPage);
+            } else {
+                const err = await response.json();
+                M.toast({html: 'Błąd podczas usuwania: ' + (err.message || 'Nieznany błąd'), classes: 'red'});
+            }
+        } catch (err) {
+            M.toast({html: 'Błąd połączenia', classes: 'red'});
+        }
     }
 }
 

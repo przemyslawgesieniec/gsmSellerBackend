@@ -41,7 +41,9 @@ public class PhoneStock {
     @Column(name = "is_used")
     private boolean used;
 
-    private Boolean isReserved;
+    private Boolean isReserved = false;
+
+    private Boolean hasOffer = false;
 
     @ManyToOne
     @JoinColumn(name = "location_id")
@@ -238,12 +240,24 @@ public class PhoneStock {
         this.soldAt = LocalDateTime.now();
     }
 
-    public boolean isReserved() {
-        return isReserved != null && isReserved;
+    public boolean isUsed() {
+        return used;
     }
 
-    public void setReserved(boolean reserved) {
+    public boolean isReserved() {
+        return Boolean.TRUE.equals(isReserved);
+    }
+
+    public boolean isHasOffer() {
+        return Boolean.TRUE.equals(hasOffer);
+    }
+
+    public void setReserved(Boolean reserved) {
         this.isReserved = reserved;
+    }
+
+    public void setHasOffer(Boolean hasOffer) {
+        this.hasOffer = hasOffer;
     }
 
 }

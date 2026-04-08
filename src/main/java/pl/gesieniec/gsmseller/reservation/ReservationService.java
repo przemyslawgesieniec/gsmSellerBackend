@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.event.EventListener;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
 
 @Slf4j
 @Service
@@ -76,5 +79,26 @@ public class ReservationService {
                         r.getExpiryTime()
                 ))
                 .orElse(null);
+    }
+
+    @EventListener
+    @Transactional
+    public void onPhoneSold(PhoneSoldEvent event) {
+        log.info("Removing reservation for sold phone: {}", event.technicalId());
+        removeReservation(event.technicalId(), "PHONE_SOLD");
+    }
+
+    @EventListener
+    @Transactional
+    public void onPhoneHandedOver(PhoneHandedOverEvent event) {
+        log.info("Removing reservation for handed over phone: {}", event.technicalId());
+        removeReservation(event.technicalId(), "PHONE_HANDED_OVER");
+    }
+
+    private void removeReservation(UUID technicalId, String reason) {
+        reservationRepository.findByTechnicalId(technicalId).ifPresent(reservation -> {
+            reservationRepository.delete(reservation);
+            eventPublisher.publishEvent(new ReservationCancelledEvent(technicalId, false, reason));
+        });
     }
 }

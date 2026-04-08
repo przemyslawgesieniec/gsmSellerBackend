@@ -230,6 +230,11 @@ function renderPhones(phones) {
                   <span class="condition-badge ${phone.used ? "USED" : "NEW"}">
                     ${phone.used ? "UŻYWANY" : "NOWY"}
                   </span>
+                  ${phone.hasOffer ? `
+                  <span class="condition-badge pink lighten-2 white-text">
+                    ONLINE
+                  </span>
+                  ` : ""}
                   ${phone.isReserved ? `
                   <span class="reservation-badge red lighten-2 white-text tooltipped" 
                         id="reservation-${phone.technicalId}"

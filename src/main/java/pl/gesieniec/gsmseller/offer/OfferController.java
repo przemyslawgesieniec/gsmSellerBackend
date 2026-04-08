@@ -122,6 +122,11 @@ public class OfferController {
         return offerService.updateOffer(technicalId, request, photoFiles);
     }
 
+    @DeleteMapping("/{technicalId}")
+    public void deleteOffer(@PathVariable UUID technicalId) {
+        offerService.deleteOffer(technicalId);
+    }
+
     @GetMapping("/available-phones")
     public Page<pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto> getAvailablePhones(
         @RequestParam(required = false) String search,

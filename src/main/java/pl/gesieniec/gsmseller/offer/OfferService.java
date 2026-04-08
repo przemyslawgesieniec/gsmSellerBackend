@@ -11,7 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.offer.model.OfferRequest;
 import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import pl.gesieniec.gsmseller.offer.event.OfferCreatedEvent;
+import pl.gesieniec.gsmseller.offer.event.OfferRemovedEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
@@ -32,6 +35,7 @@ public class OfferService {
     private final PhoneStockRepository phoneStockRepository;
     private final pl.gesieniec.gsmseller.phone.stock.PhoneStockMapper phoneStockMapper;
     private final FileStorageService fileStorageService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public PhoneOffer createOffer(OfferRequest request, List<MultipartFile> photoFiles) {
@@ -68,6 +72,7 @@ public class OfferService {
             .build();
 
         PhoneOffer savedOffer = mapToDto(offerRepository.save(offer));
+        eventPublisher.publishEvent(new OfferCreatedEvent(request.phoneStockTechnicalId()));
         log.info("Offer created successfully for phone technicalId: {}", request.phoneStockTechnicalId());
         return savedOffer;
     }
@@ -213,11 +218,26 @@ public class OfferService {
         removeOfferByPhoneTechnicalId(event.technicalId(), "handed over");
     }
 
+    @Transactional
+    public void deleteOffer(UUID technicalId) {
+        log.info("Deleting offer for phone technicalId: {}", technicalId);
+        offerRepository.findByPhoneStockTechnicalId(technicalId)
+            .ifPresentOrElse(offer -> {
+                offerRepository.delete(offer);
+                eventPublisher.publishEvent(new OfferRemovedEvent(technicalId));
+                log.info("Offer for phone technicalId {} deleted successfully", technicalId);
+            }, () -> {
+                log.warn("Offer for phone technicalId {} not found for deletion", technicalId);
+                throw new EntityNotFoundException("Offer not found: " + technicalId);
+            });
+    }
+
     private void removeOfferByPhoneTechnicalId(UUID technicalId, String reason) {
         log.info("Removing offer for {} phone: {}", reason, technicalId);
         offerRepository.findByPhoneStockTechnicalId(technicalId)
             .ifPresent(offer -> {
                 offerRepository.delete(offer);
+                eventPublisher.publishEvent(new OfferRemovedEvent(technicalId));
                 log.info("Offer for phone {} removed successfully", technicalId);
             });
     }

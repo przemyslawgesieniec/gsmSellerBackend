@@ -60,7 +60,7 @@ public class Offer {
 
     private String operatingSystem;
     private String brand;
-    private Boolean isReserved;
+    private Boolean isReserved = false;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "offer_id")
@@ -113,11 +113,11 @@ public class Offer {
         }
     }
 
-    public void setReserved(boolean reserved) {
+    public void setReserved(Boolean reserved) {
         this.isReserved = reserved;
     }
 
     public boolean isReserved() {
-        return isReserved != null && isReserved;
+        return Boolean.TRUE.equals(isReserved);
     }
 }

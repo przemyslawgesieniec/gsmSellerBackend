@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import org.springframework.context.event.EventListener;
+import pl.gesieniec.gsmseller.offer.event.OfferCreatedEvent;
+import pl.gesieniec.gsmseller.offer.event.OfferRemovedEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationCreatedEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationExpiredEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationCancelledEvent;
@@ -100,7 +102,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             dto.getSellingPrice(),
             dto.getPurchasePrice(),
             dto.getDescription(),
-            dto.getUsed(),
+            dto.isUsed(),
             dto.getBatteryCondition(),
             dto.getComment()
         );
@@ -324,6 +326,20 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     public void onReservationCancelled(ReservationCancelledEvent event) {
         repository.findByTechnicalId(event.technicalId())
             .ifPresent(phone -> phone.setReserved(event.reserved()));
+    }
+
+    @EventListener
+    @Transactional
+    public void onOfferCreated(OfferCreatedEvent event) {
+        repository.findByTechnicalId(event.phoneStockTechnicalId())
+            .ifPresent(phone -> phone.setHasOffer(true));
+    }
+
+    @EventListener
+    @Transactional
+    public void onOfferRemoved(OfferRemovedEvent event) {
+        repository.findByTechnicalId(event.phoneStockTechnicalId())
+            .ifPresent(phone -> phone.setHasOffer(false));
     }
 
 }

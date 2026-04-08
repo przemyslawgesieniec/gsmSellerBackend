@@ -3,15 +3,14 @@ package pl.gesieniec.gsmseller.phone.stock;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 
 @Component
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@RequiredArgsConstructor
 public class PhoneStockMapper {
 
     private static DateTimeFormatter formatter =
@@ -57,6 +56,7 @@ public class PhoneStockMapper {
             save.getDescription(),
             save.getBatteryCondition(),
             save.isUsed(),
-            save.isReserved());
+            save.isReserved(),
+            save.isHasOffer());
     }
 }
