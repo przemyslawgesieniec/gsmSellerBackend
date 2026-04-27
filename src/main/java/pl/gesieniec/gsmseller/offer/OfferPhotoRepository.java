@@ -16,4 +16,5 @@ public interface OfferPhotoRepository extends JpaRepository<OfferPhoto, Long> {
 
     @Query("SELECT p.technicalId FROM OfferPhoto p WHERE p.id IN (SELECT ph.id FROM Offer o JOIN o.photos ph WHERE o.id = :offerId)")
     List<UUID> findPhotoTechnicalIdsByOfferId(@Param("offerId") Long offerId);
+    List<OfferPhoto> findAllByThumbnailDataIsNull();
 }

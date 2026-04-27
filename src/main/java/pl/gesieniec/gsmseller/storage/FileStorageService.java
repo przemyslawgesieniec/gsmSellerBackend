@@ -95,23 +95,39 @@ public class FileStorageService {
             return null;
         }
         try (InputStream is = file.getInputStream()) {
-            BufferedImage originalImage = ImageIO.read(is);
-            if (originalImage == null) return null;
-
-            int targetWidth = 300;
-            int targetHeight = (int) (originalImage.getHeight() * (targetWidth / (double) originalImage.getWidth()));
-
-            java.awt.Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
-            BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
-            outputImage.getGraphics().drawImage(resultingImage, 0, 0, java.awt.Color.WHITE, null);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(outputImage, "jpg", baos);
-            return baos.toByteArray();
+            return createThumbnailFromStream(is);
         } catch (IOException e) {
             log.warn("Could not create thumbnail", e);
             return null;
         }
+    }
+
+    public byte[] createThumbnail(byte[] data, String contentType) {
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return null;
+        }
+        try (InputStream is = new ByteArrayInputStream(data)) {
+            return createThumbnailFromStream(is);
+        } catch (IOException e) {
+            log.warn("Could not create thumbnail from byte array", e);
+            return null;
+        }
+    }
+
+    private byte[] createThumbnailFromStream(InputStream is) throws IOException {
+        BufferedImage originalImage = ImageIO.read(is);
+        if (originalImage == null) return null;
+
+        int targetWidth = 300;
+        int targetHeight = (int) (originalImage.getHeight() * (targetWidth / (double) originalImage.getWidth()));
+
+        java.awt.Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
+        BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        outputImage.getGraphics().drawImage(resultingImage, 0, 0, java.awt.Color.WHITE, null);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(outputImage, "jpg", baos);
+        return baos.toByteArray();
     }
 
     private byte[] compressImage(InputStream inputStream, String extension, float quality) throws IOException {

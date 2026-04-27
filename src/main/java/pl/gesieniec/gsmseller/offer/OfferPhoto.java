@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -25,6 +26,7 @@ public class OfferPhoto {
 
     @Lob
     @Column
+    @Setter
     private byte[] thumbnailData;
 
     @Column(nullable = false)
