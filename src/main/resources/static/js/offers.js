@@ -134,7 +134,7 @@ function renderPhotosPreview() {
         if (photo instanceof File) {
             src = URL.createObjectURL(photo);
         } else {
-            src = `/api/v1/external/offers/photos/${photo}`;
+            src = `/api/v1/external/offers/photos/${photo}/thumbnail`;
         }
         
         div.innerHTML = `
@@ -258,7 +258,7 @@ function renderOffers(offers) {
     }
     
     offers.forEach(offer => {
-        const mainPhoto = offer.photos && offer.photos.length > 0 ? `/api/v1/external/offers/photos/${offer.photos[0]}` : 'https://via.placeholder.com/300x200?text=Brak+zdjęcia';
+        const mainPhoto = offer.photos && offer.photos.length > 0 ? `/api/v1/external/offers/photos/${offer.photos[0]}/thumbnail` : 'https://via.placeholder.com/300x200?text=Brak+zdjęcia';
         
         const col = document.createElement('div');
         col.className = 'col s12 m6 l4';
@@ -290,7 +290,7 @@ function renderOffers(offers) {
                         <b>System:</b> ${offer.operatingSystem || '---'}
                     </p>
                     <div class="offer-photos-mini">
-                        ${(offer.photos || []).map(p => `<img src="/api/v1/external/offers/photos/${p}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
+                        ${(offer.photos || []).map(p => `<img src="/api/v1/external/offers/photos/${p}/thumbnail" onclick="window.open('/api/v1/external/offers/photos/${p}', '_blank')" style="width: 50px; height: 50px; cursor: pointer; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
                     </div>
                 </div>
             </div>

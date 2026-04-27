@@ -45,6 +45,23 @@ public class OfferExternalController {
             .body(photo.getData());
     }
 
+    @GetMapping("/photos/{id}/thumbnail")
+    public ResponseEntity<byte[]> getPhotoThumbnail(@PathVariable UUID id) {
+        OfferPhoto photo = offerService.getPhotos(List.of(id)).stream().findFirst()
+            .orElseThrow(() -> new pl.gesieniec.gsmseller.common.EntityNotFoundException("Photo not found: " + id));
+
+        byte[] thumbnailData = photo.getThumbnailData();
+        if (thumbnailData == null || thumbnailData.length == 0) {
+            // Fallback do pełnego zdjęcia jeśli miniatura nie istnieje
+            thumbnailData = photo.getData();
+        }
+
+        return ResponseEntity.ok()
+            .contentType(MediaType.IMAGE_JPEG)
+            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000")
+            .body(thumbnailData);
+    }
+
     @GetMapping
     public Page<PhoneOffer> getOffers(
         @RequestParam(required = false) String brand,

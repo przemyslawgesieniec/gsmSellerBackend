@@ -23,12 +23,17 @@ public class OfferPhoto {
     @Column(nullable = false)
     private byte[] data;
 
+    @Lob
+    @Column
+    private byte[] thumbnailData;
+
     @Column(nullable = false)
     private String contentType;
 
-    public OfferPhoto(byte[] data, String contentType) {
+    public OfferPhoto(byte[] data, byte[] thumbnailData, String contentType) {
         this.technicalId = UUID.randomUUID();
         this.data = data;
+        this.thumbnailData = thumbnailData;
         this.contentType = contentType;
     }
 }

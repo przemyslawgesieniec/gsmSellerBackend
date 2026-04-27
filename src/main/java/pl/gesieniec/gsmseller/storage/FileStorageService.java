@@ -52,7 +52,7 @@ public class FileStorageService {
             
             try (InputStream is = file.getInputStream()) {
                 if (isImage(extension)) {
-                    byte[] compressed = compressImage(is, extension);
+                    byte[] compressed = compressImage(is, extension, 0.7f);
                     try (InputStream cis = new ByteArrayInputStream(compressed)) {
                         Files.copy(cis, targetLocation, StandardCopyOption.REPLACE_EXISTING);
                     }
@@ -79,7 +79,7 @@ public class FileStorageService {
         String extension = StringUtils.getFilenameExtension(originalFilename);
         try (InputStream is = file.getInputStream()) {
             if (isImage(extension)) {
-                return compressImage(is, extension);
+                return compressImage(is, extension, 0.7f);
             } else {
                 return file.getBytes();
             }
@@ -88,24 +88,40 @@ public class FileStorageService {
         }
     }
 
-    private byte[] compressImage(InputStream inputStream, String extension) throws IOException {
+    public byte[] createThumbnail(MultipartFile file) {
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String extension = StringUtils.getFilenameExtension(originalFilename);
+        if (!isImage(extension)) {
+            return null;
+        }
+        try (InputStream is = file.getInputStream()) {
+            BufferedImage originalImage = ImageIO.read(is);
+            if (originalImage == null) return null;
+
+            int targetWidth = 300;
+            int targetHeight = (int) (originalImage.getHeight() * (targetWidth / (double) originalImage.getWidth()));
+
+            java.awt.Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH);
+            BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+            outputImage.getGraphics().drawImage(resultingImage, 0, 0, java.awt.Color.WHITE, null);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(outputImage, "jpg", baos);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            log.warn("Could not create thumbnail", e);
+            return null;
+        }
+    }
+
+    private byte[] compressImage(InputStream inputStream, String extension, float quality) throws IOException {
         BufferedImage image = ImageIO.read(inputStream);
         if (image == null) {
-            // Jeśli ImageIO nie poradził sobie z plikiem, zwróć oryginał (powinien być już w inputStream, ale musimy go zresetować lub ponownie pobrać)
-            // W tym przypadku rzucimy wyjątek lub obsłużymy to inaczej. 
-            // Ponieważ inputStream został już częściowo odczytany, lepiej byłoby mieć kopię.
             throw new IOException("Could not read image for compression");
-        }
-
-        String format = "jpg"; // Domyślnie kompresujemy do jpg dla lepszej wydajności
-        if ("png".equalsIgnoreCase(extension)) {
-            // Można zostać przy PNG jeśli chcemy przezroczystość, ale JPG jest lepszy do zdjęć ofertowych
-            // Zmieniamy na jpg, aby faktycznie zaoszczędzić miejsce
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         
-        // Jeśli obraz ma przezroczystość (np. PNG), a kompresujemy do JPG, musimy narysować go na białym tle
         if (image.getType() == BufferedImage.TYPE_INT_ARGB || image.getType() == BufferedImage.TYPE_4BYTE_ABGR) {
             BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
             newImage.createGraphics().drawImage(image, 0, 0, java.awt.Color.WHITE, null);
@@ -118,7 +134,7 @@ public class FileStorageService {
             ImageWriteParam param = writer.getDefaultWriteParam();
             if (param.canWriteCompressed()) {
                 param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                param.setCompressionQuality(0.7f); // 70% jakości
+                param.setCompressionQuality(quality);
             }
             writer.write(null, new IIOImage(image, null, null), param);
         } finally {

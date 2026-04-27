@@ -51,7 +51,8 @@ public class OfferService {
             log.debug("Storing {} photo files for new offer in DB", photoFiles.size());
             photoFiles.forEach(file -> {
                 byte[] data = fileStorageService.compressImageIfImage(file);
-                photos.add(new OfferPhoto(data, file.getContentType()));
+                byte[] thumbnail = fileStorageService.createThumbnail(file);
+                photos.add(new OfferPhoto(data, thumbnail, file.getContentType()));
             });
         }
 
@@ -97,7 +98,8 @@ public class OfferService {
             photoFiles.forEach(file -> {
                 if (!file.isEmpty()) {
                     byte[] data = fileStorageService.compressImageIfImage(file);
-                    finalPhotos.add(new OfferPhoto(data, file.getContentType()));
+                    byte[] thumbnail = fileStorageService.createThumbnail(file);
+                    finalPhotos.add(new OfferPhoto(data, thumbnail, file.getContentType()));
                 }
             });
         }
