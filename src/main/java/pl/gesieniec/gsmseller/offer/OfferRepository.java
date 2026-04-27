@@ -1,5 +1,9 @@
 package pl.gesieniec.gsmseller.offer;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -8,5 +12,10 @@ import java.util.Optional;
 
 @Repository
 public interface OfferRepository extends JpaRepository<Offer, Long>, JpaSpecificationExecutor<Offer> {
+    @EntityGraph(attributePaths = {"phoneStock", "phoneStock.location"})
     Optional<Offer> findByPhoneStockTechnicalId(java.util.UUID technicalId);
+
+    @Override
+    @EntityGraph(attributePaths = {"phoneStock", "phoneStock.location"})
+    Page<Offer> findAll(Specification<Offer> spec, Pageable pageable);
 }

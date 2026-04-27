@@ -180,12 +180,18 @@ public class OfferService {
     @Transactional(readOnly = true)
     public Page<PhoneOffer> getOffers(Specification<Offer> spec, Pageable pageable) {
         log.info("Fetching offers with spec and pageable: {}", pageable);
-        return offerRepository.findAll(spec, pageable)
+        // Filtrowanie ofert, które mają telefon przypisany
+        Specification<Offer> nonNullPhoneSpec = (root, query, cb) -> cb.isNotNull(root.get("phoneStock"));
+        Specification<Offer> finalSpec = Specification.allOf(spec, nonNullPhoneSpec);
+
+        return offerRepository.findAll(finalSpec, pageable)
             .map(this::mapToDto);
     }
 
     private PhoneOffer mapToDto(Offer offer) {
         PhoneStock phoneStock = offer.getPhoneStock();
+        List<UUID> photoIds = offerPhotoRepository.findPhotoTechnicalIdsByOfferId(offer.getId());
+        
         return PhoneOffer.builder()
             .technicalId(phoneStock.getTechnicalId())
             .price(phoneStock.getSellingPrice())
@@ -203,7 +209,7 @@ public class OfferService {
             .batteryCapacity(offer.getBatteryCapacity())
             .communication(offer.getCommunication())
             .operatingSystem(offer.getOperatingSystem())
-            .photos(offer.getPhotos().stream().map(OfferPhoto::getTechnicalId).toList())
+            .photos(photoIds)
             .isReserved(offer.isReserved())
             .build();
     }
