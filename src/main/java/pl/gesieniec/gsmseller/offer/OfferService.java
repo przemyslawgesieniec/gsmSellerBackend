@@ -150,6 +150,7 @@ public class OfferService {
     public Page<pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto> getAvailablePhones(String search, Pageable pageable) {
         log.debug("Fetching available phones with search: '{}', pageable: {}", search, pageable);
         Specification<PhoneStock> spec = (root, query, cb) -> {
+            query.distinct(true);
             jakarta.persistence.criteria.Subquery<Long> subquery = query.subquery(Long.class);
             jakarta.persistence.criteria.Root<Offer> offerRoot = subquery.from(Offer.class);
             subquery.select(offerRoot.get("phoneStock").get("id"));
@@ -181,7 +182,10 @@ public class OfferService {
     public Page<PhoneOffer> getOffers(Specification<Offer> spec, Pageable pageable) {
         log.info("Fetching offers with spec and pageable: {}", pageable);
         // Filtrowanie ofert, które mają telefon przypisany
-        Specification<Offer> nonNullPhoneSpec = (root, query, cb) -> cb.isNotNull(root.get("phoneStock"));
+        Specification<Offer> nonNullPhoneSpec = (root, query, cb) -> {
+            query.distinct(true);
+            return cb.isNotNull(root.get("phoneStock"));
+        };
         Specification<Offer> finalSpec = Specification.allOf(spec, nonNullPhoneSpec);
 
         return offerRepository.findAll(finalSpec, pageable)

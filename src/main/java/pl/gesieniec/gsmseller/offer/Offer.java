@@ -10,8 +10,9 @@ import pl.gesieniec.gsmseller.offer.model.specs.ScreenSpecs;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -38,15 +39,8 @@ public class Offer {
     private String ram;
     private String simCardType;
 
-    @ElementCollection
-    @CollectionTable(name = "offer_front_cameras", joinColumns = @JoinColumn(name = "offer_id"))
-    @Column(name = "mpx")
-    private List<Integer> frontCamerasMpx = new ArrayList<>();
-
-    @ElementCollection
-    @CollectionTable(name = "offer_back_cameras", joinColumns = @JoinColumn(name = "offer_id"))
-    @Column(name = "mpx")
-    private List<Integer> backCamerasMpx = new ArrayList<>();
+    private String frontCameras;
+    private String backCameras;
 
     private String batteryCapacity;
 
@@ -76,8 +70,8 @@ public class Offer {
         this.memory = memory;
         this.ram = ram;
         this.simCardType = simCardType;
-        this.frontCamerasMpx = frontCamerasMpx != null ? new ArrayList<>(frontCamerasMpx) : new ArrayList<>();
-        this.backCamerasMpx = backCamerasMpx != null ? new ArrayList<>(backCamerasMpx) : new ArrayList<>();
+        this.frontCameras = mapCamerasToString(frontCamerasMpx);
+        this.backCameras = mapCamerasToString(backCamerasMpx);
         this.batteryCapacity = batteryCapacity;
         this.communication = communication;
         this.operatingSystem = operatingSystem;
@@ -94,13 +88,41 @@ public class Offer {
         this.memory = memory;
         this.ram = ram;
         this.simCardType = simCardType;
-        this.frontCamerasMpx = frontCamerasMpx != null ? new ArrayList<>(frontCamerasMpx) : new ArrayList<>();
-        this.backCamerasMpx = backCamerasMpx != null ? new ArrayList<>(backCamerasMpx) : new ArrayList<>();
+        this.frontCameras = mapCamerasToString(frontCamerasMpx);
+        this.backCameras = mapCamerasToString(backCamerasMpx);
         this.batteryCapacity = batteryCapacity;
         this.communication = communication;
         this.operatingSystem = operatingSystem;
         this.brand = brand;
         setPhotos(photos);
+    }
+
+    public List<Integer> getFrontCamerasMpx() {
+        return mapCamerasToList(this.frontCameras);
+    }
+
+    public List<Integer> getBackCamerasMpx() {
+        return mapCamerasToList(this.backCameras);
+    }
+
+    private String mapCamerasToString(List<Integer> cameras) {
+        if (cameras == null || cameras.isEmpty()) {
+            return "";
+        }
+        return cameras.stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+    }
+
+    private List<Integer> mapCamerasToList(String cameras) {
+        if (cameras == null || cameras.isBlank()) {
+            return new ArrayList<>();
+        }
+        return Arrays.stream(cameras.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(Integer::parseInt)
+            .collect(Collectors.toList());
     }
 
     public void setPhotos(List<OfferPhoto> photos) {
