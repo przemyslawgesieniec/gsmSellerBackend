@@ -163,7 +163,8 @@ async function saveOffer(e) {
         return;
     }
     
-    const isEdit = document.getElementById('cancelBtn').classList.contains('hide') === false;
+    const cancelBtn = document.getElementById('cancelBtn');
+    const isEdit = cancelBtn && cancelBtn.classList.contains('hide') === false;
     
     const formData = new FormData();
     if (!isEdit) {
@@ -222,13 +223,15 @@ function resetForm() {
     clearSelectedPhone();
     
     document.getElementById('formTitle').textContent = 'Stwórz nową ofertę';
-    document.getElementById('cancelBtn').classList.add('hide');
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) cancelBtn.classList.add('hide');
     document.getElementById('phoneSelectWrapper').classList.remove('hide');
 }
 
 async function loadOffers(page = 0) {
     currentPage = page;
-    document.getElementById('offersLoader').classList.remove('hide');
+    const loader = document.getElementById('offersLoader');
+    if (loader) loader.classList.remove('hide');
     try {
         const response = await fetch(`/api/v1/external/offers?page=${page}&size=12`);
         const data = await response.json();
@@ -244,7 +247,7 @@ async function loadOffers(page = 0) {
     } catch (err) {
         M.toast({html: 'Błąd ładowania ofert', classes: 'red'});
     } finally {
-        document.getElementById('offersLoader').classList.add('hide');
+        if (loader) loader.classList.add('hide');
     }
 }
 
@@ -305,7 +308,8 @@ async function editOffer(technicalId) {
         const offer = await response.json();
         
         document.getElementById('formTitle').textContent = 'Edytuj ofertę';
-        document.getElementById('cancelBtn').classList.remove('hide');
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) cancelBtn.classList.remove('hide');
         document.getElementById('editTechnicalId').value = offer.technicalId;
         
         document.getElementById('brand').value = offer.brand || '';
