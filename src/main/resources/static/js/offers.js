@@ -227,13 +227,11 @@ function resetForm() {
 }
 
 async function loadOffers(page = 0) {
-    console.log(`[offers.js] loadOffers(page=${page})`);
     currentPage = page;
     document.getElementById('offersLoader').classList.remove('hide');
     try {
         const response = await fetch(`/api/v1/external/offers?page=${page}&size=12`);
         const data = await response.json();
-        console.log('[offers.js] received data:', data);
         
         // Jeśli aktualna strona stała się pusta (np. po usunięciu), wróć do poprzedniej (o ile to nie strona 0)
         if (data.content.length === 0 && page > 0) {
@@ -242,9 +240,8 @@ async function loadOffers(page = 0) {
         }
 
         renderOffers(data.content);
-        renderPagination(data.number, data.totalPages);
+        renderPagination(data);
     } catch (err) {
-        console.error('Błąd ładowania ofert:', err);
         M.toast({html: 'Błąd ładowania ofert', classes: 'red'});
     } finally {
         document.getElementById('offersLoader').classList.add('hide');
@@ -361,13 +358,10 @@ async function deleteOffer(technicalId) {
     }
 }
 
-function renderPagination(currentPage, totalPages) {
-    console.log(`[offers.js] renderPagination(currentPage=${currentPage}, totalPages=${totalPages})`);
-    const container = document.getElementById('offersPagination');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (totalPages <= 1) return;
+function renderPagination(data) {
+    const pagination = document.getElementById("offersPagination");
+    if (!pagination) return;
+    pagination.innerHTML = "";
 
     function createPageItem({classes = "", inner = "", onClick = null}) {
         const li = document.createElement("li");
@@ -392,22 +386,28 @@ function renderPagination(currentPage, totalPages) {
         return li;
     }
 
+    const { totalPages, number: currentPage } = data;
+
+    if (totalPages <= 1) return;
+
     // ========== PRZYCISK "POPRZEDNIA" ==========
     if (currentPage > 0) {
-        container.appendChild(createPageItem({
+        const leftIcon = '<i class="material-icons">chevron_left</i>';
+        pagination.appendChild(createPageItem({
             classes: "waves-effect",
-            inner: '<i class="material-icons">chevron_left</i>',
+            inner: leftIcon,
             onClick: () => loadOffers(currentPage - 1)
         }));
     } else {
-        container.appendChild(createPageItem({
+        const leftIcon = '<i class="material-icons">chevron_left</i>';
+        pagination.appendChild(createPageItem({
             classes: "disabled",
-            inner: '<i class="material-icons">chevron_left</i>',
+            inner: leftIcon,
             onClick: null
         }));
     }
 
-    // ========== NUMERY STRON ==========
+    // ========== LOGIKA WYŚWIETLANIA MAKS 7 STRON ==========
     const maxVisible = 7;
     let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
     let endPage = startPage + maxVisible - 1;
@@ -419,13 +419,13 @@ function renderPagination(currentPage, totalPages) {
 
     for (let i = startPage; i <= endPage; i++) {
         if (i === currentPage) {
-            container.appendChild(createPageItem({
+            pagination.appendChild(createPageItem({
                 classes: "active blue",
                 inner: String(i + 1),
                 onClick: null
             }));
         } else {
-            container.appendChild(createPageItem({
+            pagination.appendChild(createPageItem({
                 classes: "waves-effect",
                 inner: String(i + 1),
                 onClick: () => loadOffers(i)
@@ -435,15 +435,17 @@ function renderPagination(currentPage, totalPages) {
 
     // ========== PRZYCISK "NASTĘPNA" ==========
     if (currentPage < totalPages - 1) {
-        container.appendChild(createPageItem({
+        const rightIcon = '<i class="material-icons">chevron_right</i>';
+        pagination.appendChild(createPageItem({
             classes: "waves-effect",
-            inner: '<i class="material-icons">chevron_right</i>',
+            inner: rightIcon,
             onClick: () => loadOffers(currentPage + 1)
         }));
     } else {
-        container.appendChild(createPageItem({
+        const rightIcon = '<i class="material-icons">chevron_right</i>';
+        pagination.appendChild(createPageItem({
             classes: "disabled",
-            inner: '<i class="material-icons">chevron_right</i>',
+            inner: rightIcon,
             onClick: null
         }));
     }
