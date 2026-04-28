@@ -46,7 +46,8 @@ async function loadStock(page = 0) {
             description: phone.description,
             batteryCondition: phone.batteryCondition,
             used: phone.used,
-            isReserved: phone.isReserved
+            isReserved: phone.isReserved,
+            hasOffer: phone.hasOffer
         }));
 
 
