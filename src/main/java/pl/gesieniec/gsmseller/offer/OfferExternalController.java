@@ -75,7 +75,6 @@ public class OfferExternalController {
     ) {
         Specification<Offer> spec = Specification.allOf(
             OfferSpecifications.hasBrand(brand),
-            OfferSpecifications.hasModel(model),
             OfferSpecifications.hasStatus(status),
             OfferSpecifications.hasLocation(location),
             OfferSpecifications.hasPriceBetween(minPrice, maxPrice),

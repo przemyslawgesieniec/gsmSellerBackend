@@ -14,18 +14,12 @@ public class OfferSpecifications {
             if (brand == null || brand.isBlank() || "all".equalsIgnoreCase(brand)) {
                 return null;
             }
-            // Najpierw sprawdzamy pole brand w encji Offer
-            return cb.equal(root.get("brand"), brand);
-        };
-    }
-
-    public static Specification<Offer> hasModel(String model) {
-        return (root, query, cb) -> {
-            if (model == null || model.isBlank() || "all".equalsIgnoreCase(model)) {
-                return null;
-            }
             Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
-            return cb.like(cb.lower(phoneStockJoin.get("model")), "%" + model.toLowerCase() + "%");
+            String pattern = "%" + brand.toLowerCase() + "%";
+            return cb.or(
+                cb.like(cb.lower(root.get("brand")), pattern),
+                cb.like(cb.lower(phoneStockJoin.get("model")), pattern)
+            );
         };
     }
 

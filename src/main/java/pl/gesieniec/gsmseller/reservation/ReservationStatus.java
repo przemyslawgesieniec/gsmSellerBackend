@@ -1,9 +1,9 @@
 package pl.gesieniec.gsmseller.reservation;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 public record ReservationStatus(
     String phoneNumber,
     String name,
-    LocalDateTime expiryTime
+    ZonedDateTime expiryTime
 ) {}

@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Entity
@@ -24,12 +24,12 @@ public class Reservation {
     private String phoneNumber;
     private String name;
     private UUID technicalId;
-    private LocalDateTime expiryTime;
+    private ZonedDateTime expiryTime;
 
     public Reservation(String phoneNumber, String name, UUID technicalId) {
         this.phoneNumber = phoneNumber;
         this.name = name;
         this.technicalId = technicalId;
-        this.expiryTime = LocalDateTime.now().plusHours(4);
+        this.expiryTime = ZonedDateTime.now().plusHours(4);
     }
 }

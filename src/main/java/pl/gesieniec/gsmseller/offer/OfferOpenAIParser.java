@@ -71,7 +71,7 @@ public class OfferOpenAIParser {
 
     private String buildPrompt(String phoneName, String phoneModel) {
         return """
-        Wyszukaj specyfikację techniczną telefonu: %s %s.
+        Wyszukaj specyfikację techniczną telefonu: %s %s. Sprawdź te dane w internecie (najelpiej ze strony https://www.mgsm.pl/pl/). Nie podawaj fałszywych danych.
 
         Zwróć WYŁĄCZNIE obiekt JSON z DOKŁADNIE tymi polami:
         {
@@ -101,6 +101,7 @@ public class OfferOpenAIParser {
         - "frontCamerasMpx" oraz "backCamerasMpx" MUSZĄ być tablicami liczb całkowitych.
         - Jeśli wartość jest nieznana, użyj null dla stringów/obiektów lub pustej tablicy dla list.
         - NIE dodawaj żadnych wyjaśnień.
+        - wymiary ekranów podawaj w "calach" i zwracaj z apostrofem (").
         - Wynik musi być wyłącznie poprawnym JSON-em.
         """.formatted(phoneName, phoneModel);
     }

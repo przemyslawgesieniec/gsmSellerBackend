@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.context.event.EventListener;
@@ -28,7 +28,7 @@ public class ReservationService {
         
         reservationRepository.findByTechnicalId(request.technicalId())
                 .ifPresent(r -> {
-                    if (r.getExpiryTime().isAfter(LocalDateTime.now())) {
+                    if (r.getExpiryTime().isAfter(ZonedDateTime.now())) {
                         throw new ReservationConflictException("Phone already reserved");
                     } else {
                         log.info("Removing expired reservation for phone: {} before creating new one", request.technicalId());
@@ -50,7 +50,7 @@ public class ReservationService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void removeExpiredReservations() {
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now();
         List<Reservation> expired = reservationRepository.findAllByExpiryTimeBefore(now);
         
         if (!expired.isEmpty()) {
