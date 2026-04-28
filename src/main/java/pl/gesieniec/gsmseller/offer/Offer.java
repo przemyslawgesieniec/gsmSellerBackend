@@ -139,7 +139,7 @@ public class Offer {
         this.isReserved = reserved;
     }
 
-    public boolean isReserved() {
-        return Boolean.TRUE.equals(isReserved);
+    public Boolean isReserved() {
+        return isReserved;
     }
 }

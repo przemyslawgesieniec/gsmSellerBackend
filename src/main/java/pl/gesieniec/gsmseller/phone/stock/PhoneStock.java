@@ -244,12 +244,12 @@ public class PhoneStock {
         return used;
     }
 
-    public boolean isReserved() {
-        return Boolean.TRUE.equals(isReserved);
+    public Boolean isReserved() {
+        return isReserved;
     }
 
-    public boolean isHasOffer() {
-        return Boolean.TRUE.equals(hasOffer);
+    public Boolean isHasOffer() {
+        return hasOffer;
     }
 
     public void setReserved(Boolean reserved) {

@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public record ReservationCancelledEvent(
     UUID technicalId,
-    boolean reserved,
+    Boolean reserved,
     String canceledBy
 ) {}
