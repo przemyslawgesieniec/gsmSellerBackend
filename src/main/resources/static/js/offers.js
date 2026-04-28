@@ -409,17 +409,18 @@ function renderPagination(data) {
         return li;
     }
 
-    const { totalPages, number: currentPage } = data;
+    const totalPages = data.totalPages;
+    const activePage = data.number;
 
     if (totalPages <= 1) return;
 
     // ========== PRZYCISK "POPRZEDNIA" ==========
-    if (currentPage > 0) {
+    if (activePage > 0) {
         const leftIcon = '<i class="material-icons">chevron_left</i>';
         pagination.appendChild(createPageItem({
             classes: "waves-effect",
             inner: leftIcon,
-            onClick: () => loadOffers(currentPage - 1)
+            onClick: () => loadOffers(activePage - 1)
         }));
     } else {
         const leftIcon = '<i class="material-icons">chevron_left</i>';
@@ -432,7 +433,7 @@ function renderPagination(data) {
 
     // ========== LOGIKA WYŚWIETLANIA MAKS 7 STRON ==========
     const maxVisible = 7;
-    let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+    let startPage = Math.max(0, activePage - Math.floor(maxVisible / 2));
     let endPage = startPage + maxVisible - 1;
 
     if (endPage >= totalPages) {
@@ -441,7 +442,7 @@ function renderPagination(data) {
     }
 
     for (let i = startPage; i <= endPage; i++) {
-        if (i === currentPage) {
+        if (i === activePage) {
             pagination.appendChild(createPageItem({
                 classes: "active blue",
                 inner: String(i + 1),
@@ -457,12 +458,12 @@ function renderPagination(data) {
     }
 
     // ========== PRZYCISK "NASTĘPNA" ==========
-    if (currentPage < totalPages - 1) {
+    if (activePage < totalPages - 1) {
         const rightIcon = '<i class="material-icons">chevron_right</i>';
         pagination.appendChild(createPageItem({
             classes: "waves-effect",
             inner: rightIcon,
-            onClick: () => loadOffers(currentPage + 1)
+            onClick: () => loadOffers(activePage + 1)
         }));
     } else {
         const rightIcon = '<i class="material-icons">chevron_right</i>';
