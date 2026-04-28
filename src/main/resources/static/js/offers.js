@@ -360,15 +360,87 @@ async function deleteOffer(technicalId) {
 
 function renderPagination(data) {
     const container = document.getElementById('offersPagination');
+    if (!container) return;
     container.innerHTML = '';
-    
+
     if (data.totalPages <= 1) return;
-    
-    for (let i = 0; i < data.totalPages; i++) {
-        const li = document.createElement('li');
-        li.className = i === data.number ? 'active blue' : 'waves-effect';
-        li.innerHTML = `<a href="#!">${i + 1}</a>`;
-        li.onclick = () => loadOffers(i);
-        container.appendChild(li);
+
+    function createPageItem({classes = "", inner = "", onClick = null}) {
+        const li = document.createElement("li");
+        if (classes) li.className = classes;
+
+        const a = document.createElement("a");
+        a.href = "#!";
+        if (typeof inner === "string") a.innerHTML = inner;
+        else if (inner instanceof Node) a.appendChild(inner);
+
+        if (typeof onClick === "function") {
+            a.addEventListener("click", (e) => {
+                e.preventDefault();
+                onClick();
+            });
+        } else {
+            a.setAttribute("aria-disabled", "true");
+            a.style.pointerEvents = "none";
+        }
+
+        li.appendChild(a);
+        return li;
+    }
+
+    // ========== PRZYCISK "POPRZEDNIA" ==========
+    if (data.number > 0) {
+        container.appendChild(createPageItem({
+            classes: "waves-effect",
+            inner: '<i class="material-icons">chevron_left</i>',
+            onClick: () => loadOffers(data.number - 1)
+        }));
+    } else {
+        container.appendChild(createPageItem({
+            classes: "disabled",
+            inner: '<i class="material-icons">chevron_left</i>',
+            onClick: null
+        }));
+    }
+
+    // ========== NUMERY STRON ==========
+    const maxVisible = 7;
+    let startPage = Math.max(0, data.number - Math.floor(maxVisible / 2));
+    let endPage = startPage + maxVisible - 1;
+
+    if (endPage >= data.totalPages) {
+        endPage = data.totalPages - 1;
+        startPage = Math.max(0, endPage - maxVisible + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === data.number) {
+            container.appendChild(createPageItem({
+                classes: "active blue",
+                inner: String(i + 1),
+                onClick: null
+            }));
+        } else {
+            container.appendChild(createPageItem({
+                classes: "waves-effect",
+                inner: String(i + 1),
+                onClick: () => loadOffers(i)
+            }));
+        }
+    }
+
+    // ========== PRZYCISK "NASTĘPNA" ==========
+    if (data.number < data.totalPages - 1) {
+        container.appendChild(createPageItem({
+            classes: "waves-effect",
+            inner: '<i class="material-icons">chevron_right</i>',
+            onClick: () => loadOffers(data.number + 1)
+        }));
+    } else {
+        container.appendChild(createPageItem({
+            classes: "disabled",
+            inner: '<i class="material-icons">chevron_right</i>',
+            onClick: null
+        }));
     }
 }
