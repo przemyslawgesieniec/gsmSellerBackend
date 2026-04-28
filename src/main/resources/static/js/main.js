@@ -14,7 +14,8 @@ function getFilters() {
         priceMin: document.getElementById("filterPriceMin").value.trim(),
         priceMax: document.getElementById("filterPriceMax").value.trim(),
         status: document.getElementById("filterStatus").value.trim(),
-        locationName: document.getElementById("filterLocation").value.trim()
+        locationName: document.getElementById("filterLocation").value.trim(),
+        hasOffer: document.getElementById("filterHasOffer").checked
     };
 }
 
@@ -51,6 +52,7 @@ async function loadStock(page = 0) {
 
         renderPhones(phones);
         initDropdowns();
+        M.Tooltip.init(document.querySelectorAll('.tooltipped'));
         startReservationTimers(phones);
         loadPagination(data.number, data.totalPages);
     } catch (error) {
@@ -238,7 +240,8 @@ function renderPhones(phones) {
                   ${phone.isReserved ? `
                   <span class="reservation-badge red lighten-2 white-text tooltipped" 
                         id="reservation-${phone.technicalId}"
-                        data-position="top">
+                        data-position="top"
+                        data-tooltip="Ładowanie informacji o rezerwacji...">
                     <i class="material-icons tiny">alarm</i>
                     <span class="reservation-text">REZERWACJA</span>
                     <span class="reservation-timer" id="timer-${phone.technicalId}">--:--</span>
@@ -428,6 +431,10 @@ function startReservationTimers(phones) {
             
             const badge = document.getElementById(`reservation-${phone.technicalId}`);
             if (badge) {
+                const tooltipInstance = M.Tooltip.getInstance(badge);
+                if (tooltipInstance) {
+                    tooltipInstance.destroy();
+                }
                 badge.setAttribute('data-tooltip', `Rezerwujący: ${status.name} (${status.phoneNumber})`);
                 M.Tooltip.init(badge);
             }
@@ -645,12 +652,22 @@ document.addEventListener("DOMContentLoaded", function () {
         "filterImei",
         "filterPriceMin",
         "filterPriceMax",
+        "filterHasOffer"
+    ].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", liveReload);
+        el.addEventListener("change", liveReload);
+    });
+
+    [
         "filterStatus",
         "filterLocation"
     ].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        el.addEventListener("input", liveReload);
+        // status i lokalizacja to TomSelect, więc zdarzenia natywne mogą nie wystarczyć
+        // ale zostawiamy dla pewności lub obsługi gdyby TS nie był zainicjalizowany
         el.addEventListener("change", liveReload);
     });
 
@@ -829,6 +846,8 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     document.getElementById("filterImei").value = "";
     document.getElementById("filterPriceMin").value = "";
     document.getElementById("filterPriceMax").value = "";
+    document.getElementById("filterHasOffer").checked = false;
+    liveReload();
 
     const statusSelect = TomSelect.getInstance('#filterStatus');
     const locationSelect = TomSelect.getInstance('#filterLocation');
@@ -850,7 +869,8 @@ const filterLabels = {
     priceMin: "Cena od",
     priceMax: "Cena do",
     status: "Status",
-    locationName: "Lokalizacja"
+    locationName: "Lokalizacja",
+    hasOffer: "Oferta"
 };
 
 // === CHIPS SECTION === //
@@ -893,7 +913,12 @@ function renderChips(filters) {
             const el = document.getElementById(inputId);
 
             if (el) {
-                el.value = "";
+                if (el.type === "checkbox") {
+                    el.checked = false;
+                    liveReload();
+                } else {
+                    el.value = "";
+                }
 
                 // // re-init selectów (status, lokalizacja)
                 // if (el.tagName === "SELECT") {
@@ -925,7 +950,8 @@ function renderFilterChips() {
         priceMin: "filterPriceMin",
         priceMax: "filterPriceMax",
         status: "filterStatus",
-        locationName: "filterLocation"
+        locationName: "filterLocation",
+        hasOffer: "filterHasOffer"
     };
 
     Object.entries(filters).forEach(([key, value]) => {
@@ -936,6 +962,10 @@ function renderFilterChips() {
         // 📍 specjalny przypadek: brak lokalizacji
         if (key === "locationName" && value === "__NO_LOCATION__") {
             displayValue = "Nie przyjęty";
+        }
+        
+        if (key === "hasOffer") {
+            displayValue = "TAK";
         }
 
         const chip = document.createElement("div");
@@ -950,7 +980,14 @@ function renderFilterChips() {
             const el = document.getElementById(inputId);
 
             if (el) {
-                el.value = "";
+                if (el.type === "checkbox") {
+                    el.checked = false;
+                    // Dla checkboxów wywołujemy liveReload() bezpośrednio, 
+                    // ponieważ zdarzenie 'change' może nie zostać wywołane przy programowej zmianie
+                    liveReload();
+                } else {
+                    el.value = "";
+                }
 
                 // // re-init selectów
                 // if (el.tagName === "SELECT") {

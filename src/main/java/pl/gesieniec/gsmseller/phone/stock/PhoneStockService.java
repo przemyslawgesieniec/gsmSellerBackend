@@ -64,9 +64,10 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                                          String color,
                                          String imei,
                                          Status status,
-                                         String LocationName,
+                                         String locationName,
                                          BigDecimal priceMin,
                                          BigDecimal priceMax,
+                                         Boolean hasOffer,
                                          int page,
                                          int size) {
         Specification<PhoneStock> spec = Specification
@@ -75,9 +76,10 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             .and(PhoneStockSpecifications.hasImeiLike(imei))
             .and(PhoneStockSpecifications.hasColor(color))
             .and(PhoneStockSpecifications.hasStatus(status))
-            .and(PhoneStockSpecifications.hasLocationName(LocationName))
+            .and(PhoneStockSpecifications.hasLocationName(locationName))
             .and(PhoneStockSpecifications.hasPriceMin(priceMin))
-            .and(PhoneStockSpecifications.hasPriceMax(priceMax));
+            .and(PhoneStockSpecifications.hasPriceMax(priceMax))
+            .and(PhoneStockSpecifications.hasOffer(hasOffer));
 
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDateTime").descending());

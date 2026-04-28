@@ -58,6 +58,15 @@ public class PhoneStockSpecifications {
             status == null ? null : cb.equal(root.get("status"), status);
     }
 
+    public static Specification<PhoneStock> hasOffer(Boolean hasOffer) {
+        return (root, query, cb) -> {
+            if (hasOffer == null || !hasOffer) {
+                return null;
+            }
+            return cb.isTrue(root.get("hasOffer"));
+        };
+    }
+
     public static Specification<PhoneStock> hasLocationName(String locationName) {
         return (root, query, cb) -> {
             if (locationName == null || locationName.isBlank()) {
