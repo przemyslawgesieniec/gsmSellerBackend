@@ -1,6 +1,6 @@
 let photos = [];
 let phoneSelect;
-let currentPage = 0;
+let currentPage = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
     initPhoneSelect();
@@ -211,7 +211,7 @@ async function saveOffer(e) {
         if (response.ok) {
             M.toast({html: isEdit ? 'Oferta zaktualizowana!' : 'Oferta utworzona!', classes: 'green'});
             resetForm();
-            loadOffers(isEdit ? currentPage : 0);
+            loadOffers(isEdit ? currentPage : 1);
         } else {
             const err = await response.json();
             M.toast({html: 'Błąd: ' + (err.message || 'Nieznany błąd'), classes: 'red'});
@@ -234,7 +234,7 @@ function resetForm() {
     document.getElementById('phoneSelectWrapper').classList.remove('hide');
 }
 
-async function loadOffers(page = 0) {
+async function loadOffers(page = 1) {
     currentPage = page;
     const loader = document.getElementById('offersLoader');
     if (loader) loader.classList.remove('hide');
@@ -242,8 +242,8 @@ async function loadOffers(page = 0) {
         const response = await fetch(`/api/v1/external/offers?page=${page}&size=12`);
         const data = await response.json();
         
-        // Jeśli aktualna strona stała się pusta (np. po usunięciu), wróć do poprzedniej (o ile to nie strona 0)
-        if (data.content.length === 0 && page > 0) {
+        // Jeśli aktualna strona stała się pusta (np. po usunięciu), wróć do poprzedniej (o ile to nie strona 1)
+        if (data.content.length === 0 && page > 1) {
             loadOffers(page - 1);
             return;
         }
@@ -420,7 +420,7 @@ function renderPagination(data) {
         pagination.appendChild(createPageItem({
             classes: "waves-effect",
             inner: leftIcon,
-            onClick: () => loadOffers(activePage - 1)
+            onClick: () => loadOffers(activePage)
         }));
     } else {
         const leftIcon = '<i class="material-icons">chevron_left</i>';
@@ -442,17 +442,18 @@ function renderPagination(data) {
     }
 
     for (let i = startPage; i <= endPage; i++) {
+        const pageNum = i + 1;
         if (i === activePage) {
             pagination.appendChild(createPageItem({
                 classes: "active blue",
-                inner: String(i + 1),
+                inner: String(pageNum),
                 onClick: null
             }));
         } else {
             pagination.appendChild(createPageItem({
                 classes: "waves-effect",
-                inner: String(i + 1),
-                onClick: () => loadOffers(i)
+                inner: String(pageNum),
+                onClick: () => loadOffers(pageNum)
             }));
         }
     }
@@ -463,7 +464,7 @@ function renderPagination(data) {
         pagination.appendChild(createPageItem({
             classes: "waves-effect",
             inner: rightIcon,
-            onClick: () => loadOffers(activePage + 1)
+            onClick: () => loadOffers(activePage + 2)
         }));
     } else {
         const rightIcon = '<i class="material-icons">chevron_right</i>';
