@@ -25,14 +25,10 @@ public class CloudflareImagesService {
             .build();
     }
 
-    public String uploadImage(MultipartFile file, String offerId) throws IOException {
+    public String uploadImage(MultipartFile file) throws IOException {
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("file", file.getResource());
-        bodyBuilder.part("metadata", "{\"offerId\":\"" + offerId + "\"}");
         bodyBuilder.part("requireSignedURLs", "false");
-
-        // Opcjonalnie: custom ID powiązane z ofertą
-        // bodyBuilder.part("id", "offers/" + offerId + "/" + file.getOriginalFilename());
 
         Map response = webClient.post()
             .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -42,11 +38,9 @@ public class CloudflareImagesService {
             .block();
 
         Map result = (Map) response.get("result");
-        String imageId = (String) result.get("id");
-        List<String> variants = (List<String>) result.get("variants");
+        //        List<String> variants = (List<String>) result.get("variants");
 
-        // Zapisz imageId do bazy danych oferty
-        return imageId;
+        return (String) result.get("id");
     }
 
     public void deleteImage(String imageId) {

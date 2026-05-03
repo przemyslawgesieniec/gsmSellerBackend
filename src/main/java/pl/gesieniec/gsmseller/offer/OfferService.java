@@ -35,6 +35,7 @@ public class OfferService {
     private final PhoneStockRepository phoneStockRepository;
     private final pl.gesieniec.gsmseller.phone.stock.PhoneStockMapper phoneStockMapper;
     private final FileStorageService fileStorageService;
+    private final CloudflareImagesService cloudflareImagesService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -50,9 +51,15 @@ public class OfferService {
         if (photoFiles != null) {
             log.debug("Storing {} photo files for new offer in DB", photoFiles.size());
             photoFiles.forEach(file -> {
-                byte[] data = fileStorageService.compressImageIfImage(file);
-                byte[] thumbnail = fileStorageService.createThumbnail(file);
-                photos.add(new OfferPhoto(data, thumbnail, file.getContentType()));
+                try {
+                    byte[] data = fileStorageService.compressImageIfImage(file);
+                    byte[] thumbnail = fileStorageService.createThumbnail(file);
+                    String imageId = cloudflareImagesService.uploadImage(file);
+                    photos.add(new OfferPhoto(data, thumbnail, file.getContentType(), imageId));
+                } catch (java.io.IOException e) {
+                    log.error("Failed to upload image to Cloudflare", e);
+                    throw new RuntimeException("Failed to upload image", e);
+                }
             });
         }
 
@@ -97,9 +104,15 @@ public class OfferService {
             log.debug("Storing {} new photo files for offer update in DB", photoFiles.size());
             photoFiles.forEach(file -> {
                 if (!file.isEmpty()) {
-                    byte[] data = fileStorageService.compressImageIfImage(file);
-                    byte[] thumbnail = fileStorageService.createThumbnail(file);
-                    finalPhotos.add(new OfferPhoto(data, thumbnail, file.getContentType()));
+                    try {
+                        byte[] data = fileStorageService.compressImageIfImage(file);
+                        byte[] thumbnail = fileStorageService.createThumbnail(file);
+                        String imageId = cloudflareImagesService.uploadImage(file);
+                        finalPhotos.add(new OfferPhoto(data, thumbnail, file.getContentType(), imageId));
+                    } catch (java.io.IOException e) {
+                        log.error("Failed to upload image to Cloudflare", e);
+                        throw new RuntimeException("Failed to upload image", e);
+                    }
                 }
             });
         }

@@ -32,10 +32,14 @@ public class OfferPhoto {
     @Column(nullable = false)
     private String contentType;
 
-    public OfferPhoto(byte[] data, byte[] thumbnailData, String contentType) {
+    @Column
+    private String imageId;
+
+    public OfferPhoto(byte[] data, byte[] thumbnailData, String contentType, String imageId) {
         this.technicalId = UUID.randomUUID();
         this.data = data;
         this.thumbnailData = thumbnailData;
         this.contentType = contentType;
+        this.imageId = imageId;
     }
 }
