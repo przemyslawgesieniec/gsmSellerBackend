@@ -10,6 +10,7 @@ public class CloudflareProperties {
     private String apiKey;
     private String accountId;
     private String accountHash;
+    private String env;
 
     public String getApiKey() {
         return apiKey;
@@ -33,5 +34,13 @@ public class CloudflareProperties {
 
     public void setAccountHash(String accountHash) {
         this.accountHash = accountHash;
+    }
+
+    public String getEnv() {
+        return env;
+    }
+
+    public void setEnv(String env) {
+        this.env = env;
     }
 }

@@ -30,6 +30,12 @@ public class CloudflareImagesService {
         bodyBuilder.part("file", file.getResource());
         bodyBuilder.part("requireSignedURLs", "false");
 
+        Map<String, String> metadata = Map.of(
+            "env", cloudflareProperties.getEnv(),
+            "app", "Teleakcesoria"
+        );
+        bodyBuilder.part("metadata", metadata);
+
         Map response = webClient.post()
             .contentType(MediaType.MULTIPART_FORM_DATA)
             .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
