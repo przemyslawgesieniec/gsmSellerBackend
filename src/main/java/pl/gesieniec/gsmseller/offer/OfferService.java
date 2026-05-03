@@ -96,7 +96,17 @@ public class OfferService {
         List<UUID> requestedExistingPhotoIds = request.photos() != null ? request.photos() : new ArrayList<>();
 
         // Znajdź istniejące zdjęcia, które mają zostać zachowane
-        List<OfferPhoto> finalPhotos = new ArrayList<>(offerPhotoRepository.findAllByTechnicalIdIn(requestedExistingPhotoIds));
+        List<OfferPhoto> existingPhotos = offer.getPhotos();
+        List<OfferPhoto> photosToKeep = offerPhotoRepository.findAllByTechnicalIdIn(requestedExistingPhotoIds);
+        
+        // Zdjęcia do usunięcia z Cloudflare
+        List<String> imageIdsToDelete = existingPhotos.stream()
+            .filter(p -> !photosToKeep.contains(p))
+            .map(OfferPhoto::getImageId)
+            .filter(java.util.Objects::nonNull)
+            .toList();
+
+        List<OfferPhoto> finalPhotos = new ArrayList<>(photosToKeep);
 
         // Dodaj nowe pliki
         if (photoFiles != null) {
@@ -129,6 +139,16 @@ public class OfferService {
         );
 
         PhoneOffer updatedOffer = mapToDto(offerRepository.save(offer));
+
+        // Usuń zdjęcia z Cloudflare po udanym zapisie oferty
+        imageIdsToDelete.forEach(imageId -> {
+            try {
+                cloudflareImagesService.deleteImage(imageId);
+            } catch (Exception e) {
+                log.error("Failed to delete orphaned image {} from Cloudflare", imageId, e);
+            }
+        });
+
         log.info("Offer updated successfully for technicalId: {}", technicalId);
         return updatedOffer;
     }
@@ -246,7 +266,21 @@ public class OfferService {
         log.info("Deleting offer for phone technicalId: {}", technicalId);
         offerRepository.findByPhoneStockTechnicalId(technicalId)
             .ifPresentOrElse(offer -> {
+                List<String> imageIds = offer.getPhotos().stream()
+                    .map(OfferPhoto::getImageId)
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+
                 offerRepository.delete(offer);
+
+                imageIds.forEach(imageId -> {
+                    try {
+                        cloudflareImagesService.deleteImage(imageId);
+                    } catch (Exception e) {
+                        log.error("Failed to delete image {} from Cloudflare", imageId, e);
+                    }
+                });
+
                 eventPublisher.publishEvent(new OfferRemovedEvent(technicalId));
                 log.info("Offer for phone technicalId {} deleted successfully", technicalId);
             }, () -> {
@@ -259,7 +293,21 @@ public class OfferService {
         log.info("Removing offer for {} phone: {}", reason, technicalId);
         offerRepository.findByPhoneStockTechnicalId(technicalId)
             .ifPresent(offer -> {
+                List<String> imageIds = offer.getPhotos().stream()
+                    .map(OfferPhoto::getImageId)
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+
                 offerRepository.delete(offer);
+
+                imageIds.forEach(imageId -> {
+                    try {
+                        cloudflareImagesService.deleteImage(imageId);
+                    } catch (Exception e) {
+                        log.error("Failed to delete image {} from Cloudflare", imageId, e);
+                    }
+                });
+
                 eventPublisher.publishEvent(new OfferRemovedEvent(technicalId));
                 log.info("Offer for phone {} removed successfully", technicalId);
             });
