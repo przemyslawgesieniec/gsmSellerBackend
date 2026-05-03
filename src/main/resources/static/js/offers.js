@@ -136,7 +136,7 @@ function renderPhotosPreview() {
             src = URL.createObjectURL(photo);
         } else {
             src = 'https://via.placeholder.com/100x100?text=...';
-            dataSrc = `/api/v1/external/offers/photos/${photo}/thumbnail`;
+            dataSrc = photo.thumbnailUrl;
         }
         
         div.innerHTML = `
@@ -194,8 +194,8 @@ async function saveOffer(e) {
     photos.forEach(photo => {
         if (photo instanceof File) {
             formData.append('photoFiles', photo);
-        } else if (typeof photo === 'string') {
-            formData.append('photos', photo);
+        } else if (photo && photo.uuid) {
+            formData.append('photos', photo.uuid);
         }
     });
     
@@ -279,7 +279,7 @@ function renderOffers(offers) {
     
     offers.forEach(offer => {
         const mainPhoto = offer.photos && offer.photos.length > 0 
-            ? `/api/v1/external/offers/photos/${offer.photos[0]}/thumbnail` 
+            ? offer.photos[0].thumbnailUrl 
             : 'https://via.placeholder.com/300x200?text=Brak+zdjęcia';
         
         const col = document.createElement('div');
@@ -312,7 +312,7 @@ function renderOffers(offers) {
                         <b>System:</b> ${offer.operatingSystem || '---'}
                     </p>
                     <div class="offer-photos-mini">
-                        ${(offer.photos || []).map(p => `<img data-src="/api/v1/external/offers/photos/${p}/thumbnail" src="https://via.placeholder.com/50x50?text=..." onclick="window.open('/api/v1/external/offers/photos/${p}', '_blank')" style="width: 50px; height: 50px; cursor: pointer; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
+                        ${(offer.photos || []).map(p => `<img data-src="${p.thumbnailUrl}" src="https://via.placeholder.com/50x50?text=..." onclick="window.open('${p.publicUrl}', '_blank')" style="width: 50px; height: 50px; cursor: pointer; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
                     </div>
                 </div>
             </div>

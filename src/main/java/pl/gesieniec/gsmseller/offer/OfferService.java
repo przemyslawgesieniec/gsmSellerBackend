@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.offer.model.OfferRequest;
 import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
+import pl.gesieniec.gsmseller.offer.model.Photo;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import pl.gesieniec.gsmseller.offer.event.OfferCreatedEvent;
@@ -197,8 +198,15 @@ public class OfferService {
 
     private PhoneOffer mapToDto(Offer offer) {
         PhoneStock phoneStock = offer.getPhoneStock();
-        List<UUID> photoIds = offerPhotoRepository.findPhotoTechnicalIdsByOfferId(offer.getId());
-        
+        List<Photo> photos = offer.getPhotos().stream()
+            .map(photo -> Photo.builder()
+                .uuid(photo.getTechnicalId())
+                .thumbnailUrl(cloudflareImagesService.getImageUrl(photo.getImageId(), "thumbnail"))
+                .galleryUrl(cloudflareImagesService.getImageUrl(photo.getImageId(), "galery"))
+                .publicUrl(cloudflareImagesService.getImageUrl(photo.getImageId(), "public"))
+                .build())
+            .toList();
+
         return PhoneOffer.builder()
             .technicalId(phoneStock.getTechnicalId())
             .price(phoneStock.getSellingPrice())
@@ -216,7 +224,7 @@ public class OfferService {
             .batteryCapacity(offer.getBatteryCapacity())
             .communication(offer.getCommunication())
             .operatingSystem(offer.getOperatingSystem())
-            .photos(photoIds)
+            .photos(photos)
             .isReserved(offer.isReserved())
             .build();
     }
