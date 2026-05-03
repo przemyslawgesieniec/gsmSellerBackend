@@ -59,6 +59,12 @@ function selectPhone(phone) {
 
 async function fetchAiSpecs(name, model) {
     M.toast({html: 'Pobieranie specyfikacji z AI...', classes: 'blue'});
+    const saveBtn = document.getElementById('saveBtn');
+    const formLoader = document.getElementById('formLoader');
+    
+    if (saveBtn) saveBtn.disabled = true;
+    if (formLoader) formLoader.classList.remove('hide');
+
     try {
         const response = await fetch(`/api/v1/offers/ai-specs?name=${encodeURIComponent(name)}&model=${encodeURIComponent(model)}`);
         if (response.ok) {
@@ -71,6 +77,9 @@ async function fetchAiSpecs(name, model) {
     } catch (err) {
         console.error('Błąd AI:', err);
         M.toast({html: 'Błąd połączenia z AI', classes: 'red'});
+    } finally {
+        if (saveBtn) saveBtn.disabled = false;
+        if (formLoader) formLoader.classList.add('hide');
     }
 }
 
@@ -169,9 +178,15 @@ async function saveOffer(e) {
         return;
     }
     
+    const saveBtn = document.getElementById('saveBtn');
+    const formLoader = document.getElementById('formLoader');
     const cancelBtn = document.getElementById('cancelBtn');
     const isEdit = cancelBtn && cancelBtn.classList.contains('hide') === false;
     
+    // Pokazujemy loader i blokujemy przycisk
+    if (saveBtn) saveBtn.disabled = true;
+    if (formLoader) formLoader.classList.remove('hide');
+
     const formData = new FormData();
     if (!isEdit) {
         formData.append('phoneStockTechnicalId', technicalId);
@@ -210,14 +225,22 @@ async function saveOffer(e) {
         
         if (response.ok) {
             M.toast({html: isEdit ? 'Oferta zaktualizowana!' : 'Oferta utworzona!', classes: 'green'});
-            resetForm();
-            loadOffers(isEdit ? currentPage : 1);
+            // Przeładowujemy stronę po 1 sekundzie, żeby użytkownik zdążył zobaczyć toasta
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
             const err = await response.json();
             M.toast({html: 'Błąd: ' + (err.message || 'Nieznany błąd'), classes: 'red'});
+            // Przy błędzie odblokowujemy przycisk
+            if (saveBtn) saveBtn.disabled = false;
+            if (formLoader) formLoader.classList.add('hide');
         }
     } catch (err) {
         M.toast({html: 'Błąd połączenia', classes: 'red'});
+        // Przy błędzie odblokowujemy przycisk
+        if (saveBtn) saveBtn.disabled = false;
+        if (formLoader) formLoader.classList.add('hide');
     }
 }
 
@@ -370,7 +393,9 @@ async function deleteOffer(technicalId) {
 
             if (response.ok) {
                 M.toast({html: 'Oferta została usunięta', classes: 'green'});
-                loadOffers(currentPage);
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             } else {
                 const err = await response.json();
                 M.toast({html: 'Błąd podczas usuwania: ' + (err.message || 'Nieznany błąd'), classes: 'red'});

@@ -165,10 +165,21 @@
                         <div class="row">
                             <div class="col s12 right-align">
                                 <button type="button" id="cancelBtn" class="btn-flat waves-effect hide">Anuluj edycję</button>
-                                <button type="submit" class="btn waves-effect waves-light blue darken-2">
+                                <button type="submit" id="saveBtn" class="btn waves-effect waves-light blue darken-2">
                                     Zapisz ofertę
                                     <i class="material-icons right">send</i>
                                 </button>
+                            </div>
+                            <!-- Loading Indicator dla Formularza -->
+                            <div class="col s12 center-align hide" id="formLoader">
+                                <div class="preloader-wrapper small active">
+                                    <div class="spinner-layer spinner-blue-only">
+                                        <div class="circle-clipper left"><div class="circle"></div></div>
+                                        <div class="gap-patch"><div class="circle"></div></div>
+                                        <div class="circle-clipper right"><div class="circle"></div></div>
+                                    </div>
+                                </div>
+                                <p class="grey-text">Przetwarzanie...</p>
                             </div>
                         </div>
                     </form>
