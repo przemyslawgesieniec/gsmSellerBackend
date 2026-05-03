@@ -41,6 +41,11 @@ openai:
   model: gpt-4o-mini
   api-key: ${OPENAI_API_KEY}
 
+cloudflare:
+  api-key: ${CLOUDFLARE_API_KEY}
+  account-id: ${CLOUDFLARE_ACCOUNT_ID}
+  account-hash: ${CLOUDFLARE_ACCOUNT_HASH}
+
 logging:
   level:
     org.springframework.security: DEBUG
