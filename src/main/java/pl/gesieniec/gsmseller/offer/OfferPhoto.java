@@ -33,6 +33,7 @@ public class OfferPhoto {
     private String contentType;
 
     @Column
+    @Setter
     private String imageId;
 
     public OfferPhoto(byte[] data, byte[] thumbnailData, String contentType, String imageId) {

@@ -1,5 +1,6 @@
 package pl.gesieniec.gsmseller.offer;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +18,8 @@ public interface OfferPhotoRepository extends JpaRepository<OfferPhoto, Long> {
     @Query("SELECT p.technicalId FROM OfferPhoto p WHERE p.id IN (SELECT ph.id FROM Offer o JOIN o.photos ph WHERE o.id = :offerId)")
     List<UUID> findPhotoTechnicalIdsByOfferId(@Param("offerId") Long offerId);
     List<OfferPhoto> findAllByThumbnailDataIsNull();
+    List<OfferPhoto> findAllByImageIdIsNull(Pageable pageable);
+
+    @Query("SELECT p.id FROM OfferPhoto p WHERE p.imageId IS NULL")
+    List<Long> findIdsByImageIdIsNull(Pageable pageable);
 }
