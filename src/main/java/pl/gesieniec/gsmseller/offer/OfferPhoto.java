@@ -21,7 +21,7 @@ public class OfferPhoto {
     private UUID technicalId;
 
     @Lob
-    @Column(nullable = false)
+    @Column
     private byte[] data;
 
     @Lob

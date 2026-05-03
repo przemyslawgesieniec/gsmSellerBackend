@@ -49,13 +49,11 @@ public class OfferService {
 
         List<OfferPhoto> photos = new ArrayList<>();
         if (photoFiles != null) {
-            log.debug("Storing {} photo files for new offer in DB", photoFiles.size());
+            log.debug("Storing {} photo files for new offer", photoFiles.size());
             photoFiles.forEach(file -> {
                 try {
-                    byte[] data = fileStorageService.compressImageIfImage(file);
-                    byte[] thumbnail = fileStorageService.createThumbnail(file);
                     String imageId = cloudflareImagesService.uploadImage(file);
-                    photos.add(new OfferPhoto(data, thumbnail, file.getContentType(), imageId));
+                    photos.add(new OfferPhoto(null, null, file.getContentType(), imageId));
                 } catch (java.io.IOException e) {
                     log.error("Failed to upload image to Cloudflare", e);
                     throw new RuntimeException("Failed to upload image", e);
@@ -101,14 +99,12 @@ public class OfferService {
 
         // Dodaj nowe pliki
         if (photoFiles != null) {
-            log.debug("Storing {} new photo files for offer update in DB", photoFiles.size());
+            log.debug("Storing {} new photo files for offer update", photoFiles.size());
             photoFiles.forEach(file -> {
                 if (!file.isEmpty()) {
                     try {
-                        byte[] data = fileStorageService.compressImageIfImage(file);
-                        byte[] thumbnail = fileStorageService.createThumbnail(file);
                         String imageId = cloudflareImagesService.uploadImage(file);
-                        finalPhotos.add(new OfferPhoto(data, thumbnail, file.getContentType(), imageId));
+                        finalPhotos.add(new OfferPhoto(null, null, file.getContentType(), imageId));
                     } catch (java.io.IOException e) {
                         log.error("Failed to upload image to Cloudflare", e);
                         throw new RuntimeException("Failed to upload image", e);
@@ -139,13 +135,7 @@ public class OfferService {
     @Transactional(readOnly = true)
     public List<OfferPhoto> getPhotos(List<UUID> photoIds) {
         log.debug("Fetching photos for UUIDs: {}", photoIds);
-        List<OfferPhoto> photos = offerPhotoRepository.findAllByTechnicalIdIn(photoIds);
-        photos.forEach(photo -> {
-            if (photo.getData() != null) {
-                int length = photo.getData().length; // Force load @Lob
-            }
-        });
-        return photos;
+        return offerPhotoRepository.findAllByTechnicalIdIn(photoIds);
     }
 
     @Transactional(readOnly = true)
