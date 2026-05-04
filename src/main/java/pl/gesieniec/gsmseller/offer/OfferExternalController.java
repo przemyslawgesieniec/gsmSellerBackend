@@ -26,40 +26,36 @@ import java.util.UUID;
 public class OfferExternalController {
 
     private final OfferService offerService;
-
-    @GetMapping("/photos")
-    public ResponseEntity<List<byte[]>> getPhotos(@RequestParam List<UUID> ids) {
-        List<OfferPhoto> photos = offerService.getPhotos(ids);
-        List<byte[]> data = photos.stream().map(OfferPhoto::getData).toList();
-        return ResponseEntity.ok(data);
-    }
+    private final CloudflareImagesService cloudflareImagesService;
 
     @GetMapping("/photos/{id}")
-    public ResponseEntity<byte[]> getPhoto(@PathVariable UUID id) {
+    public ResponseEntity<Void> getPhoto(@PathVariable UUID id) {
         OfferPhoto photo = offerService.getPhotos(List.of(id)).stream().findFirst()
             .orElseThrow(() -> new pl.gesieniec.gsmseller.common.EntityNotFoundException("Photo not found: " + id));
-        
-        return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType(photo.getContentType()))
-            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000")
-            .body(photo.getData());
+
+        if (photo.getImageId() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String imageUrl = cloudflareImagesService.getImageUrl(photo.getImageId(), "public");
+        return ResponseEntity.status(HttpStatus.FOUND)
+            .header(HttpHeaders.LOCATION, imageUrl)
+            .build();
     }
 
     @GetMapping("/photos/{id}/thumbnail")
-    public ResponseEntity<byte[]> getPhotoThumbnail(@PathVariable UUID id) {
+    public ResponseEntity<Void> getPhotoThumbnail(@PathVariable UUID id) {
         OfferPhoto photo = offerService.getPhotos(List.of(id)).stream().findFirst()
             .orElseThrow(() -> new pl.gesieniec.gsmseller.common.EntityNotFoundException("Photo not found: " + id));
 
-        byte[] thumbnailData = photo.getThumbnailData();
-        if (thumbnailData == null || thumbnailData.length == 0) {
-            // Fallback do pełnego zdjęcia jeśli miniatura nie istnieje
-            thumbnailData = photo.getData();
+        if (photo.getImageId() == null) {
+            return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok()
-            .contentType(MediaType.IMAGE_JPEG)
-            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000")
-            .body(thumbnailData);
+        String imageUrl = cloudflareImagesService.getImageUrl(photo.getImageId(), "thumbnail");
+        return ResponseEntity.status(HttpStatus.FOUND)
+            .header(HttpHeaders.LOCATION, imageUrl)
+            .build();
     }
 
     @GetMapping

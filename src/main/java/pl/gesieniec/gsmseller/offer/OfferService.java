@@ -54,7 +54,7 @@ public class OfferService {
             photoFiles.forEach(file -> {
                 try {
                     String imageId = cloudflareImagesService.uploadImage(file);
-                    photos.add(new OfferPhoto(null, null, file.getContentType(), imageId));
+                    photos.add(new OfferPhoto(file.getContentType(), imageId));
                 } catch (java.io.IOException e) {
                     log.error("Failed to upload image to Cloudflare", e);
                     throw new RuntimeException("Failed to upload image", e);
@@ -115,7 +115,7 @@ public class OfferService {
                 if (!file.isEmpty()) {
                     try {
                         String imageId = cloudflareImagesService.uploadImage(file);
-                        finalPhotos.add(new OfferPhoto(null, null, file.getContentType(), imageId));
+                        finalPhotos.add(new OfferPhoto(file.getContentType(), imageId));
                     } catch (java.io.IOException e) {
                         log.error("Failed to upload image to Cloudflare", e);
                         throw new RuntimeException("Failed to upload image", e);

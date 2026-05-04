@@ -20,15 +20,6 @@ public class OfferPhoto {
     @Column(nullable = false, unique = true)
     private UUID technicalId;
 
-    @Lob
-    @Column
-    private byte[] data;
-
-    @Lob
-    @Column
-    @Setter
-    private byte[] thumbnailData;
-
     @Column(nullable = false)
     private String contentType;
 
@@ -36,10 +27,8 @@ public class OfferPhoto {
     @Setter
     private String imageId;
 
-    public OfferPhoto(byte[] data, byte[] thumbnailData, String contentType, String imageId) {
+    public OfferPhoto(String contentType, String imageId) {
         this.technicalId = UUID.randomUUID();
-        this.data = data;
-        this.thumbnailData = thumbnailData;
         this.contentType = contentType;
         this.imageId = imageId;
     }
