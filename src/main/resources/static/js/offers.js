@@ -59,6 +59,12 @@ function selectPhone(phone) {
 
 async function fetchAiSpecs(name, model) {
     M.toast({html: 'Pobieranie specyfikacji z AI...', classes: 'blue'});
+    const saveBtn = document.getElementById('saveBtn');
+    const formLoader = document.getElementById('formLoader');
+    
+    if (saveBtn) saveBtn.disabled = true;
+    if (formLoader) formLoader.classList.remove('hide');
+
     try {
         const response = await fetch(`/api/v1/offers/ai-specs?name=${encodeURIComponent(name)}&model=${encodeURIComponent(model)}`);
         if (response.ok) {
@@ -71,6 +77,9 @@ async function fetchAiSpecs(name, model) {
     } catch (err) {
         console.error('Błąd AI:', err);
         M.toast({html: 'Błąd połączenia z AI', classes: 'red'});
+    } finally {
+        if (saveBtn) saveBtn.disabled = false;
+        if (formLoader) formLoader.classList.add('hide');
     }
 }
 
@@ -136,7 +145,7 @@ function renderPhotosPreview() {
             src = URL.createObjectURL(photo);
         } else {
             src = 'https://via.placeholder.com/100x100?text=...';
-            dataSrc = `/api/v1/external/offers/photos/${photo}/thumbnail`;
+            dataSrc = photo.thumbnailUrl;
         }
         
         div.innerHTML = `
@@ -169,9 +178,15 @@ async function saveOffer(e) {
         return;
     }
     
+    const saveBtn = document.getElementById('saveBtn');
+    const formLoader = document.getElementById('formLoader');
     const cancelBtn = document.getElementById('cancelBtn');
     const isEdit = cancelBtn && cancelBtn.classList.contains('hide') === false;
     
+    // Pokazujemy loader i blokujemy przycisk
+    if (saveBtn) saveBtn.disabled = true;
+    if (formLoader) formLoader.classList.remove('hide');
+
     const formData = new FormData();
     if (!isEdit) {
         formData.append('phoneStockTechnicalId', technicalId);
@@ -194,8 +209,8 @@ async function saveOffer(e) {
     photos.forEach(photo => {
         if (photo instanceof File) {
             formData.append('photoFiles', photo);
-        } else if (typeof photo === 'string') {
-            formData.append('photos', photo);
+        } else if (photo && photo.uuid) {
+            formData.append('photos', photo.uuid);
         }
     });
     
@@ -210,14 +225,22 @@ async function saveOffer(e) {
         
         if (response.ok) {
             M.toast({html: isEdit ? 'Oferta zaktualizowana!' : 'Oferta utworzona!', classes: 'green'});
-            resetForm();
-            loadOffers(isEdit ? currentPage : 1);
+            // Przeładowujemy stronę po 1 sekundzie, żeby użytkownik zdążył zobaczyć toasta
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
             const err = await response.json();
             M.toast({html: 'Błąd: ' + (err.message || 'Nieznany błąd'), classes: 'red'});
+            // Przy błędzie odblokowujemy przycisk
+            if (saveBtn) saveBtn.disabled = false;
+            if (formLoader) formLoader.classList.add('hide');
         }
     } catch (err) {
         M.toast({html: 'Błąd połączenia', classes: 'red'});
+        // Przy błędzie odblokowujemy przycisk
+        if (saveBtn) saveBtn.disabled = false;
+        if (formLoader) formLoader.classList.add('hide');
     }
 }
 
@@ -279,7 +302,7 @@ function renderOffers(offers) {
     
     offers.forEach(offer => {
         const mainPhoto = offer.photos && offer.photos.length > 0 
-            ? `/api/v1/external/offers/photos/${offer.photos[0]}/thumbnail` 
+            ? offer.photos[0].thumbnailUrl 
             : 'https://via.placeholder.com/300x200?text=Brak+zdjęcia';
         
         const col = document.createElement('div');
@@ -312,7 +335,7 @@ function renderOffers(offers) {
                         <b>System:</b> ${offer.operatingSystem || '---'}
                     </p>
                     <div class="offer-photos-mini">
-                        ${(offer.photos || []).map(p => `<img data-src="/api/v1/external/offers/photos/${p}/thumbnail" src="https://via.placeholder.com/50x50?text=..." onclick="window.open('/api/v1/external/offers/photos/${p}', '_blank')" style="width: 50px; height: 50px; cursor: pointer; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
+                        ${(offer.photos || []).map(p => `<img data-src="${p.thumbnailUrl}" src="https://via.placeholder.com/50x50?text=..." onclick="window.open('${p.publicUrl}', '_blank')" style="width: 50px; height: 50px; cursor: pointer; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join('')}
                     </div>
                 </div>
             </div>
@@ -370,7 +393,9 @@ async function deleteOffer(technicalId) {
 
             if (response.ok) {
                 M.toast({html: 'Oferta została usunięta', classes: 'green'});
-                loadOffers(currentPage);
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             } else {
                 const err = await response.json();
                 M.toast({html: 'Błąd podczas usuwania: ' + (err.message || 'Nieznany błąd'), classes: 'red'});
