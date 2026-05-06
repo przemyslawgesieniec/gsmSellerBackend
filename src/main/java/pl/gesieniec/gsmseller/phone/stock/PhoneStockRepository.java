@@ -21,6 +21,8 @@ public interface PhoneStockRepository extends
 
     Optional<PhoneStock> findByTechnicalId(UUID technicalId);
 
+    boolean existsByPhoneModelTechnicalId(UUID technicalId);
+
     long countByStatusIn(List<Status> statuses);
 
     @Query("""

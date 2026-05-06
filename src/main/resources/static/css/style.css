@@ -758,6 +758,84 @@ table td {
     color: #2e7d32; /* zielony */
 }
 
+.page-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.page-heading h4 {
+    margin-bottom: 4px;
+}
+
+.models-table td,
+.models-table th {
+    vertical-align: top;
+}
+
+.models-table .btn-small {
+    margin-left: 6px;
+    padding: 0 8px;
+}
+
+.model-specs-preview {
+    margin: 8px 0 20px;
+}
+
+.model-specs-panel {
+    border-left: 4px solid #00aed8;
+    line-height: 1.8;
+}
+
+.dynamic-field-group {
+    border: 1px solid #eceff1;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.dynamic-field-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.dynamic-field-header h6 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.dynamic-field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dynamic-field-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.dynamic-remove-btn {
+    flex: 0 0 auto;
+    margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    .page-heading {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-heading .btn {
+        width: 100%;
+    }
+}
+
 .battery-ok {
     color: #f9a825; /* żółty */
 }

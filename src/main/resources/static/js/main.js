@@ -2,8 +2,72 @@ const pageSize = 20;
 let currentPage = 0;
 let phoneToHandover = null;
 let phoneToReserve = null;
+let phoneToAssignModel = null;
+let assignPhoneModelSelect = null;
 
 const listContainer = document.getElementById("phone-list");
+
+function formatPhoneModelOption(item) {
+    const spec = [item.memory, item.ram].filter(Boolean).join(" / ");
+    return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
+}
+
+function initPhoneModelSelect(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+
+    return new TomSelect(el, {
+        controlInput: null,
+        create: false,
+        searchField: [],
+        shouldSort: false,
+        hideSelected: true,
+        closeAfterSelect: true,
+        allowEmptyOption: true
+    });
+}
+
+async function loadAssignPhoneModelOptions(selectedValue = "", selectedLabel = "") {
+    if (!assignPhoneModelSelect) {
+        assignPhoneModelSelect = initPhoneModelSelect('#assignPhoneModelSelect');
+    }
+
+    if (!assignPhoneModelSelect) return;
+
+    assignPhoneModelSelect.clear(true);
+    assignPhoneModelSelect.clearOptions();
+    assignPhoneModelSelect.addOption({ value: "", text: "Wybierz model z bazy" });
+
+    try {
+        const response = await fetch("/api/v1/phone-models?size=1000");
+        if (!response.ok) throw new Error("Nie udało się pobrać modeli");
+
+        const data = await response.json();
+        (data.content || []).forEach(model => {
+            assignPhoneModelSelect.addOption({
+                value: model.technicalId,
+                text: formatPhoneModelOption(model)
+            });
+        });
+
+        if (
+            selectedValue
+            && !assignPhoneModelSelect.options[selectedValue]
+        ) {
+            assignPhoneModelSelect.addOption({
+                value: selectedValue,
+                text: selectedLabel || selectedValue
+            });
+        }
+
+        assignPhoneModelSelect.refreshOptions(false);
+        if (selectedValue) {
+            assignPhoneModelSelect.setValue(selectedValue, true);
+        }
+    } catch (e) {
+        M.toast({ html: "Nie udało się pobrać modeli z bazy", classes: "red" });
+    }
+}
 
 function getFilters() {
     return {
@@ -49,7 +113,9 @@ async function loadStock(page = 0) {
             used: phone.used,
             isReserved: phone.isReserved,
             hasOffer: phone.hasOffer,
-            afterService: phone.afterService
+            afterService: phone.afterService,
+            phoneModelTechnicalId: phone.phoneModelTechnicalId,
+            phoneModelDisplayName: phone.phoneModelDisplayName
         }));
 
 
@@ -226,6 +292,8 @@ function renderPhones(phones) {
           data-battery-condition="${phone.batteryCondition ?? ""}"
           data-selling-price="${phone.sellingPrice ?? ""}"
           data-purchase-price="${phone.purchasePrice ?? ""}"
+          data-phone-model-technical-id="${phone.phoneModelTechnicalId ?? ""}"
+          data-phone-model-display-name="${phone.phoneModelDisplayName ?? ""}"
         >
           <div class="card-content phone-card">
             <div class="phone-left">
@@ -261,6 +329,11 @@ function renderPhones(phones) {
                   ` : ""}
                 </div>
                 <p><i class="material-icons tiny">smartphone</i> <b>Model:</b> ${phone.model}</p>
+
+                <p>
+                  <i class="material-icons tiny">dns</i>
+                  <b>Model z bazy:</b> ${phone.phoneModelDisplayName || "Nie ustawiono"}
+                </p>
 
                 ${(phone.ram != null || phone.memory != null) ? `
                 <p>
@@ -345,6 +418,12 @@ function renderPhones(phones) {
               <li>
                 <a href="#!" data-action="edit" data-id="${phone.technicalId}">
                   Edytuj
+                </a>
+              </li>
+
+              <li>
+                <a href="#!" data-action="assign-model" data-id="${phone.technicalId}">
+                  Ustaw model z bazy
                 </a>
               </li>
             
@@ -684,6 +763,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const statusSelect = initSimpleSelect('#filterStatus');
     const locationSelect = initSimpleSelect('#filterLocation');
+    assignPhoneModelSelect = initPhoneModelSelect('#assignPhoneModelSelect');
+    loadAssignPhoneModelOptions();
 
     if (statusSelect) {
         statusSelect.on('change', () => liveReload());
@@ -1173,6 +1254,10 @@ function handleDropdownAction(e) {
             editPhone(id);
             break;
 
+        case "assign-model":
+            openAssignModelModal(id);
+            break;
+
         case "accept":
             acceptPhone(id);
             break;
@@ -1199,6 +1284,52 @@ function handleDropdownAction(e) {
 
     }
 }
+
+async function openAssignModelModal(technicalId) {
+    phoneToAssignModel = technicalId;
+    const card = document.querySelector(`.card[data-technical-id="${technicalId}"]`);
+    const phoneInfo = document.getElementById("assignModelPhoneInfo");
+    const currentModelId = card?.dataset.phoneModelTechnicalId || "";
+    const currentModelDisplayName = card?.dataset.phoneModelDisplayName || "";
+
+    phoneInfo.textContent = `${card?.dataset.name || ""} ${card?.dataset.model || ""}`.trim();
+
+    if (!assignPhoneModelSelect) {
+        assignPhoneModelSelect = initPhoneModelSelect('#assignPhoneModelSelect');
+    }
+
+    await loadAssignPhoneModelOptions(currentModelId, currentModelDisplayName);
+
+    M.Modal.getInstance(document.getElementById("assignModelModal")).open();
+}
+
+document.getElementById("saveAssignModelBtn")
+    .addEventListener("click", async () => {
+        const phoneModelTechnicalId = assignPhoneModelSelect?.getValue();
+
+        if (!phoneToAssignModel || !phoneModelTechnicalId) {
+            M.toast({ html: "Wybierz model z bazy", classes: "red" });
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/phones/${phoneToAssignModel}/model`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneModelTechnicalId })
+            });
+
+            if (!response.ok) {
+                throw new Error("Nie udało się ustawić modelu");
+            }
+
+            M.toast({ html: "Model z bazy został ustawiony", classes: "green" });
+            M.Modal.getInstance(document.getElementById("assignModelModal")).close();
+            loadStock(currentPage);
+        } catch (e) {
+            M.toast({ html: "Błąd ustawiania modelu", classes: "red" });
+        }
+    });
 
 function openReservationModal(technicalId) {
     phoneToReserve = technicalId;

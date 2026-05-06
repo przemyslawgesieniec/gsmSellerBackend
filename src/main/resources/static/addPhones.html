@@ -19,6 +19,7 @@
 
 <!-- Navbar -->
 <div id="navbar"></div>
+<script src="js/auth.js"></script>
 <script src="js/loadNavbar.js"></script>
 
 <div class="container wide-layout">
@@ -58,9 +59,25 @@
                         <label for="manualSource">Pochodzenie</label>
                     </div>
 
-                    <div class="input-field col s12 m8">
+                    <div class="col s12">
+                        <div class="switch" style="margin: 6px 0 18px;">
+                            <label>
+                                Podaj nazwę
+                                <input type="checkbox" id="identitySourceToggle" checked>
+                                <span class="lever"></span>
+                                Wybierz model z bazy
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-field col s12 m8 hide" id="manualNameWrapper">
                         <input type="text" id="manualName">
                         <label for="manualName">Nazwa</label>
+                    </div>
+
+                    <div class="input-field col s12 m8" id="manualPhoneModelWrapper">
+                        <select id="manualPhoneModelSelect"></select>
+                        <label class="active">Model z bazy</label>
                     </div>
 
                     <div class="input-field col s12 m4">
@@ -176,7 +193,6 @@
 
     <!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="js/auth.js"></script>
 
 <script src="https://unpkg.com/heic2any/dist/heic2any.min.js"></script>
     <script src="js/uploadFiles.js"></script>

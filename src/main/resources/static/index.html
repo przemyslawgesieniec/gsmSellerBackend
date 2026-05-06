@@ -20,6 +20,7 @@
 
 <!-- Navbar -->
 <div id="navbar"></div>
+<script src="js/auth.js"></script>
 <script src="js/loadNavbar.js"></script>
 
 <div class="container wide-layout">
@@ -235,6 +236,26 @@
   </div>
 </div>
 
+<!-- Modal: Przypisanie modelu z bazy -->
+<div id="assignModelModal" class="modal">
+  <div class="modal-content" style="position: relative;">
+    <h5>Ustaw model z bazy</h5>
+    <a class="modal-close right"><i class="material-icons">close</i></a>
+    <p id="assignModelPhoneInfo" class="grey-text"></p>
+
+    <div class="row">
+      <div class="input-field col s12">
+        <select id="assignPhoneModelSelect"></select>
+        <label class="active">Model z bazy</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn blue darken-2" id="saveAssignModelBtn">Zapisz</button>
+  </div>
+</div>
+
 <!-- Modal: Potwierdzenie przyjecia telefonu -->
 <div id="acceptConfirmModal" class="modal">
   <div class="modal-content">
@@ -334,7 +355,6 @@
 
 <!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script src="js/auth.js"></script>
 <script src="js/main.js"></script>
 <script src="js/uploadFiles.js"></script>
 <script src="js/cart.js"></script>

@@ -35,5 +35,7 @@ public class PhoneStockDto {
     private Boolean isReserved;
     private Boolean hasOffer;
     private boolean afterService;
+    private UUID phoneModelTechnicalId;
+    private String phoneModelDisplayName;
 
 }
