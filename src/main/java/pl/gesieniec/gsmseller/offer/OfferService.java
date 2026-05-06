@@ -242,6 +242,7 @@ public class OfferService {
             .frontCamerasMpx(offer.getFrontCamerasMpx())
             .backCamerasMpx(offer.getBackCamerasMpx())
             .batteryCapacity(offer.getBatteryCapacity())
+            .batteryCondition(phoneStock.getBatteryCondition())
             .communication(offer.getCommunication())
             .operatingSystem(offer.getOperatingSystem())
             .photos(photos)

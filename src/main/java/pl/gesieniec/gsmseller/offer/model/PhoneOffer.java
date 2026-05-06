@@ -24,6 +24,7 @@ public record PhoneOffer(
     List<Integer> frontCamerasMpx,
     List<Integer> backCamerasMpx,
     String batteryCapacity,
+    String batteryCondition,
     CommunicationSpecs communication,
     String operatingSystem,
     List<Photo> photos,
