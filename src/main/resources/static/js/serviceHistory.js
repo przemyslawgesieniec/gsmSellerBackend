@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initDatePickers();
     initClientAutocomplete();
     initLocationFilter();
+    initInHouseRepairFilter();
     
     // Obsługa parametru query z URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -29,6 +30,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (receiptPicker) receiptPicker.clear();
         if (handoverPicker) handoverPicker.clear();
+        const inHouseRepairFilter = document.getElementById('inHouseRepairFilter');
+        if (inHouseRepairFilter) {
+            inHouseRepairFilter.checked = false;
+        }
         currentPage = 0;
         loadHistory();
     });
@@ -56,6 +61,16 @@ async function initLocationFilter() {
     } catch (error) {
         console.error('Error fetching locations:', error);
     }
+}
+
+function initInHouseRepairFilter() {
+    const checkbox = document.getElementById('inHouseRepairFilter');
+    if (!checkbox) return;
+
+    checkbox.addEventListener('change', () => {
+        currentPage = 0;
+        loadHistory();
+    });
 }
 
 function debounce(func, wait) {
@@ -129,11 +144,13 @@ function initDatePickers() {
 async function loadHistory() {
     const query = document.getElementById('historySearch').value;
     const location = document.getElementById('locationFilter').value;
+    const inHouseRepair = document.getElementById('inHouseRepairFilter')?.checked;
     
     let url = `/api/v1/repairs/history?page=${currentPage}&size=${pageSize}&sort=handoverDate,DESC`;
 
     if (query) url += `&query=${encodeURIComponent(query)}`;
     if (location) url += `&location=${encodeURIComponent(location)}`;
+    if (inHouseRepair) url += `&inHouseRepair=true`;
     
     if (receiptPicker && receiptPicker.selectedDates.length === 2) {
         const from = formatDate(receiptPicker.selectedDates[0]);

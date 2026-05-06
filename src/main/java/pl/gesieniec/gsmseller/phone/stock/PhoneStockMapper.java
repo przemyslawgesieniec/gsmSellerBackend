@@ -57,6 +57,7 @@ public class PhoneStockMapper {
             save.getBatteryCondition(),
             save.isUsed(),
             save.isReserved(),
-            save.isHasOffer());
+            save.isHasOffer(),
+            save.isAfterService());
     }
 }

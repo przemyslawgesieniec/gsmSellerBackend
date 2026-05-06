@@ -34,5 +34,6 @@ public class PhoneStockDto {
     private boolean used;
     private Boolean isReserved;
     private Boolean hasOffer;
+    private boolean afterService;
 
 }

@@ -37,6 +37,7 @@ public class RepairController {
         @RequestParam(required = false) String query,
         @RequestParam(required = false) String location,
         @RequestParam(required = false) Boolean archived,
+        @RequestParam(required = false) Boolean inHouseRepair,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateFrom,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime receiptDateTo,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime handoverDateFrom,
@@ -47,6 +48,7 @@ public class RepairController {
             RepairSpecifications.hasClientNameOrPhoneOrRmaOrModel(query),
             RepairSpecifications.hasLocation(location),
             RepairSpecifications.archived(archived),
+            RepairSpecifications.inHouseRepair(inHouseRepair),
             RepairSpecifications.receiptDateBetween(receiptDateFrom, receiptDateTo),
             RepairSpecifications.handoverDateBetween(handoverDateFrom, handoverDateTo)
         );

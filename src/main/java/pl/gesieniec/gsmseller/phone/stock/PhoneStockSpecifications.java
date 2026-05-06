@@ -67,6 +67,15 @@ public class PhoneStockSpecifications {
         };
     }
 
+    public static Specification<PhoneStock> hasAfterService(Boolean afterService) {
+        return (root, query, cb) -> {
+            if (afterService == null || !afterService) {
+                return null;
+            }
+            return cb.isTrue(root.get("afterService"));
+        };
+    }
+
     public static Specification<PhoneStock> hasLocationName(String locationName) {
         return (root, query, cb) -> {
             if (locationName == null || locationName.isBlank()) {
