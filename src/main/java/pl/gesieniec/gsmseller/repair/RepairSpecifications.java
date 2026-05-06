@@ -16,6 +16,15 @@ public class RepairSpecifications {
         return (root, query, cb) -> archived == null ? null : cb.equal(root.get("archived"), archived);
     }
 
+    public static Specification<Repair> inHouseRepair(Boolean inHouseRepair) {
+        return (root, query, cb) -> {
+            if (inHouseRepair == null || !inHouseRepair) {
+                return null;
+            }
+            return cb.isFalse(root.get("forCustomer"));
+        };
+    }
+
     public static Specification<Repair> hasClientNameOrPhoneOrRmaOrModel(String query) {
         return (root, q, cb) -> {
             if (query == null || query.isBlank()) return null;

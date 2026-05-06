@@ -68,6 +68,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                                          BigDecimal priceMin,
                                          BigDecimal priceMax,
                                          Boolean hasOffer,
+                                         Boolean afterService,
                                          int page,
                                          int size) {
         Specification<PhoneStock> spec = Specification
@@ -79,7 +80,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             .and(PhoneStockSpecifications.hasLocationName(locationName))
             .and(PhoneStockSpecifications.hasPriceMin(priceMin))
             .and(PhoneStockSpecifications.hasPriceMax(priceMax))
-            .and(PhoneStockSpecifications.hasOffer(hasOffer));
+            .and(PhoneStockSpecifications.hasOffer(hasOffer))
+            .and(PhoneStockSpecifications.hasAfterService(afterService));
 
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDateTime").descending());

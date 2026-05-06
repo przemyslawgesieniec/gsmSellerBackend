@@ -37,6 +37,9 @@ public class PhoneStock {
     private String description;
     private String batteryCondition;
 
+    @Column(name = "after_service")
+    private Boolean afterService;
+
     @Access(AccessType.FIELD)
     @Column(name = "is_used")
     private boolean used;
@@ -252,12 +255,20 @@ public class PhoneStock {
         return hasOffer;
     }
 
+    public boolean isAfterService() {
+        return Boolean.TRUE.equals(afterService);
+    }
+
     public void setReserved(Boolean reserved) {
         this.isReserved = reserved;
     }
 
     public void setHasOffer(Boolean hasOffer) {
         this.hasOffer = hasOffer;
+    }
+
+    public void markAsAfterService() {
+        this.afterService = Boolean.TRUE;
     }
 
 }

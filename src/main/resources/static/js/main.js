@@ -15,7 +15,8 @@ function getFilters() {
         priceMax: document.getElementById("filterPriceMax").value.trim(),
         status: document.getElementById("filterStatus").value.trim(),
         locationName: document.getElementById("filterLocation").value.trim(),
-        hasOffer: document.getElementById("filterHasOffer").checked
+        hasOffer: document.getElementById("filterHasOffer").checked,
+        afterService: document.getElementById("filterAfterService").checked ? true : null
     };
 }
 
@@ -47,7 +48,8 @@ async function loadStock(page = 0) {
             batteryCondition: phone.batteryCondition,
             used: phone.used,
             isReserved: phone.isReserved,
-            hasOffer: phone.hasOffer
+            hasOffer: phone.hasOffer,
+            afterService: phone.afterService
         }));
 
 
@@ -233,6 +235,11 @@ function renderPhones(phones) {
                   <span class="condition-badge ${phone.used ? "USED" : "NEW"}">
                     ${phone.used ? "UŻYWANY" : "NOWY"}
                   </span>
+                  ${phone.afterService ? `
+                  <span class="condition-badge AFTER_SERVICE">
+                    PO SERWISIE
+                  </span>
+                  ` : ""}
                   ${phone.hasOffer ? `
                   <span class="condition-badge pink lighten-2 white-text">
                     ONLINE
@@ -653,7 +660,8 @@ document.addEventListener("DOMContentLoaded", function () {
         "filterImei",
         "filterPriceMin",
         "filterPriceMax",
-        "filterHasOffer"
+        "filterHasOffer",
+        "filterAfterService"
     ].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -848,6 +856,7 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     document.getElementById("filterPriceMin").value = "";
     document.getElementById("filterPriceMax").value = "";
     document.getElementById("filterHasOffer").checked = false;
+    document.getElementById("filterAfterService").checked = false;
     liveReload();
 
     const statusSelect = TomSelect.getInstance('#filterStatus');
@@ -871,7 +880,8 @@ const filterLabels = {
     priceMax: "Cena do",
     status: "Status",
     locationName: "Lokalizacja",
-    hasOffer: "Oferta"
+    hasOffer: "Oferta",
+    afterService: "Po serwisie"
 };
 
 // === CHIPS SECTION === //
@@ -952,7 +962,8 @@ function renderFilterChips() {
         priceMax: "filterPriceMax",
         status: "filterStatus",
         locationName: "filterLocation",
-        hasOffer: "filterHasOffer"
+        hasOffer: "filterHasOffer",
+        afterService: "filterAfterService"
     };
 
     Object.entries(filters).forEach(([key, value]) => {
@@ -966,6 +977,10 @@ function renderFilterChips() {
         }
         
         if (key === "hasOffer") {
+            displayValue = "TAK";
+        }
+
+        if (key === "afterService") {
             displayValue = "TAK";
         }
 

@@ -286,6 +286,7 @@ public class RepairService {
 
         // Update phone
         phone.acceptAtLocation(location);
+        phone.markAsAfterService();
 
         BigDecimal currentPurchasePrice = phone.getPurchasePrice() != null ? phone.getPurchasePrice() : BigDecimal.ZERO;
         BigDecimal repairPrice = request.getRepairPrice() != null ? request.getRepairPrice() : BigDecimal.ZERO;
