@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
@@ -36,7 +37,8 @@ public class PhoneScanService {
         PurchaseType purchaseType,
         String description,
         String batteryCondition,
-        boolean used
+        boolean used,
+        UUID phoneModelTechnicalId
     ) {
 
         log.info("📦 Phone scan started | photos={}", photos != null ? photos.size() : 0);
@@ -54,7 +56,8 @@ public class PhoneScanService {
                 purchaseType,
                 description,
                 batteryCondition,
-                used
+                used,
+                phoneModelTechnicalId
             ),ocrExecutor))
             .toList();
 
@@ -90,7 +93,8 @@ public class PhoneScanService {
         PurchaseType purchaseType,
         String description,
         String batteryCondition,
-        boolean used
+        boolean used,
+        UUID phoneModelTechnicalId
     ) {
 
         try {
@@ -107,6 +111,7 @@ public class PhoneScanService {
             dto.setUsed(used);
             dto.setBatteryCondition(batteryCondition);
             dto.setPurchaseType(purchaseType);
+            dto.setPhoneModelTechnicalId(phoneModelTechnicalId);
 
             return dto;
 

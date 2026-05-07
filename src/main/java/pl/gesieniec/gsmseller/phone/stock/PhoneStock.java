@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
+import pl.gesieniec.gsmseller.phone.model.PhoneModels;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -36,6 +37,10 @@ public class PhoneStock {
     private String comment;
     private String description;
     private String batteryCondition;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "phone_model_id")
+    private PhoneModels phoneModel;
 
     @Column(name = "after_service")
     private Boolean afterService;
@@ -64,8 +69,8 @@ public class PhoneStock {
     public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei,
                       String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
                       LocationEntity location, Status status, PurchaseType purchaseType, String comment,
-                      String description,
-                      String batteryCondition, boolean isUsed) {
+        String description,
+        String batteryCondition, boolean isUsed) {
 
         this.technicalId = technicalId;
         this.model = model;
@@ -157,6 +162,10 @@ public class PhoneStock {
         }
 
 
+    }
+
+    public void assignPhoneModel(PhoneModels phoneModel) {
+        this.phoneModel = phoneModel;
     }
 
 

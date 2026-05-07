@@ -84,6 +84,25 @@ public class Offer {
                        List<Integer> frontCamerasMpx, List<Integer> backCamerasMpx,
                        String batteryCapacity, CommunicationSpecs communication, String operatingSystem,
                        String brand, List<OfferPhoto> photos) {
+        updateSpecifications(
+            screen,
+            memory,
+            ram,
+            simCardType,
+            frontCamerasMpx,
+            backCamerasMpx,
+            batteryCapacity,
+            communication,
+            operatingSystem,
+            brand
+        );
+        setPhotos(photos);
+    }
+
+    public void updateSpecifications(ScreenSpecs screen, String memory, String ram, String simCardType,
+                                     List<Integer> frontCamerasMpx, List<Integer> backCamerasMpx,
+                                     String batteryCapacity, CommunicationSpecs communication,
+                                     String operatingSystem, String brand) {
         this.screen = screen;
         this.memory = memory;
         this.ram = ram;
@@ -94,7 +113,6 @@ public class Offer {
         this.communication = communication;
         this.operatingSystem = operatingSystem;
         this.brand = brand;
-        setPhotos(photos);
     }
 
     public List<Integer> getFrontCamerasMpx() {

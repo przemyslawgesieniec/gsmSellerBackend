@@ -58,6 +58,12 @@ public class PhoneStockMapper {
             save.isUsed(),
             save.isReserved(),
             save.isHasOffer(),
-            save.isAfterService());
+            save.isAfterService(),
+            Optional.ofNullable(save.getPhoneModel())
+                .map(pl.gesieniec.gsmseller.phone.model.PhoneModels::getTechnicalId)
+                .orElse(null),
+            Optional.ofNullable(save.getPhoneModel())
+                .map(pl.gesieniec.gsmseller.phone.model.PhoneModels::getDisplayName)
+                .orElse(null));
     }
 }

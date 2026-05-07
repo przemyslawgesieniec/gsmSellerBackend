@@ -25,6 +25,8 @@ import pl.gesieniec.gsmseller.reservation.ReservationCreatedEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationExpiredEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationCancelledEvent;
 import pl.gesieniec.gsmseller.location.LocationEntity;
+import pl.gesieniec.gsmseller.phone.model.PhoneModels;
+import pl.gesieniec.gsmseller.phone.model.PhoneModelsRepository;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.event.PhoneRemovedEvent;
 import pl.gesieniec.gsmseller.phone.stock.handler.PhoneReturnHandler;
@@ -50,6 +52,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     private final ApplicationEventPublisher eventPublisher;
     private final RepairRepository repairRepository;
     private final pl.gesieniec.gsmseller.repair.RepairService repairService;
+    private final PhoneModelsRepository phoneModelsRepository;
 
 
     public PhoneStockDto getByTechnicalId(UUID id) {
@@ -111,6 +114,12 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             dto.getComment()
         );
 
+        if (dto.getPhoneModelTechnicalId() != null) {
+            PhoneModels phoneModel = phoneModelsRepository.findByTechnicalId(dto.getPhoneModelTechnicalId())
+                .orElseThrow(() -> new EntityNotFoundException("Phone model not found: " + dto.getPhoneModelTechnicalId()));
+            phone.assignPhoneModel(phoneModel);
+        }
+
 
         return phoneStockMapper.toDto(phone);
     }
@@ -124,6 +133,13 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
         phoneScanDtoList.forEach(dto -> {
             PhoneStock entity = phoneStockMapper.toPhoneStock(dto);
+
+            if (dto.getPhoneModelTechnicalId() != null) {
+                PhoneModels phoneModel = phoneModelsRepository.findByTechnicalId(dto.getPhoneModelTechnicalId())
+                    .orElseThrow(() -> new EntityNotFoundException("Phone model not found: " + dto.getPhoneModelTechnicalId()));
+                entity.assignPhoneModel(phoneModel);
+            }
+
             if (locationEntity != null) {
                 entity.acceptAtLocation(locationEntity);
             }
@@ -151,6 +167,22 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                 repairRepository.save(repair);
             }
         });
+    }
+
+    @Transactional
+    public PhoneStockDto assignPhoneModel(UUID technicalId, UUID phoneModelTechnicalId) {
+        if (phoneModelTechnicalId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Model z bazy jest wymagany");
+        }
+
+        PhoneStock phone = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() -> new EntityNotFoundException("Phone not found: " + technicalId));
+
+        PhoneModels phoneModel = phoneModelsRepository.findByTechnicalId(phoneModelTechnicalId)
+            .orElseThrow(() -> new EntityNotFoundException("Phone model not found: " + phoneModelTechnicalId));
+
+        phone.assignPhoneModel(phoneModel);
+        return phoneStockMapper.toDto(phone);
     }
 
     @Override

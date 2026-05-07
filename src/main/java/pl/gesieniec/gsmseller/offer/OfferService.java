@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.offer.model.OfferRequest;
@@ -16,6 +18,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import pl.gesieniec.gsmseller.offer.event.OfferCreatedEvent;
 import pl.gesieniec.gsmseller.offer.event.OfferRemovedEvent;
+import pl.gesieniec.gsmseller.offer.model.specs.CommunicationSpecs;
+import pl.gesieniec.gsmseller.offer.model.specs.ScreenSpecs;
+import pl.gesieniec.gsmseller.phone.model.PhoneModels;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
@@ -62,21 +67,13 @@ public class OfferService {
             });
         }
 
+        PhoneModels phoneModel = getAssignedPhoneModel(phoneStock);
         Offer offer = Offer.builder()
             .phoneStock(phoneStock)
-            .screen(request.screen())
-            .memory(request.memory())
-            .ram(request.ram())
-            .simCardType(request.simCardType())
-            .frontCamerasMpx(request.frontCamerasMpx())
-            .backCamerasMpx(request.backCamerasMpx())
-            .batteryCapacity(request.batteryCapacity())
-            .communication(request.communication())
-            .operatingSystem(request.operatingSystem())
-            .brand(request.brand())
             .photos(photos)
             .isReserved(phoneStock.isReserved())
             .build();
+        applyPhoneModelToOffer(offer, phoneStock, phoneModel);
 
         PhoneOffer savedOffer = mapToDto(offerRepository.save(offer));
         eventPublisher.publishEvent(new OfferCreatedEvent(request.phoneStockTechnicalId()));
@@ -124,19 +121,26 @@ public class OfferService {
             });
         }
 
-        offer.update(
-            request.screen(),
-            request.memory(),
-            request.ram(),
-            request.simCardType(),
-            request.frontCamerasMpx(),
-            request.backCamerasMpx(),
-            request.batteryCapacity(),
-            request.communication(),
-            request.operatingSystem(),
-            request.brand(),
-            finalPhotos
+        PhoneModels phoneModel = getAssignedPhoneModel(offer.getPhoneStock());
+        offer.updateSpecifications(
+            ScreenSpecs.builder()
+                .size(phoneModel.getScreen())
+                .resolution(phoneModel.getScreenResolution())
+                .type(phoneModel.getDisplayType())
+                .build(),
+            valueOrFallback(offer.getPhoneStock().getMemory(), phoneModel.getMemory()),
+            valueOrFallback(offer.getPhoneStock().getRam(), phoneModel.getRam()),
+            phoneModel.getSimCardType(),
+            phoneModel.getFrontCamerasMpx(),
+            phoneModel.getBackCamerasMpx(),
+            phoneModel.getBatteryCapacity(),
+            CommunicationSpecs.builder()
+                .portType(phoneModel.getPortType())
+                .build(),
+            null,
+            phoneModel.getBrand()
         );
+        offer.setPhotos(finalPhotos);
 
         PhoneOffer updatedOffer = mapToDto(offerRepository.save(offer));
 
@@ -151,6 +155,15 @@ public class OfferService {
 
         log.info("Offer updated successfully for technicalId: {}", technicalId);
         return updatedOffer;
+    }
+
+    @Transactional
+    public void refreshOffersForPhoneModel(PhoneModels phoneModel) {
+        List<Offer> offers = offerRepository.findAllByPhoneStockPhoneModelTechnicalId(phoneModel.getTechnicalId());
+
+        offers.forEach(offer -> applyPhoneModelToOffer(offer, offer.getPhoneStock(), phoneModel));
+
+        log.info("Refreshed {} offers for phone model {}", offers.size(), phoneModel.getTechnicalId());
     }
 
     @Transactional(readOnly = true)
@@ -181,8 +194,9 @@ public class OfferService {
 
             jakarta.persistence.criteria.Predicate noOffer = cb.not(root.get("id").in(subquery));
             jakarta.persistence.criteria.Predicate isAvailable = cb.equal(root.get("status"), pl.gesieniec.gsmseller.phone.stock.model.Status.DOSTĘPNY);
+            jakarta.persistence.criteria.Predicate hasModel = cb.isNotNull(root.get("phoneModel"));
 
-            jakarta.persistence.criteria.Predicate basePredicate = cb.and(noOffer, isAvailable);
+            jakarta.persistence.criteria.Predicate basePredicate = cb.and(noOffer, isAvailable, hasModel);
 
             if (search == null || search.isBlank()) {
                 return basePredicate;
@@ -192,7 +206,9 @@ public class OfferService {
             jakarta.persistence.criteria.Predicate searchPredicate = cb.or(
                 cb.like(cb.lower(root.get("name")), pattern),
                 cb.like(cb.lower(root.get("model")), pattern),
-                cb.like(cb.lower(root.get("imei")), pattern)
+                cb.like(cb.lower(root.get("imei")), pattern),
+                cb.like(cb.lower(root.join("phoneModel", jakarta.persistence.criteria.JoinType.LEFT).get("brand")), pattern),
+                cb.like(cb.lower(root.join("phoneModel", jakarta.persistence.criteria.JoinType.LEFT).get("model")), pattern)
             );
 
             return cb.and(basePredicate, searchPredicate);
@@ -248,6 +264,38 @@ public class OfferService {
             .photos(photos)
             .isReserved(offer.isReserved())
             .build();
+    }
+
+    private PhoneModels getAssignedPhoneModel(PhoneStock phoneStock) {
+        if (phoneStock.getPhoneModel() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Telefon nie ma przypisanego modelu z bazy");
+        }
+        return phoneStock.getPhoneModel();
+    }
+
+    private void applyPhoneModelToOffer(Offer offer, PhoneStock phoneStock, PhoneModels phoneModel) {
+        offer.updateSpecifications(
+            ScreenSpecs.builder()
+                .size(phoneModel.getScreen())
+                .resolution(phoneModel.getScreenResolution())
+                .type(phoneModel.getDisplayType())
+                .build(),
+            valueOrFallback(phoneStock.getMemory(), phoneModel.getMemory()),
+            valueOrFallback(phoneStock.getRam(), phoneModel.getRam()),
+            phoneModel.getSimCardType(),
+            phoneModel.getFrontCamerasMpx(),
+            phoneModel.getBackCamerasMpx(),
+            phoneModel.getBatteryCapacity(),
+            CommunicationSpecs.builder()
+                .portType(phoneModel.getPortType())
+                .build(),
+            null,
+            phoneModel.getBrand()
+        );
+    }
+
+    private String valueOrFallback(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     @EventListener

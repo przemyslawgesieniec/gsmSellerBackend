@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.phone.scan;
 
 import java.util.List;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,10 +29,11 @@ public class PhoneScanController {
         @RequestParam("description") String description,
         @RequestParam("batteryCondition") String batteryCondition,
         @RequestParam("used") boolean used,
+        @RequestParam(required = false) UUID phoneModelTechnicalId,
         @RequestParam("photos") List<MultipartFile> photos
     ) {
         return phoneScanService.getPhoneScanDtos(name, source, initialPrice, sellingPrice, photos, purchaseType,
-            description, batteryCondition, used);
+            description, batteryCondition, used, phoneModelTechnicalId);
     }
 
 }

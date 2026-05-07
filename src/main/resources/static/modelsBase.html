@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Baza modeli telefonów</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="navbar"></div>
+<script src="js/auth.js"></script>
+<script src="js/loadNavbar.js"></script>
+
+<div class="container wide-layout">
+    <div class="row">
+        <div class="col s12">
+            <div class="page-heading">
+                <div>
+                    <h4 class="blue-text text-darken-2">Baza modeli telefonów</h4>
+                    <p class="grey-text">Specyfikacje używane przy tworzeniu ofert i przypisywaniu modeli do magazynu.</p>
+                </div>
+                <button class="btn blue darken-2 waves-effect" id="openCreateModelBtn">
+                    <i class="material-icons left">add</i>
+                    Dodaj model
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s12 m4">
+            <div class="input-field">
+                <input id="modelSearch" type="text">
+                <label for="modelSearch">Szukaj po marce, modelu lub pamięci</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <table class="highlight responsive-table models-table">
+                        <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Ekran</th>
+                            <th>Pamięć</th>
+                            <th>SIM</th>
+                            <th>Kolory</th>
+                            <th>Aparaty</th>
+                            <th>Bateria</th>
+                            <th class="right-align">Akcje</th>
+                        </tr>
+                        </thead>
+                        <tbody id="modelsTableBody"></tbody>
+                    </table>
+                    <div id="modelsEmptyState" class="center-align grey-text hide" style="padding: 32px;">
+                        Brak modeli w bazie.
+                    </div>
+                    <div id="modelsLoader" class="center-align hide" style="padding: 24px;">
+                        <div class="preloader-wrapper small active">
+                            <div class="spinner-layer spinner-blue-only">
+                                <div class="circle-clipper left"><div class="circle"></div></div>
+                                <div class="gap-patch"><div class="circle"></div></div>
+                                <div class="circle-clipper right"><div class="circle"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <ul id="modelsPagination" class="pagination center-align"></ul>
+        </div>
+    </div>
+</div>
+
+<div id="modelModal" class="modal">
+    <div class="modal-content" style="position: relative;">
+        <h5 id="modelModalTitle">Dodaj model</h5>
+        <a class="modal-close right"><i class="material-icons">close</i></a>
+
+        <form id="modelForm">
+            <input type="hidden" id="modelTechnicalId">
+            <div class="row">
+                <div class="input-field col s12 m4">
+                    <input id="brand" type="text" required>
+                    <label for="brand">Marka</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="model" type="text" required>
+                    <label for="model">Model</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="screen" type="text">
+                    <label for="screen">Ekran</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="screenResolution" type="text">
+                    <label for="screenResolution">Rozdzielczość</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="displayType" type="text">
+                    <label for="displayType">Rodzaj wyświetlacza</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="simCardType" type="text">
+                    <label for="simCardType">Typ karty SIM</label>
+                </div>
+                <div class="input-field col s12 m4">
+                    <select id="portType">
+                        <option value="" selected>Wybierz</option>
+                        <option value="USB-C">USB-C</option>
+                        <option value="Lightning">Lightning</option>
+                        <option value="micro-USB">micro-USB</option>
+                        <option value="Inny">Inny</option>
+                    </select>
+                    <label for="portType" class="active">Port</label>
+                </div>
+                <div class="col s12 m4">
+                    <p>
+                        <label>
+                            <input id="dualSim" type="checkbox">
+                            <span>Dual SIM</span>
+                        </label>
+                    </p>
+                </div>
+                <div class="input-field col s12 m4">
+                    <input id="batteryCapacity" type="number" min="0" step="1">
+                    <label for="batteryCapacity">Pojemność baterii</label>
+                </div>
+
+                <div class="col s12 m6">
+                    <div class="dynamic-field-group">
+                        <div class="dynamic-field-header">
+                            <h6>Pamięć</h6>
+                            <button type="button" class="btn-small blue darken-2" id="addMemoryBtn">
+                                <i class="material-icons left">add</i>
+                                Dodaj
+                            </button>
+                        </div>
+                        <div id="memoryFields" class="dynamic-fields"></div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6">
+                    <div class="dynamic-field-group">
+                        <div class="dynamic-field-header">
+                            <h6>RAM</h6>
+                            <button type="button" class="btn-small blue darken-2" id="addRamBtn">
+                                <i class="material-icons left">add</i>
+                                Dodaj
+                            </button>
+                        </div>
+                        <div id="ramFields" class="dynamic-fields"></div>
+                    </div>
+                </div>
+
+                <div class="col s12">
+                    <div class="dynamic-field-group">
+                        <div class="dynamic-field-header">
+                            <h6>Kolory</h6>
+                            <button type="button" class="btn-small blue darken-2" id="addColorBtn">
+                                <i class="material-icons left">add</i>
+                                Dodaj kolor
+                            </button>
+                        </div>
+                        <div id="colorsFields" class="dynamic-fields"></div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6">
+                    <div class="dynamic-field-group">
+                        <div class="dynamic-field-header">
+                            <h6>Aparaty przód</h6>
+                            <button type="button" class="btn-small blue darken-2" id="addFrontCameraBtn">
+                                <i class="material-icons left">add</i>
+                                Dodaj
+                            </button>
+                        </div>
+                        <div id="frontCameraFields" class="dynamic-fields"></div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6">
+                    <div class="dynamic-field-group">
+                        <div class="dynamic-field-header">
+                            <h6>Aparaty tył</h6>
+                            <button type="button" class="btn-small blue darken-2" id="addBackCameraBtn">
+                                <i class="material-icons left">add</i>
+                                Dodaj
+                            </button>
+                        </div>
+                        <div id="backCameraFields" class="dynamic-fields"></div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn-flat modal-close">Anuluj</button>
+        <button class="btn blue darken-2" id="saveModelBtn">Zapisz</button>
+    </div>
+</div>
+
+<div id="deleteModelModal" class="modal">
+    <div class="modal-content">
+        <h5>Usunięcie modelu</h5>
+        <p>Czy na pewno chcesz usunąć ten model z bazy?</p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn-flat modal-close">Anuluj</button>
+        <button class="btn red darken-2" id="confirmDeleteModelBtn">Usuń</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+<script src="js/modelsBase.js"></script>
+</body>
+</html>

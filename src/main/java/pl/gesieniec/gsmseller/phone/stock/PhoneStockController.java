@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneModelAssignmentRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
@@ -71,6 +72,14 @@ public class PhoneStockController {
         PhoneStockDto phoneStockDto = service.updatePhone(technicalId, updateDto);
         log.info("Aktualizacja pozycji {} zrealizowana", technicalId);
         return phoneStockDto;
+    }
+
+    @PatchMapping("/{technicalId}/model")
+    public PhoneStockDto assignPhoneModel(
+        @PathVariable UUID technicalId,
+        @RequestBody PhoneModelAssignmentRequest request
+    ) {
+        return service.assignPhoneModel(technicalId, request.getPhoneModelTechnicalId());
     }
 
     @PostMapping("/{technicalId}/accept")

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.jspecify.annotations.NonNull;
+import java.util.UUID;
 import pl.gesieniec.gsmseller.phone.stock.model.PurchaseType;
 
 @ToString
@@ -37,6 +38,8 @@ public class PhoneScanDto {
     private boolean used;
     @Setter
     private boolean damaged;
+    @Setter
+    private UUID phoneModelTechnicalId;
 
 
     public PhoneScanDto(String model, String ram, String memory, String color, String imei) {

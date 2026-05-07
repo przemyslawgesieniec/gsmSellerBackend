@@ -1,7 +1,298 @@
 let manualMode = false;
 
+function isModelIdentityMode() {
+    return document.getElementById("identitySourceToggle")?.checked === true;
+}
+
+function formatPhoneModelOption(item) {
+    const spec = [item.memory, item.ram, item.colors].filter(Boolean).join(" / ");
+    return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
+}
+
+function stockNameFromPhoneModel(item) {
+    if (!item) return "";
+    return [item.brand, item.model].filter(Boolean).join(" ").trim()
+        || item.displayName
+        || "";
+}
+
+function getDefaultPhoneModelOption() {
+    const select = document.getElementById("manualPhoneModelSelect");
+    const value = select?.tomselect?.getValue();
+    return value ? select.tomselect.options[value] : null;
+}
+
+function getDefaultPhoneModelName() {
+    return stockNameFromPhoneModel(getDefaultPhoneModelOption());
+}
+
+function splitModelOptions(value) {
+    if (!value) return [];
+    return String(value)
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
+function findMatchingOption(options, currentValue) {
+    if (!currentValue) return "";
+    const normalizedCurrent = String(currentValue).trim().toLowerCase();
+    const currentDigits = String(currentValue).replace(/\D/g, "");
+
+    return options.find(option => option.toLowerCase() === normalizedCurrent)
+        || options.find(option => currentDigits && option.replace(/\D/g, "") === currentDigits)
+        || "";
+}
+
+async function getPhoneModelData(select) {
+    const selectEl = resolveSelectElement(select);
+    const value = selectEl?.tomselect?.getValue();
+    if (!value) return null;
+
+    const cached = selectEl.tomselect.options[value];
+    if (cached && (cached.memory || cached.ram || cached.colors)) {
+        return cached;
+    }
+
+    const response = await fetch(`/api/v1/phone-models/${value}`);
+    if (!response.ok) return null;
+
+    const model = await response.json();
+    const displayName = formatPhoneModelOption(model);
+    selectEl.tomselect.addOption({ ...model, displayName });
+    return { ...model, displayName };
+}
+
+function resolveSelectElement(select) {
+    if (!select) return null;
+    if (typeof select === "string") return document.querySelector(select);
+    if (select.input) return select.input;
+    return select;
+}
+
+function initPhoneModelSelect(select, selectedValue = null) {
+    const selectEl = resolveSelectElement(select);
+    if (!selectEl || selectEl.tomselect) return selectEl?.tomselect || null;
+
+    const ts = new TomSelect(selectEl, {
+        valueField: "technicalId",
+        labelField: "displayName",
+        searchField: ["displayName", "brand", "model", "memory", "ram", "colors"],
+        maxOptions: 20,
+        preload: true,
+        placeholder: "Wybierz model z bazy",
+        load: function(query, callback) {
+            fetch(`/api/v1/phone-models?search=${encodeURIComponent(query || "")}&size=20`)
+                .then(response => response.json())
+                .then(json => callback((json.content || []).map(item => ({
+                    ...item,
+                    displayName: formatPhoneModelOption(item)
+                }))))
+                .catch(() => callback());
+        },
+        render: {
+            option: function(item, escape) {
+                return `<div>
+                    <span><b>${escape(item.brand || "")}</b> ${escape(item.model || "")}</span><br>
+                    <small class="grey-text">${escape([item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / "))}</small>
+                </div>`;
+            },
+            item: function(item, escape) {
+                return `<div>${escape(item.displayName || formatPhoneModelOption(item))}</div>`;
+            }
+        }
+    });
+
+    if (selectedValue) {
+        fetch(`/api/v1/phone-models/${selectedValue}`)
+            .then(response => response.ok ? response.json() : null)
+            .then(model => {
+                if (!model) return;
+                ts.addOption({ ...model, displayName: formatPhoneModelOption(model) });
+                ts.setValue(selectedValue, true);
+                const block = selectEl.closest(".scan-item");
+                if (block) {
+                    updateVariantSelectsForBlock(block);
+                }
+            })
+            .catch(() => {});
+    }
+
+    ts.on("change", () => {
+        const block = selectEl.closest(".scan-item");
+        if (block) {
+            updateVariantSelectsForBlock(block);
+        }
+        if (selectEl.id === "manualPhoneModelSelect") {
+            syncNameFromDefaultModel();
+            syncDefaultModelToBlocks();
+        }
+    });
+
+    return ts;
+}
+
+function initPhoneModelSelects(container = document) {
+    container.querySelectorAll(".phone-model-select").forEach(select => {
+        initPhoneModelSelect(select, select.dataset.currentValue || null);
+    });
+}
+
+function selectedDefaultPhoneModel() {
+    const select = document.getElementById("manualPhoneModelSelect");
+    return isModelIdentityMode()
+        ? select?.tomselect?.getValue() || ""
+        : "";
+}
+
+function syncNameFromDefaultModel() {
+    if (!isModelIdentityMode()) return;
+
+    const name = getDefaultPhoneModelName();
+    document.getElementById("manualName").value = name;
+    document.querySelectorAll(".scan-item [data-field='name']").forEach(input => {
+        input.value = name;
+        input.readOnly = true;
+    });
+    M.updateTextFields();
+}
+
+function updateIdentitySourceState() {
+    const modelMode = isModelIdentityMode();
+    const nameInput = document.getElementById("manualName");
+    const nameWrapper = document.getElementById("manualNameWrapper");
+    const modelWrapper = document.getElementById("manualPhoneModelWrapper");
+    const modelSelect = document.getElementById("manualPhoneModelSelect")?.tomselect;
+
+    nameInput.readOnly = modelMode;
+    nameWrapper.classList.toggle("hide", modelMode);
+    modelWrapper.classList.toggle("hide", !modelMode);
+
+    if (modelMode) {
+        modelSelect?.enable();
+        syncNameFromDefaultModel();
+    } else {
+        modelSelect?.clear(true);
+        modelSelect?.disable();
+        nameInput.readOnly = false;
+    }
+
+    document.querySelectorAll(".scan-item").forEach(block => {
+        const row = block.querySelector(".phone-model-row");
+        const name = block.querySelector("[data-field='name']");
+        const phoneModelSelect = block.querySelector(".phone-model-select")?.tomselect;
+
+        row?.classList.toggle("hide", !modelMode);
+        if (name) {
+            name.readOnly = modelMode;
+            if (modelMode) {
+                name.value = getDefaultPhoneModelName();
+            }
+        }
+
+        if (modelMode) {
+            phoneModelSelect?.enable();
+        } else {
+            phoneModelSelect?.clear(true);
+            phoneModelSelect?.disable();
+        }
+    });
+    M.updateTextFields();
+}
+
+function syncDefaultModelToBlocks() {
+    if (!isModelIdentityMode()) return;
+    const selected = selectedDefaultPhoneModel();
+
+    document.querySelectorAll(".scan-item .phone-model-select").forEach(select => {
+        if (!select.tomselect || !selected) return;
+        select.tomselect.setValue(selected, true);
+        updateVariantSelectsForBlock(select.closest(".scan-item"));
+    });
+}
+
+function validateIdentitySource() {
+    if (isModelIdentityMode()) {
+        if (!selectedDefaultPhoneModel()) {
+            M.toast({ html: "Wybierz model z bazy albo przełącz na ręczną nazwę", classes: "red" });
+            return false;
+        }
+        syncNameFromDefaultModel();
+        return true;
+    }
+
+    if (!document.getElementById("manualName").value.trim()) {
+        M.toast({ html: "Podaj nazwę albo przełącz na model z bazy", classes: "red" });
+        return false;
+    }
+
+    return true;
+}
+
+function initVariantSelect(select, placeholder) {
+    if (!select) return null;
+    if (select.tomselect) return select.tomselect;
+
+    return new TomSelect(select, {
+        create: false,
+        allowEmptyOption: true,
+        placeholder,
+        dropdownParent: "body"
+    });
+}
+
+function setVariantOptions(select, options, currentValue) {
+    if (!select) return;
+
+    const ts = initVariantSelect(select, select.dataset.placeholder || "Wybierz");
+    const uniqueOptions = [...new Set(options)];
+    const matchedValue = findMatchingOption(uniqueOptions, currentValue);
+
+    ts.clear(true);
+    ts.clearOptions();
+    uniqueOptions.forEach(option => ts.addOption({ value: option, text: option }));
+    ts.refreshOptions(false);
+
+    if (matchedValue) {
+        ts.setValue(matchedValue, true);
+    }
+}
+
+async function updateVariantSelectsForBlock(block) {
+    const modelSelect = block.querySelector(".phone-model-select");
+    const phoneModel = await getPhoneModelData(modelSelect);
+    if (!phoneModel) return;
+
+    const memorySelect = block.querySelector(".memory-select");
+    const ramSelect = block.querySelector(".ram-select");
+    const colorSelect = block.querySelector(".color-select");
+
+    setVariantOptions(
+        memorySelect,
+        splitModelOptions(phoneModel.memory),
+        memorySelect?.tomselect?.getValue() || memorySelect?.dataset.currentValue || ""
+    );
+    setVariantOptions(
+        ramSelect,
+        splitModelOptions(phoneModel.ram),
+        ramSelect?.tomselect?.getValue() || ramSelect?.dataset.currentValue || ""
+    );
+    setVariantOptions(
+        colorSelect,
+        splitModelOptions(phoneModel.colors),
+        colorSelect?.tomselect?.getValue() || colorSelect?.dataset.currentValue || ""
+    );
+}
+
+function initVariantSelects(container = document) {
+    container.querySelectorAll(".memory-select").forEach(select => initVariantSelect(select, "Wybierz pamięć"));
+    container.querySelectorAll(".ram-select").forEach(select => initVariantSelect(select, "Wybierz RAM"));
+    container.querySelectorAll(".color-select").forEach(select => initVariantSelect(select, "Wybierz kolor"));
+    container.querySelectorAll(".scan-item").forEach(block => updateVariantSelectsForBlock(block));
+}
+
 document.getElementById("manualToggle")
-    .addEventListener("change", e => {
+    ?.addEventListener("change", e => {
         manualMode = e.target.checked;
         switchMode();
     });
@@ -96,20 +387,35 @@ function addManualPhone() {
             </div>
         </div>
 
+        <div class="row phone-model-row ${isModelIdentityMode() ? "" : "hide"}">
+            <div class="input-field col s12">
+                <select data-field="phoneModelTechnicalId"
+                        class="phone-model-select"
+                        data-current-value="${selectedDefaultPhoneModel()}"></select>
+                <label class="active">Model z bazy</label>
+            </div>
+        </div>
+
         <div class="row">
             <div class="input-field col s12 m4">
-                <input type="number" data-field="ram">
-                <label>RAM (GB)</label>
+                <select data-field="ram"
+                        class="ram-select"
+                        data-placeholder="Wybierz RAM"></select>
+                <label class="active">RAM</label>
             </div>
 
             <div class="input-field col s12 m4">
-                <input type="number" data-field="memory">
-                <label>Pamięć (GB)</label>
+                <select data-field="memory"
+                        class="memory-select"
+                        data-placeholder="Wybierz pamięć"></select>
+                <label class="active">Pamięć</label>
             </div>
 
             <div class="input-field col s12 m4">
-                <input type="text" data-field="color">
-                <label>Kolor</label>
+                <select data-field="color"
+                        class="color-select"
+                        data-placeholder="Wybierz kolor"></select>
+                <label class="active">Kolor</label>
             </div>
         </div>
 
@@ -195,6 +501,10 @@ function addManualPhone() {
     `;
 
     wrapper.appendChild(block);
+    initPhoneModelSelects(block);
+    initVariantSelects(block);
+    updateIdentitySourceState();
+    syncDefaultModelToBlocks();
 
     block.querySelector(".remove-phone-btn")
         .addEventListener("click", () => {
@@ -234,6 +544,8 @@ function renumberManualPhones() {
 function sendFinalPhones() {
     const phoneBlocks = document.querySelectorAll(".scan-item");
     const resultList = [];
+    let missingPhoneModel = false;
+    let missingName = false;
 
     phoneBlocks.forEach(block => {
         const fields = block.querySelectorAll("[data-field]");
@@ -264,9 +576,34 @@ function sendFinalPhones() {
             phone[key] = el.value === "" ? null : el.value;
         });
 
+        if (isModelIdentityMode()) {
+            phone.phoneModelTechnicalId = phone.phoneModelTechnicalId || selectedDefaultPhoneModel();
+            phone.name = getDefaultPhoneModelName();
+        } else {
+            phone.phoneModelTechnicalId = null;
+        }
+
+        if (isModelIdentityMode() && !phone.phoneModelTechnicalId) {
+            missingPhoneModel = true;
+            block.classList.add("red", "lighten-5");
+        } else if (!phone.name) {
+            missingName = true;
+            block.classList.add("red", "lighten-5");
+        } else {
+            block.classList.remove("red", "lighten-5");
+        }
 
         resultList.push(phone);
     });
+
+    if (missingPhoneModel) {
+        M.toast({ html: "Wybierz model z bazy dla każdego telefonu", classes: "red" });
+        return;
+    }
+    if (missingName) {
+        M.toast({ html: "Podaj nazwę dla każdego telefonu", classes: "red" });
+        return;
+    }
 
     console.log("Wysyłane dane:", JSON.stringify(resultList, null, 2));
 
@@ -328,6 +665,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // === WYSYŁANIE ===
     addBtn.addEventListener("click", async () => {
+        if (!validateIdentitySource()) {
+            return;
+        }
+
         showProgressLoader();
 
         const totalSteps = selectedFiles.length * 2;
@@ -337,6 +678,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const formData = new FormData();
             formData.append("name", document.getElementById("manualName").value);
+            if (isModelIdentityMode()) {
+                formData.append("phoneModelTechnicalId", selectedDefaultPhoneModel());
+            }
             formData.append("initialPrice", document.getElementById("manualInitialPrice").value);
             formData.append("sellingPrice", document.getElementById("manualSellingPrice").value);
             formData.append("source", document.getElementById("manualSource").value);
@@ -527,20 +871,38 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
 
+            <div class="row phone-model-row ${isModelIdentityMode() ? "" : "hide"}">
+                <div class="input-field col s12">
+                    <select data-field="phoneModelTechnicalId"
+                            class="phone-model-select"
+                            data-current-value="${p.phoneModelTechnicalId || selectedDefaultPhoneModel()}"></select>
+                    <label class="active">Model z bazy</label>
+                </div>
+            </div>
+
             <!-- RAM, Memory, Color -->
             <div class="row">
                 <div class="input-field col s12 m4">
-                    <input type="number" value="${p.ram || ''}" data-field="ram">
-                    <label class="active">RAM (GB)</label>
+                    <select data-field="ram"
+                            class="ram-select"
+                            data-current-value="${p.ram || ''}"
+                            data-placeholder="Wybierz RAM"></select>
+                    <label class="active">RAM</label>
                 </div>
 
                 <div class="input-field col s12 m4">
-                    <input type="number" value="${p.memory || ''}" data-field="memory">
-                    <label class="active">Pamięć (GB)</label>
+                    <select data-field="memory"
+                            class="memory-select"
+                            data-current-value="${p.memory || ''}"
+                            data-placeholder="Wybierz pamięć"></select>
+                    <label class="active">Pamięć</label>
                 </div>
 
                 <div class="input-field col s12 m4">
-                    <input type="text" value="${p.color || ''}" data-field="color">
+                    <select data-field="color"
+                            class="color-select"
+                            data-current-value="${p.color || ''}"
+                            data-placeholder="Wybierz kolor"></select>
                     <label class="active">Kolor</label>
                 </div>
             </div>
@@ -664,6 +1026,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 ts.setValue(value, true);
             }
         });
+
+        initPhoneModelSelects(container);
+        initVariantSelects(container);
+        updateIdentitySourceState();
+        syncDefaultModelToBlocks();
 
 
         M.updateTextFields();
@@ -865,13 +1232,23 @@ function hideProgressLoader() {
 let purchaseTypeSelect;
 
 document.addEventListener("DOMContentLoaded", () => {
-    purchaseTypeSelect = new TomSelect("#manualPurchaseType", {
-        create: false,
-        sortField: {
-            field: "text",
-            direction: "desc"
-        }
+    initPhoneModelSelect(document.getElementById("manualPhoneModelSelect"));
+    updateIdentitySourceState();
+
+    document.getElementById("identitySourceToggle")?.addEventListener("change", () => {
+        updateIdentitySourceState();
+        syncDefaultModelToBlocks();
     });
+
+    if (document.getElementById("manualPurchaseType")) {
+        purchaseTypeSelect = new TomSelect("#manualPurchaseType", {
+            create: false,
+            sortField: {
+                field: "text",
+                direction: "desc"
+            }
+        });
+    }
 
 });
 
@@ -899,8 +1276,8 @@ function updateManualBatteryVisibility() {
 }
 
 ["manualName", "manualUsed"].forEach(id => {
-    document.getElementById(id).addEventListener("input", updateManualBatteryVisibility);
-    document.getElementById(id).addEventListener("change", updateManualBatteryVisibility);
+    document.getElementById(id)?.addEventListener("input", updateManualBatteryVisibility);
+    document.getElementById(id)?.addEventListener("change", updateManualBatteryVisibility);
 });
 
 
@@ -927,5 +1304,3 @@ function updateBatteryVisibilityForBlock(block) {
 function nextFrame() {
     return new Promise(resolve => requestAnimationFrame(resolve));
 }
-
-
