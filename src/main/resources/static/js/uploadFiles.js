@@ -45,10 +45,11 @@ function findMatchingOption(options, currentValue) {
 }
 
 async function getPhoneModelData(select) {
-    const value = select?.tomselect?.getValue();
+    const selectEl = resolveSelectElement(select);
+    const value = selectEl?.tomselect?.getValue();
     if (!value) return null;
 
-    const cached = select.tomselect.options[value];
+    const cached = selectEl.tomselect.options[value];
     if (cached && (cached.memory || cached.ram || cached.colors)) {
         return cached;
     }
@@ -58,14 +59,22 @@ async function getPhoneModelData(select) {
 
     const model = await response.json();
     const displayName = formatPhoneModelOption(model);
-    select.tomselect.addOption({ ...model, displayName });
+    selectEl.tomselect.addOption({ ...model, displayName });
     return { ...model, displayName };
 }
 
-function initPhoneModelSelect(select, selectedValue = null) {
-    if (!select || select.tomselect) return select?.tomselect || null;
+function resolveSelectElement(select) {
+    if (!select) return null;
+    if (typeof select === "string") return document.querySelector(select);
+    if (select.input) return select.input;
+    return select;
+}
 
-    const ts = new TomSelect(select, {
+function initPhoneModelSelect(select, selectedValue = null) {
+    const selectEl = resolveSelectElement(select);
+    if (!selectEl || selectEl.tomselect) return selectEl?.tomselect || null;
+
+    const ts = new TomSelect(selectEl, {
         valueField: "technicalId",
         labelField: "displayName",
         searchField: ["displayName", "brand", "model", "memory", "ram", "colors"],
@@ -101,7 +110,7 @@ function initPhoneModelSelect(select, selectedValue = null) {
                 if (!model) return;
                 ts.addOption({ ...model, displayName: formatPhoneModelOption(model) });
                 ts.setValue(selectedValue, true);
-                const block = select.closest(".scan-item");
+                const block = selectEl.closest(".scan-item");
                 if (block) {
                     updateVariantSelectsForBlock(block);
                 }
@@ -110,11 +119,11 @@ function initPhoneModelSelect(select, selectedValue = null) {
     }
 
     ts.on("change", () => {
-        const block = select.closest(".scan-item");
+        const block = selectEl.closest(".scan-item");
         if (block) {
             updateVariantSelectsForBlock(block);
         }
-        if (select.id === "manualPhoneModelSelect") {
+        if (selectEl.id === "manualPhoneModelSelect") {
             syncNameFromDefaultModel();
             syncDefaultModelToBlocks();
         }

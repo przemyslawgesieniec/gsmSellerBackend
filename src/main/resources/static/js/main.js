@@ -4,15 +4,37 @@ let phoneToHandover = null;
 let phoneToReserve = null;
 let phoneToAssignModel = null;
 let assignPhoneModelSelect = null;
+let assignRamSelect = null;
+let assignMemorySelect = null;
+let assignColorSelect = null;
+let assignVariantRequestId = 0;
 
 const listContainer = document.getElementById("phone-list");
 
 function formatPhoneModelOption(item) {
-    const spec = [item.memory, item.ram].filter(Boolean).join(" / ");
+    const spec = [item.memory, item.ram, item.colors].filter(Boolean).join(" / ");
     return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
 }
 
-function initPhoneModelSelect(selector) {
+function splitModelOptions(value) {
+    if (!value) return [];
+    return String(value)
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
+function findMatchingOption(options, currentValue) {
+    if (!currentValue) return "";
+    const normalizedCurrent = String(currentValue).trim().toLowerCase();
+    const currentDigits = String(currentValue).replace(/\D/g, "");
+
+    return options.find(option => option.toLowerCase() === normalizedCurrent)
+        || options.find(option => currentDigits && option.replace(/\D/g, "") === currentDigits)
+        || "";
+}
+
+function initAssignVariantSelect(selector) {
     const el = document.querySelector(selector);
     if (!el) return null;
 
@@ -27,6 +49,152 @@ function initPhoneModelSelect(selector) {
     });
 }
 
+function setAssignVariantOptions(ts, options, currentValue, emptyText) {
+    if (!ts) return;
+
+    const uniqueOptions = [...new Set(options)];
+    const matchedValue = findMatchingOption(uniqueOptions, currentValue);
+
+    ts.clear(true);
+    ts.clearOptions();
+    ts.addOption({ value: "", text: emptyText });
+    uniqueOptions.forEach(option => ts.addOption({ value: option, text: option }));
+    ts.refreshOptions(false);
+
+    if (matchedValue) {
+        ts.setValue(matchedValue, true);
+    }
+}
+
+function updateAssignVariantOptions(model, card) {
+    setAssignVariantOptions(
+        assignRamSelect,
+        splitModelOptions(model?.ram),
+        card?.dataset.ram || "",
+        "Wybierz RAM"
+    );
+    setAssignVariantOptions(
+        assignMemorySelect,
+        splitModelOptions(model?.memory),
+        card?.dataset.memory || "",
+        "Wybierz pamięć"
+    );
+    setAssignVariantOptions(
+        assignColorSelect,
+        splitModelOptions(model?.colors),
+        card?.dataset.color || "",
+        "Wybierz kolor"
+    );
+}
+
+function getAssignModelVariantContainer() {
+    return document.getElementById("assignModelVariantFields");
+}
+
+function destroyAssignVariantSelects() {
+    [assignRamSelect, assignMemorySelect, assignColorSelect].forEach(select => {
+        if (select) {
+            select.destroy();
+        }
+    });
+    assignRamSelect = null;
+    assignMemorySelect = null;
+    assignColorSelect = null;
+}
+
+function clearAssignVariantFields(message = "") {
+    destroyAssignVariantSelects();
+    const container = getAssignModelVariantContainer();
+    if (!container) return;
+
+    container.innerHTML = message
+        ? `<div class="assign-model-variants-message grey-text">${message}</div>`
+        : "";
+}
+
+function renderAssignVariantFields(model, card) {
+    const container = getAssignModelVariantContainer();
+    if (!container) return;
+
+    destroyAssignVariantSelects();
+    container.innerHTML = `
+        <div class="row" style="margin-bottom: 0;">
+            <div class="input-field col s12 m4">
+                <select id="assignRamSelect"></select>
+                <label class="active">RAM</label>
+            </div>
+            <div class="input-field col s12 m4">
+                <select id="assignMemorySelect"></select>
+                <label class="active">Pamięć</label>
+            </div>
+            <div class="input-field col s12 m4">
+                <select id="assignColorSelect"></select>
+                <label class="active">Kolor</label>
+            </div>
+        </div>
+    `;
+
+    assignRamSelect = initAssignVariantSelect('#assignRamSelect');
+    assignMemorySelect = initAssignVariantSelect('#assignMemorySelect');
+    assignColorSelect = initAssignVariantSelect('#assignColorSelect');
+    updateAssignVariantOptions(model, card);
+}
+
+function currentAssignModelCard() {
+    return phoneToAssignModel
+        ? document.querySelector(`.card[data-technical-id="${phoneToAssignModel}"]`)
+        : null;
+}
+
+async function loadAssignModelVariants(phoneModelTechnicalId, card = currentAssignModelCard()) {
+    const requestId = ++assignVariantRequestId;
+    clearAssignVariantFields(phoneModelTechnicalId ? "Ładowanie opcji modelu..." : "");
+
+    if (!phoneModelTechnicalId) return;
+
+    try {
+        const response = await fetch(`/api/v1/phone-models/${encodeURIComponent(phoneModelTechnicalId)}`);
+        if (!response.ok) throw new Error("Nie udało się pobrać modelu");
+
+        const model = await response.json();
+        if (requestId !== assignVariantRequestId) return;
+
+        renderAssignVariantFields(model, card);
+    } catch (e) {
+        if (requestId !== assignVariantRequestId) return;
+
+        clearAssignVariantFields();
+        M.toast({ html: "Nie udało się pobrać opcji RAM, pamięci i koloru", classes: "red" });
+    }
+}
+
+function initPhoneModelSelect(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+
+    return new TomSelect(el, {
+        valueField: "technicalId",
+        labelField: "displayName",
+        searchField: ["displayName", "brand", "model", "memory", "ram", "colors"],
+        create: false,
+        shouldSort: false,
+        hideSelected: true,
+        closeAfterSelect: true,
+        allowEmptyOption: true,
+        render: {
+            option: function(item, escape) {
+                return `<div>
+                    <span><b>${escape(item.brand || "")}</b> ${escape(item.model || "")}</span><br>
+                    <small class="grey-text">${escape([item.memory, item.ram, item.colors].filter(Boolean).join(" / "))}</small>
+                </div>`;
+            },
+            item: function(item, escape) {
+                return `<div>${escape(item.displayName || formatPhoneModelOption(item))}</div>`;
+            }
+        }
+    });
+}
+
 async function loadAssignPhoneModelOptions(selectedValue = "", selectedLabel = "") {
     if (!assignPhoneModelSelect) {
         assignPhoneModelSelect = initPhoneModelSelect('#assignPhoneModelSelect');
@@ -36,7 +204,7 @@ async function loadAssignPhoneModelOptions(selectedValue = "", selectedLabel = "
 
     assignPhoneModelSelect.clear(true);
     assignPhoneModelSelect.clearOptions();
-    assignPhoneModelSelect.addOption({ value: "", text: "Wybierz model z bazy" });
+    assignPhoneModelSelect.addOption({ technicalId: "", displayName: "Wybierz model z bazy" });
 
     try {
         const response = await fetch("/api/v1/phone-models?size=1000");
@@ -45,8 +213,8 @@ async function loadAssignPhoneModelOptions(selectedValue = "", selectedLabel = "
         const data = await response.json();
         (data.content || []).forEach(model => {
             assignPhoneModelSelect.addOption({
-                value: model.technicalId,
-                text: formatPhoneModelOption(model)
+                ...model,
+                displayName: formatPhoneModelOption(model)
             });
         });
 
@@ -54,10 +222,19 @@ async function loadAssignPhoneModelOptions(selectedValue = "", selectedLabel = "
             selectedValue
             && !assignPhoneModelSelect.options[selectedValue]
         ) {
-            assignPhoneModelSelect.addOption({
-                value: selectedValue,
-                text: selectedLabel || selectedValue
-            });
+            const selectedResponse = await fetch(`/api/v1/phone-models/${selectedValue}`);
+            if (selectedResponse.ok) {
+                const model = await selectedResponse.json();
+                assignPhoneModelSelect.addOption({
+                    ...model,
+                    displayName: formatPhoneModelOption(model)
+                });
+            } else {
+                assignPhoneModelSelect.addOption({
+                    technicalId: selectedValue,
+                    displayName: selectedLabel || selectedValue
+                });
+            }
         }
 
         assignPhoneModelSelect.refreshOptions(false);
@@ -764,7 +941,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusSelect = initSimpleSelect('#filterStatus');
     const locationSelect = initSimpleSelect('#filterLocation');
     assignPhoneModelSelect = initPhoneModelSelect('#assignPhoneModelSelect');
-    loadAssignPhoneModelOptions();
+    assignPhoneModelSelect?.on('change', value => {
+        loadAssignModelVariants(value, currentAssignModelCard());
+    });
 
     if (statusSelect) {
         statusSelect.on('change', () => liveReload());
@@ -1299,6 +1478,7 @@ async function openAssignModelModal(technicalId) {
     }
 
     await loadAssignPhoneModelOptions(currentModelId, currentModelDisplayName);
+    await loadAssignModelVariants(currentModelId, card);
 
     M.Modal.getInstance(document.getElementById("assignModelModal")).open();
 }
@@ -1312,11 +1492,32 @@ document.getElementById("saveAssignModelBtn")
             return;
         }
 
+        if (!assignRamSelect || !assignMemorySelect || !assignColorSelect) {
+            M.toast({ html: "Poczekaj na załadowanie opcji RAM, pamięci i koloru", classes: "red" });
+            return;
+        }
+
         try {
-            const response = await fetch(`/api/v1/phones/${phoneToAssignModel}/model`, {
+            const card = document.querySelector(`.card[data-technical-id="${phoneToAssignModel}"]`);
+            const response = await fetch(`/api/v1/phones/${phoneToAssignModel}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phoneModelTechnicalId })
+                body: JSON.stringify({
+                    name: card?.dataset.name || null,
+                    model: card?.dataset.model || null,
+                    color: assignColorSelect?.getValue() || null,
+                    imei: card?.dataset.imei || null,
+                    source: card?.dataset.source || null,
+                    sellingPrice: card?.dataset.sellingPrice || null,
+                    purchasePrice: card?.dataset.purchasePrice || null,
+                    description: card?.dataset.description || null,
+                    comment: card?.dataset.comment || null,
+                    used: card?.dataset.used === "true",
+                    batteryCondition: card?.dataset.batteryCondition || null,
+                    ram: assignRamSelect?.getValue() || null,
+                    memory: assignMemorySelect?.getValue() || null,
+                    phoneModelTechnicalId
+                })
             });
 
             if (!response.ok) {
