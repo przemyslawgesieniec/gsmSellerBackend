@@ -14,30 +14,230 @@
         .offer-photos-preview {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
             margin-top: 10px;
         }
         .photo-container {
             position: relative;
-            width: 100px;
-            height: 100px;
+            width: 128px;
+            min-height: 172px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fff;
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
         }
         .photo-container img {
             width: 100%;
-            height: 100%;
+            height: 104px;
             object-fit: cover;
             border-radius: 4px;
         }
         .photo-container .remove-photo {
             position: absolute;
-            top: -5px;
-            right: -5px;
-            background: red;
+            top: -8px;
+            right: -8px;
+            background: #d32f2f;
             color: white;
             border-radius: 50%;
             cursor: pointer;
             padding: 2px;
             font-size: 16px;
+        }
+        .photo-order-badge {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            min-width: 28px;
+            height: 28px;
+            line-height: 28px;
+            border-radius: 50%;
+            background: #1565c0;
+            color: #fff;
+            text-align: center;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+        }
+        .photo-primary-label {
+            margin-top: 6px;
+            min-height: 18px;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #1565c0;
+        }
+        .photo-order-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+        .photo-order-actions .btn-flat {
+            width: 34px;
+            height: 30px;
+            line-height: 30px;
+            padding: 0;
+        }
+        .offer-form-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            cursor: pointer;
+            padding: 22px 24px;
+        }
+        .offer-form-header .card-title {
+            margin: 0;
+        }
+        .offer-form-subtitle {
+            margin: 4px 0 0;
+            color: #757575;
+            font-size: .95rem;
+        }
+        .offer-form-body {
+            border-top: 1px solid #eceff1;
+            padding-top: 22px;
+        }
+        .offers-toolbar {
+            background: #fff;
+            border: 1px solid #e3e8ef;
+            border-radius: 8px;
+            padding: 16px 16px 4px;
+            margin: 12px 0 16px;
+        }
+        .offers-section-title {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .offers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .offer-list-item {
+            background: #fff;
+            border: 1px solid #e3e8ef;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: box-shadow .18s ease, border-color .18s ease;
+        }
+        .offer-list-item.expanded {
+            border-color: #90caf9;
+            box-shadow: 0 8px 24px rgba(21, 101, 192, .12);
+        }
+        .offer-summary {
+            display: grid;
+            grid-template-columns: 96px minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            width: 100%;
+            padding: 12px 14px;
+            cursor: pointer;
+        }
+        .offer-thumbnail {
+            width: 96px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #eceff1;
+        }
+        .offer-main h6 {
+            margin: 0 0 6px;
+            font-weight: 700;
+            color: #263238;
+        }
+        .offer-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: #607d8b;
+            font-size: .92rem;
+        }
+        .offer-price {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #0d47a1;
+            white-space: nowrap;
+            text-align: right;
+        }
+        .offer-actions {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+        .offer-details {
+            display: none;
+            border-top: 1px solid #eceff1;
+            padding: 16px;
+            background: #fbfdff;
+        }
+        .offer-list-item.expanded .offer-details {
+            display: block;
+        }
+        .offer-details-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .offer-detail {
+            background: #fff;
+            border: 1px solid #e8eef5;
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 64px;
+        }
+        .offer-detail span {
+            display: block;
+            color: #78909c;
+            font-size: .78rem;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .offer-detail strong {
+            display: block;
+            margin-top: 4px;
+            color: #263238;
+            word-break: break-word;
+        }
+        .offer-photos-mini {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+        .offer-photos-mini img {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        @media (max-width: 700px) {
+            .offer-summary {
+                grid-template-columns: 76px minmax(0, 1fr);
+            }
+            .offer-thumbnail {
+                width: 76px;
+                height: 76px;
+            }
+            .offer-side {
+                grid-column: 1 / -1;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .offer-details-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 480px) {
+            .offer-details-grid {
+                grid-template-columns: 1fr;
+            }
         }
         .ts-control {
             border: none !important;
@@ -70,8 +270,14 @@
     <div class="row">
         <div class="col s12">
             <div class="card">
-                <div class="card-content">
-                    <span class="card-title" id="formTitle">Stwórz nową ofertę</span>
+                <div class="offer-form-header" id="offerFormToggle" role="button" tabindex="0" aria-expanded="false">
+                    <div>
+                        <span class="card-title" id="formTitle">Stwórz nową ofertę</span>
+                        <p class="offer-form-subtitle">Wybierz telefon, dodaj zdjęcia i ustaw miniaturkę kolejnością zdjęć.</p>
+                    </div>
+                    <i class="material-icons" id="offerFormToggleIcon">expand_more</i>
+                </div>
+                <div class="card-content offer-form-body hide" id="offerFormBody">
                     <form id="offerForm">
                         <input type="hidden" id="editTechnicalId">
                         <div class="row">
@@ -93,7 +299,7 @@
 
                             <!-- Zdjęcia -->
                             <div class="col s12">
-                                <p class="grey-text">Dodaj zdjęcia (maksymalnie 5)</p>
+                                <p class="grey-text">Dodaj zdjęcia (maksymalnie 5). Zdjęcie nr 1 będzie miniaturką oferty.</p>
                                 <div class="file-field input-field">
                                     <div class="btn blue">
                                         <span>Wybierz pliki</span>
@@ -136,19 +342,45 @@
     <!-- Sekcja: Aktualne Oferty -->
     <div class="row">
         <div class="col s12">
-            <h5 class="blue-text text-darken-2">Aktualnie wystawione oferty</h5>
-            <div id="offers-list" class="row">
-                <!-- Tu trafią karty ofert -->
-                <div class="col s12 center-align" id="offersLoader">
-                    <div class="preloader-wrapper small active">
-                        <div class="spinner-layer spinner-blue-only">
-                            <div class="circle-clipper left"><div class="circle"></div></div>
-                            <div class="gap-patch"><div class="circle"></div></div>
-                            <div class="circle-clipper right"><div class="circle"></div></div>
-                        </div>
+            <div class="offers-section-title">
+                <h5 class="blue-text text-darken-2">Aktualnie wystawione oferty</h5>
+                <span id="offerResultsMeta" class="grey-text"></span>
+            </div>
+            <div class="offers-toolbar">
+                <div class="row">
+                    <div class="input-field col s12 m4">
+                        <i class="material-icons prefix">fingerprint</i>
+                        <input id="offerImeiFilter" type="text">
+                        <label for="offerImeiFilter">IMEI</label>
+                    </div>
+                    <div class="input-field col s12 m4">
+                        <i class="material-icons prefix">search</i>
+                        <input id="offerNameFilter" type="text">
+                        <label for="offerNameFilter">Nazwa, marka lub model</label>
+                    </div>
+                    <div class="input-field col s12 m3">
+                        <select id="offerLocationFilter">
+                            <option value="" selected>Wszystkie lokalizacje</option>
+                        </select>
+                        <label class="active">Lokalizacja</label>
+                    </div>
+                    <div class="col s12 m1 right-align" style="padding-top: 12px;">
+                        <button type="button" id="clearOfferFilters" class="btn-flat waves-effect" title="Wyczyść filtry">
+                            <i class="material-icons">filter_alt_off</i>
+                        </button>
                     </div>
                 </div>
             </div>
+            <div id="offersLoader" class="center-align hide">
+                <div class="preloader-wrapper small active">
+                    <div class="spinner-layer spinner-blue-only">
+                        <div class="circle-clipper left"><div class="circle"></div></div>
+                        <div class="gap-patch"><div class="circle"></div></div>
+                        <div class="circle-clipper right"><div class="circle"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div id="offers-list" class="offers-list"></div>
             <ul id="offersPagination" class="pagination center-align"></ul>
         </div>
     </div>

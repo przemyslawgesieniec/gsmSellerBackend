@@ -1,9 +1,14 @@
 let photos = [];
 let phoneSelect;
+let offerLocationSelect;
 let currentPage = 1;
+let offerFiltersDebounce;
 
 document.addEventListener("DOMContentLoaded", function() {
+    initOfferFormToggle();
     initPhoneSelect();
+    initOfferFilters();
+    loadOfferLocations();
     loadOffers();
 
     document.getElementById("photoFiles").addEventListener("change", handleFileSelect);
@@ -11,6 +16,31 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("clearPhone").addEventListener("click", clearSelectedPhone);
     document.getElementById("cancelBtn").addEventListener("click", resetForm);
 });
+
+function initOfferFormToggle() {
+    const toggle = document.getElementById("offerFormToggle");
+    if (!toggle) return;
+
+    toggle.addEventListener("click", () => toggleOfferForm());
+    toggle.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggleOfferForm();
+        }
+    });
+}
+
+function toggleOfferForm(forceOpen) {
+    const body = document.getElementById("offerFormBody");
+    const toggle = document.getElementById("offerFormToggle");
+    const icon = document.getElementById("offerFormToggleIcon");
+    if (!body) return;
+
+    const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : body.classList.contains("hide");
+    body.classList.toggle("hide", !shouldOpen);
+    if (toggle) toggle.setAttribute("aria-expanded", String(shouldOpen));
+    if (icon) icon.textContent = shouldOpen ? "expand_less" : "expand_more";
+}
 
 function initPhoneSelect() {
     phoneSelect = new TomSelect("#phoneSelect", {
@@ -47,6 +77,53 @@ function initPhoneSelect() {
     });
 }
 
+function initOfferFilters() {
+    const imeiInput = document.getElementById("offerImeiFilter");
+    const nameInput = document.getElementById("offerNameFilter");
+    const clearButton = document.getElementById("clearOfferFilters");
+
+    [imeiInput, nameInput].forEach(input => {
+        input?.addEventListener("input", () => {
+            clearTimeout(offerFiltersDebounce);
+            offerFiltersDebounce = setTimeout(() => loadOffers(1), 250);
+        });
+    });
+
+    offerLocationSelect = new TomSelect("#offerLocationFilter", {
+        create: false,
+        allowEmptyOption: true,
+        onChange: () => loadOffers(1)
+    });
+
+    clearButton?.addEventListener("click", () => {
+        if (imeiInput) imeiInput.value = "";
+        if (nameInput) nameInput.value = "";
+        M.updateTextFields();
+        offerLocationSelect?.clear();
+        loadOffers(1);
+    });
+}
+
+async function loadOfferLocations() {
+    try {
+        const response = await fetch("/api/v1/locations");
+        if (!response.ok) throw new Error("Nie udało się pobrać lokalizacji");
+        const locations = await response.json();
+
+        if (!offerLocationSelect) return;
+        offerLocationSelect.addOption({ value: "__ONLINE__", text: "Dostępny online" });
+        locations.forEach(location => {
+            offerLocationSelect.addOption({
+                value: location.name,
+                text: [location.name, location.city].filter(Boolean).join(" - ")
+            });
+        });
+        offerLocationSelect.refreshOptions(false);
+    } catch (err) {
+        console.warn("Nie udało się pobrać lokalizacji ofert", err);
+    }
+}
+
 function selectPhone(phone) {
     document.getElementById("phoneSelectWrapper").classList.add("hide");
     document.getElementById("selectedPhoneInfo").classList.remove("hide");
@@ -63,6 +140,7 @@ function renderSelectedPhonePreview(phone) {
         <div class="card-panel grey lighten-5 model-specs-panel">
             <div><b>Telefon:</b> ${escapeHtml(phone.name || "")} ${escapeHtml(phone.model || "")}</div>
             <div><b>Model z bazy:</b> ${escapeHtml(phone.phoneModelDisplayName || "Nie ustawiono")}</div>
+            <div><b>IMEI:</b> ${escapeHtml(phone.imei || "brak")}</div>
             <div><b>Pamięć:</b> ${escapeHtml([phone.memory, phone.ram].filter(Boolean).join(" / ") || "z bazy modelu")}</div>
             <div><b>Cena:</b> ${escapeHtml(phone.sellingPrice || "")} PLN</div>
         </div>
@@ -81,7 +159,7 @@ function clearSelectedPhone() {
 
 function handleFileSelect(e) {
     const files = Array.from(e.target.files);
-    if (photos.filter(p => p instanceof File).length + files.length > 5) {
+    if (photos.length + files.length > 5) {
         M.toast({ html: "Można dodać maksymalnie 5 zdjęć", classes: "red" });
         e.target.value = "";
         return;
@@ -100,12 +178,25 @@ function renderPhotosPreview() {
         const div = document.createElement("div");
         div.className = "photo-container";
 
-        const src = photo instanceof File ? URL.createObjectURL(photo) : "https://via.placeholder.com/100x100?text=...";
+        const src = photo instanceof File ? getFilePreviewUrl(photo) : "https://via.placeholder.com/120x100?text=...";
         const dataSrc = photo instanceof File ? "" : photo.thumbnailUrl;
 
         div.innerHTML = `
-            <img src="${src}" ${dataSrc ? `data-src="${dataSrc}"` : ""} alt="Foto ${index + 1}">
+            <span class="photo-order-badge">${index + 1}</span>
+            <img src="${src}" ${dataSrc ? `data-src="${escapeHtml(dataSrc)}"` : ""} alt="Foto ${index + 1}">
             <i class="material-icons remove-photo" onclick="removePhoto(${index})">close</i>
+            <div class="photo-primary-label">${index === 0 ? "Miniaturka" : "&nbsp;"}</div>
+            <div class="photo-order-actions">
+                <button type="button" class="btn-flat waves-effect" title="Przesuń wcześniej" onclick="movePhoto(${index}, -1)" ${index === 0 ? "disabled" : ""}>
+                    <i class="material-icons">arrow_back</i>
+                </button>
+                <button type="button" class="btn-flat waves-effect" title="Ustaw jako miniaturkę" onclick="setPrimaryPhoto(${index})" ${index === 0 ? "disabled" : ""}>
+                    <i class="material-icons">star</i>
+                </button>
+                <button type="button" class="btn-flat waves-effect" title="Przesuń później" onclick="movePhoto(${index}, 1)" ${index === photos.length - 1 ? "disabled" : ""}>
+                    <i class="material-icons">arrow_forward</i>
+                </button>
+            </div>
         `;
         container.appendChild(div);
     });
@@ -115,12 +206,32 @@ function renderPhotosPreview() {
     }
 }
 
+function getFilePreviewUrl(file) {
+    if (!file.previewUrl) {
+        file.previewUrl = URL.createObjectURL(file);
+    }
+    return file.previewUrl;
+}
+
 function removePhoto(index) {
     const photo = photos[index];
-    if (photo instanceof File) {
-        URL.revokeObjectURL(photo);
-    }
+    revokePreviewUrl(photo);
     photos.splice(index, 1);
+    renderPhotosPreview();
+}
+
+function movePhoto(index, direction) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= photos.length) return;
+    const [photo] = photos.splice(index, 1);
+    photos.splice(nextIndex, 0, photo);
+    renderPhotosPreview();
+}
+
+function setPrimaryPhoto(index) {
+    if (index <= 0 || index >= photos.length) return;
+    const [photo] = photos.splice(index, 1);
+    photos.unshift(photo);
     renderPhotosPreview();
 }
 
@@ -146,11 +257,15 @@ async function saveOffer(e) {
         formData.append("phoneStockTechnicalId", technicalId);
     }
 
+    const newPhotos = photos.filter(photo => photo instanceof File);
+    newPhotos.forEach(photo => formData.append("photoFiles", photo));
+
     photos.forEach(photo => {
         if (photo instanceof File) {
-            formData.append("photoFiles", photo);
+            formData.append("photoOrder", `new:${newPhotos.indexOf(photo)}`);
         } else if (photo && photo.uuid) {
             formData.append("photos", photo.uuid);
+            formData.append("photoOrder", photo.uuid);
         }
     });
 
@@ -161,8 +276,7 @@ async function saveOffer(e) {
         });
 
         if (!response.ok) {
-            const err = await response.json().catch(() => null);
-            throw new Error(err?.message || "Nieznany błąd");
+            throw new Error(await getResponseErrorMessage(response));
         }
 
         M.toast({ html: isEdit ? "Oferta zaktualizowana!" : "Oferta utworzona!", classes: "green" });
@@ -177,12 +291,14 @@ async function saveOffer(e) {
 function resetForm() {
     document.getElementById("offerForm").reset();
     document.getElementById("editTechnicalId").value = "";
+    photos.forEach(revokePreviewUrl);
     photos = [];
     renderPhotosPreview();
     clearSelectedPhone();
     document.getElementById("formTitle").textContent = "Stwórz nową ofertę";
     document.getElementById("cancelBtn").classList.add("hide");
     document.getElementById("phoneSelectWrapper").classList.remove("hide");
+    toggleOfferForm(false);
 }
 
 async function loadOffers(page = 1) {
@@ -191,7 +307,22 @@ async function loadOffers(page = 1) {
     if (loader) loader.classList.remove("hide");
 
     try {
-        const response = await fetch(`/api/v1/external/offers?page=${page}&size=12`);
+        const params = new URLSearchParams({
+            page,
+            size: 12
+        });
+        const imei = document.getElementById("offerImeiFilter")?.value.trim();
+        const name = document.getElementById("offerNameFilter")?.value.trim();
+        const location = offerLocationSelect?.getValue();
+
+        if (imei) params.append("imei", imei);
+        if (name) params.append("name", name);
+        if (location) params.append("location", location);
+
+        const response = await fetch(`/api/v1/offers?${params.toString()}`);
+        if (!response.ok) {
+            throw new Error(await getResponseErrorMessage(response));
+        }
         const data = await response.json();
 
         if (data.content.length === 0 && page > 1) {
@@ -201,9 +332,10 @@ async function loadOffers(page = 1) {
 
         renderOffers(data.content);
         renderPagination(data);
+        renderOfferResultsMeta(data);
         setTimeout(lazyLoadImages, 100);
     } catch (err) {
-        M.toast({ html: "Błąd ładowania ofert", classes: "red" });
+        M.toast({ html: `Błąd ładowania ofert: ${err.message}`, classes: "red" });
     } finally {
         if (loader) loader.classList.add("hide");
     }
@@ -221,62 +353,122 @@ function renderOffers(offers) {
     container.innerHTML = "";
 
     if (offers.length === 0) {
-        container.innerHTML = '<div class="col s12 center-align grey-text">Brak aktywnych ofert.</div>';
+        container.innerHTML = '<div class="center-align grey-text" style="padding: 28px;">Brak aktywnych ofert dla wybranych filtrów.</div>';
         return;
     }
 
     offers.forEach(offer => {
         const mainPhoto = offer.photos && offer.photos.length > 0
             ? offer.photos[0].thumbnailUrl
-            : "https://via.placeholder.com/300x200?text=Brak+zdjęcia";
+            : "https://via.placeholder.com/300x220?text=Brak+zdjecia";
 
-        const col = document.createElement("div");
-        col.className = "col s12 m6 l4";
-        col.innerHTML = `
-            <div class="card sticky-action">
-                <div class="card-image waves-effect waves-block waves-light">
-                    <img class="activator" data-src="${mainPhoto}" src="https://via.placeholder.com/300x200?text=Wczytywanie..." style="height: 200px; object-fit: cover;">
+        const item = document.createElement("div");
+        item.className = "offer-list-item";
+        item.dataset.offerId = offer.technicalId;
+        item.innerHTML = `
+            <div class="offer-summary" role="button" tabindex="0" aria-expanded="false">
+                <img class="offer-thumbnail" data-src="${escapeHtml(mainPhoto)}" src="https://via.placeholder.com/96x72?text=..." alt="${escapeHtml(offer.brand || "Oferta")} ${escapeHtml(offer.model || "")}">
+                <div class="offer-main">
+                    <h6>${escapeHtml(offer.brand || "")} ${escapeHtml(offer.model || "")}</h6>
+                    <div class="offer-meta">
+                        <span><i class="material-icons tiny">fingerprint</i> IMEI: ${escapeHtml(offer.imei || "brak")}</span>
+                        <span><i class="material-icons tiny">place</i> ${escapeHtml(offer.location || "Dostępny online")}</span>
+                        <span><i class="material-icons tiny">palette</i> ${escapeHtml(offer.color || "kolor nieustawiony")}</span>
+                        ${offer.isReserved ? '<span class="red-text text-darken-1"><i class="material-icons tiny">event_busy</i> Zarezerwowana</span>' : ""}
+                    </div>
                 </div>
-                <div class="card-content">
-                    <span class="card-title activator grey-text text-darken-4">
-                        ${escapeHtml(offer.brand || "")} ${escapeHtml(offer.model || "")}
-                        <i class="material-icons right">more_vert</i>
-                    </span>
-                    <p class="blue-text text-darken-2" style="font-weight: bold; font-size: 1.2rem;">
-                        ${escapeHtml(offer.price || "")} PLN
-                    </p>
-                </div>
-                <div class="card-action">
-                    <a href="#" onclick="editOffer('${offer.technicalId}')" class="blue-text">Edytuj zdjęcia</a>
-                    <a href="#" onclick="deleteOffer('${offer.technicalId}')" class="red-text right">Usuń</a>
-                </div>
-                <div class="card-reveal">
-                    <span class="card-title grey-text text-darken-4">${escapeHtml(offer.brand || "")} ${escapeHtml(offer.model || "")}<i class="material-icons right">close</i></span>
-                    <p>
-                        <b>Ekran:</b> ${(offer.screen && escapeHtml(offer.screen.size)) || "—"}<br>
-                        <b>Bateria:</b> ${escapeHtml(offer.batteryCapacity || "—")}<br>
-                        <b>Pamięć:</b> ${escapeHtml(offer.memory || "—")} / ${escapeHtml(offer.ram || "—")}<br>
-                        <b>SIM:</b> ${escapeHtml(offer.simCardType || "—")}<br>
-                        <b>Aparaty:</b> przód ${(offer.frontCamerasMpx || []).join(", ") || "—"}, tył ${(offer.backCamerasMpx || []).join(", ") || "—"}
-                    </p>
-                    <div class="offer-photos-mini">
-                        ${(offer.photos || []).map(p => `<img data-src="${p.thumbnailUrl}" src="https://via.placeholder.com/50x50?text=..." onclick="window.open('${p.publicUrl}', '_blank')" style="width: 50px; height: 50px; cursor: pointer; object-fit: cover; margin-right: 5px; border-radius: 2px;">`).join("")}
+                <div class="offer-side">
+                    <div class="offer-price">${escapeHtml(offer.price || "")} PLN</div>
+                    <div class="offer-actions">
+                        <button type="button" class="btn-flat waves-effect blue-text" title="Edytuj zdjęcia" onclick="editOffer('${offer.technicalId}', event)">
+                            <i class="material-icons">edit</i>
+                        </button>
+                        <button type="button" class="btn-flat waves-effect red-text" title="Usuń ofertę" onclick="deleteOffer('${offer.technicalId}', event)">
+                            <i class="material-icons">delete</i>
+                        </button>
+                        <i class="material-icons grey-text">expand_more</i>
                     </div>
                 </div>
             </div>
+            <div class="offer-details">
+                <div class="offer-details-grid">
+                    ${detailTile("Status", offer.status)}
+                    ${detailTile("Ekran", offer.screen ? [offer.screen.size, offer.screen.resolution, offer.screen.type].filter(Boolean).join(" / ") : "")}
+                    ${detailTile("Pamięć", [offer.memory, offer.ram].filter(Boolean).join(" / "))}
+                    ${detailTile("SIM", offer.simCardType)}
+                    ${detailTile("Bateria", [offer.batteryCapacity, offer.batteryCondition].filter(Boolean).join(" / "))}
+                    ${detailTile("Aparat przedni", formatList(offer.frontCamerasMpx, "Mpx"))}
+                    ${detailTile("Aparat tylny", formatList(offer.backCamerasMpx, "Mpx"))}
+                    ${detailTile("Złącze", offer.communication?.portType)}
+                    ${detailTile("System", offer.operatingSystem)}
+                    ${detailTile("Kolor", offer.color)}
+                    ${detailTile("Lokalizacja", offer.location)}
+                    ${detailTile("Cena", `${offer.price || ""} PLN`)}
+                </div>
+                <div class="offer-photos-mini">
+                    ${(offer.photos || []).map((photo, index) => `
+                        <img data-src="${escapeHtml(photo.thumbnailUrl)}"
+                             src="https://via.placeholder.com/72x72?text=${index + 1}"
+                             onclick="openPhoto('${escapeInlineJsAttr(photo.publicUrl)}', event)"
+                             alt="Zdjęcie oferty ${index + 1}">
+                    `).join("")}
+                </div>
+            </div>
         `;
-        container.appendChild(col);
+
+        const summary = item.querySelector(".offer-summary");
+        summary.addEventListener("click", event => {
+            if (event.target.closest("button")) return;
+            toggleOfferDetails(item);
+        });
+        summary.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                toggleOfferDetails(item);
+            }
+        });
+
+        container.appendChild(item);
     });
 }
 
-async function editOffer(technicalId) {
+function detailTile(label, value) {
+    return `
+        <div class="offer-detail">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value || "-")}</strong>
+        </div>
+    `;
+}
+
+function toggleOfferDetails(item) {
+    const expanded = item.classList.toggle("expanded");
+    const summary = item.querySelector(".offer-summary");
+    const icon = item.querySelector(".offer-actions > i");
+    if (summary) summary.setAttribute("aria-expanded", String(expanded));
+    if (icon) icon.textContent = expanded ? "expand_less" : "expand_more";
+}
+
+function openPhoto(url, event) {
+    event?.stopPropagation();
+    window.open(url, "_blank");
+}
+
+async function editOffer(technicalId, event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+
     try {
-        const response = await fetch(`/api/v1/external/offers/${technicalId}`);
+        const response = await fetch(`/api/v1/offers/${technicalId}`);
+        if (!response.ok) {
+            throw new Error(await getResponseErrorMessage(response));
+        }
         const offer = await response.json();
 
         document.getElementById("formTitle").textContent = "Edytuj zdjęcia oferty";
         document.getElementById("cancelBtn").classList.remove("hide");
         document.getElementById("editTechnicalId").value = offer.technicalId;
+        photos.forEach(revokePreviewUrl);
         photos = offer.photos || [];
         renderPhotosPreview();
 
@@ -287,28 +479,32 @@ async function editOffer(technicalId) {
         document.getElementById("modelSpecsPreview").innerHTML = `
             <div class="card-panel grey lighten-5 model-specs-panel">
                 <div><b>Oferta:</b> ${escapeHtml(offer.brand || "")} ${escapeHtml(offer.model || "")}</div>
-                <div><b>Pamięć:</b> ${escapeHtml(offer.memory || "—")} / ${escapeHtml(offer.ram || "—")}</div>
-                <div><b>SIM:</b> ${escapeHtml(offer.simCardType || "—")}</div>
+                <div><b>IMEI:</b> ${escapeHtml(offer.imei || "brak")}</div>
+                <div><b>Pamięć:</b> ${escapeHtml(offer.memory || "-")} / ${escapeHtml(offer.ram || "-")}</div>
+                <div><b>SIM:</b> ${escapeHtml(offer.simCardType || "-")}</div>
             </div>
         `;
 
+        toggleOfferForm(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-        M.toast({ html: "Błąd pobierania danych oferty", classes: "red" });
+        M.toast({ html: `Błąd pobierania danych oferty: ${err.message}`, classes: "red" });
     }
 }
 
-async function deleteOffer(technicalId) {
+async function deleteOffer(technicalId, event) {
+    event?.preventDefault();
+    event?.stopPropagation();
     if (!confirm("Czy na pewno chcesz usunąć tę ofertę? Zdjęcia zostaną również usunięte.")) return;
 
     try {
         const response = await fetch(`/api/v1/offers/${technicalId}`, { method: "DELETE" });
-        if (!response.ok) throw new Error("Błąd usuwania");
+        if (!response.ok) throw new Error(await getResponseErrorMessage(response));
 
         M.toast({ html: "Oferta została usunięta", classes: "green" });
         setTimeout(() => location.reload(), 800);
     } catch (err) {
-        M.toast({ html: "Błąd podczas usuwania", classes: "red" });
+        M.toast({ html: `Błąd podczas usuwania: ${err.message}`, classes: "red" });
     }
 }
 
@@ -330,6 +526,31 @@ function renderPagination(data) {
     }
 }
 
+function renderOfferResultsMeta(data) {
+    const meta = document.getElementById("offerResultsMeta");
+    if (!meta) return;
+
+    const total = data.totalElements ?? 0;
+    if (total === 0) {
+        meta.textContent = "0 ofert";
+        return;
+    }
+
+    meta.textContent = `${total} ofert`;
+}
+
+function revokePreviewUrl(photo) {
+    if (photo instanceof File && photo.previewUrl) {
+        URL.revokeObjectURL(photo.previewUrl);
+        delete photo.previewUrl;
+    }
+}
+
+function formatList(values, suffix) {
+    if (!values || values.length === 0) return "";
+    return values.map(value => suffix ? `${value} ${suffix}` : value).join(", ");
+}
+
 function escapeHtml(value) {
     return String(value)
         .replaceAll("&", "&amp;")
@@ -337,4 +558,28 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+async function getResponseErrorMessage(response) {
+    const text = await response.text().catch(() => "");
+    if (!text) {
+        return response.statusText || "Nieznany błąd";
+    }
+
+    try {
+        const json = JSON.parse(text);
+        return json.message || json.error || text;
+    } catch {
+        return text;
+    }
+}
+
+function escapeJs(value) {
+    return String(value || "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'");
+}
+
+function escapeInlineJsAttr(value) {
+    return escapeHtml(escapeJs(value));
 }

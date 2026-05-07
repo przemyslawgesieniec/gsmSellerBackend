@@ -58,6 +58,7 @@ public class Offer {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "offer_id")
+    @OrderBy("displayOrder ASC, id ASC")
     private List<OfferPhoto> photos = new ArrayList<>();
 
     @Builder
@@ -149,7 +150,11 @@ public class Offer {
         }
         this.photos.clear();
         if (photos != null) {
-            this.photos.addAll(photos);
+            for (int i = 0; i < photos.size(); i++) {
+                OfferPhoto photo = photos.get(i);
+                photo.setDisplayOrder(i);
+                this.photos.add(photo);
+            }
         }
     }
 

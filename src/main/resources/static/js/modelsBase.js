@@ -1,5 +1,5 @@
 const modelsPageSize = 20;
-let modelsCurrentPage = 0;
+let modelsCurrentPage = 1;
 let modelToDelete = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,17 +9,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("openCreateModelBtn").addEventListener("click", openCreateModelModal);
     document.getElementById("saveModelBtn").addEventListener("click", saveModel);
     document.getElementById("confirmDeleteModelBtn").addEventListener("click", deleteModel);
-    document.getElementById("modelSearch").addEventListener("input", debounce(() => loadModels(0), 300));
+    document.getElementById("modelSearch").addEventListener("input", debounce(() => loadModels(1), 300));
     document.getElementById("addMemoryBtn").addEventListener("click", () => addNumericField("memoryFields", "Pamięć"));
     document.getElementById("addRamBtn").addEventListener("click", () => addNumericField("ramFields", "RAM"));
     document.getElementById("addColorBtn").addEventListener("click", () => addDynamicField("colorsFields", "Kolor"));
     document.getElementById("addFrontCameraBtn").addEventListener("click", () => addNumericField("frontCameraFields", "Aparat przód (Mpx)"));
     document.getElementById("addBackCameraBtn").addEventListener("click", () => addNumericField("backCameraFields", "Aparat tył (Mpx)"));
 
-    loadModels(0);
+    loadModels(1);
 });
 
-async function loadModels(page = 0) {
+async function loadModels(page = 1) {
     modelsCurrentPage = page;
     const search = document.getElementById("modelSearch").value.trim();
     const params = new URLSearchParams({
@@ -296,10 +296,12 @@ function renderModelsPagination(data) {
 
     if (!data || data.totalPages <= 1) return;
 
-    for (let page = 0; page < data.totalPages; page++) {
+    const activePage = (data.number ?? 0) + 1;
+
+    for (let page = 1; page <= data.totalPages; page++) {
         const li = document.createElement("li");
-        li.className = page === data.number ? "active blue" : "waves-effect";
-        li.innerHTML = `<a href="#!">${page + 1}</a>`;
+        li.className = page === activePage ? "active blue" : "waves-effect";
+        li.innerHTML = `<a href="#!">${page}</a>`;
         li.addEventListener("click", () => loadModels(page));
         pagination.appendChild(li);
     }

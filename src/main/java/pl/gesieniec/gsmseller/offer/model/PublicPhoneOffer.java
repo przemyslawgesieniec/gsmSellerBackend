@@ -4,12 +4,19 @@ import lombok.Builder;
 import pl.gesieniec.gsmseller.offer.model.specs.CommunicationSpecs;
 import pl.gesieniec.gsmseller.offer.model.specs.ScreenSpecs;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 @Builder
-public record OfferRequest(
-    UUID phoneStockTechnicalId,
+public record PublicPhoneOffer(
+    UUID technicalId,
+    BigDecimal price,
+    String brand,
+    String model,
+    String status,
+    String color,
+    String location,
     ScreenSpecs screen,
     String memory,
     String ram,
@@ -17,9 +24,9 @@ public record OfferRequest(
     List<Integer> frontCamerasMpx,
     List<Integer> backCamerasMpx,
     String batteryCapacity,
+    String batteryCondition,
     CommunicationSpecs communication,
     String operatingSystem,
-    String brand,
-    List<UUID> photos,
-    List<String> photoOrder
+    List<Photo> photos,
+    Boolean isReserved
 ) {}
