@@ -278,6 +278,7 @@ async function loadStock(page = 0) {
             color: phone.color,
             imei: phone.imei,
             sellingPrice: phone.sellingPrice,
+            soldFor: phone.soldFor,
             purchasePrice: phone.purchasePrice,
             createDateTime: phone.createDateTime,
             status: phone.status,
@@ -441,6 +442,7 @@ function renderPhones(phones) {
     phones.forEach((phone) => {
         const statusClass = phone.status ? phone.status.toUpperCase() : "";
         const inCart = isPhoneInCart(phone.technicalId);
+        const displayPrice = getDisplayPrice(phone);
 
         const disableSellButton =
             phone.status !== "DOSTĘPNY"
@@ -468,6 +470,7 @@ function renderPhones(phones) {
           data-is-reserved="${phone.isReserved ?? false}"
           data-battery-condition="${phone.batteryCondition ?? ""}"
           data-selling-price="${phone.sellingPrice ?? ""}"
+          data-sold-for="${phone.soldFor ?? ""}"
           data-purchase-price="${phone.purchasePrice ?? ""}"
           data-phone-model-technical-id="${phone.phoneModelTechnicalId ?? ""}"
           data-phone-model-display-name="${phone.phoneModelDisplayName ?? ""}"
@@ -579,7 +582,7 @@ function renderPhones(phones) {
             </div>
             <div class="phone-right">
             <div class="price-wrapper col s12">
-                <p class="sellingPrice">${phone.sellingPrice} zł</p>
+                <p class="sellingPrice">${formatPrice(displayPrice)} zł</p>
                 <p class="initialPrice-hover">Zakup: ${phone.purchasePrice} zł</p>
             </div>          
               <span class="status-badge ${statusClass}">${phone.status}</span>
@@ -682,6 +685,23 @@ function renderPhones(phones) {
         coverTrigger: false
     });
 
+}
+
+function getDisplayPrice(phone) {
+    if (phone.status === "SPRZEDANY" && phone.soldFor != null) {
+        return phone.soldFor;
+    }
+
+    return phone.sellingPrice;
+}
+
+function formatPrice(price) {
+    if (price == null || price === "") {
+        return "—";
+    }
+
+    const value = Number(price);
+    return Number.isNaN(value) ? price : value
 }
 
 let cartBtn = null;

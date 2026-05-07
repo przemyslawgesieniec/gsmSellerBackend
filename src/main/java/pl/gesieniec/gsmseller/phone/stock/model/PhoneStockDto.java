@@ -25,6 +25,7 @@ public class PhoneStockDto {
     private Status status;
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
+    private BigDecimal soldFor;
     private String createDateTime;
     private String locationName;
     private PurchaseType purchaseType;

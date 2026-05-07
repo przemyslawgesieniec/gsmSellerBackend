@@ -48,6 +48,7 @@ public class PhoneStockMapper {
             save.getStatus(),
             save.getPurchasePrice(),
             save.getSellingPrice(),
+            save.getSoldFor(),
             save.getCreateDateTime().format(formatter),
             Optional.ofNullable(save.getLocation())
                 .map(LocationEntity::getName).orElse(null),
