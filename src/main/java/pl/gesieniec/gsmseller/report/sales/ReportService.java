@@ -151,7 +151,7 @@ public class ReportService {
         LocalDateTime fromDt = from.atStartOfDay();
         LocalDateTime toDt = to.atTime(LocalTime.MAX);
 
-        List<Repair> repairs = repairRepository.findAllByArchivedAndCreateDateTimeBetween(true, fromDt, toDt);
+        List<Repair> repairs = repairRepository.findAllByArchivedAndHandoverDateBetween(true, fromDt, toDt);
 
         Map<RepairStatus, Long> statusCounts = repairs.stream()
             .collect(Collectors.groupingBy(Repair::getStatus, Collectors.counting()));
