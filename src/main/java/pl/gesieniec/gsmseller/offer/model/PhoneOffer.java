@@ -14,6 +14,7 @@ public record PhoneOffer(
     BigDecimal price,
     String brand,
     String model,
+    String imei,
     String status,
     String color,
     String location,

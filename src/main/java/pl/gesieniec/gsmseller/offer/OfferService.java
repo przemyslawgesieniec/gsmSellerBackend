@@ -14,6 +14,7 @@ import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.offer.model.OfferRequest;
 import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
 import pl.gesieniec.gsmseller.offer.model.Photo;
+import pl.gesieniec.gsmseller.offer.model.PublicPhoneOffer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import pl.gesieniec.gsmseller.offer.event.OfferCreatedEvent;
@@ -92,9 +93,17 @@ public class OfferService {
 
         List<UUID> requestedExistingPhotoIds = request.photos() != null ? request.photos() : new ArrayList<>();
 
-        // Znajdź istniejące zdjęcia, które mają zostać zachowane
+        // Znajdź istniejące zdjęcia tej oferty, które mają zostać zachowane
         List<OfferPhoto> existingPhotos = offer.getPhotos();
-        List<OfferPhoto> photosToKeep = offerPhotoRepository.findAllByTechnicalIdIn(requestedExistingPhotoIds);
+        java.util.Map<UUID, OfferPhoto> existingPhotosById = existingPhotos.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                OfferPhoto::getTechnicalId,
+                java.util.function.Function.identity()
+            ));
+        List<OfferPhoto> photosToKeep = requestedExistingPhotoIds.stream()
+            .map(existingPhotosById::get)
+            .filter(java.util.Objects::nonNull)
+            .toList();
         
         // Zdjęcia do usunięcia z Cloudflare
         List<String> imageIdsToDelete = existingPhotos.stream()
@@ -103,7 +112,7 @@ public class OfferService {
             .filter(java.util.Objects::nonNull)
             .toList();
 
-        List<OfferPhoto> finalPhotos = new ArrayList<>(photosToKeep);
+        List<OfferPhoto> uploadedPhotos = new ArrayList<>();
 
         // Dodaj nowe pliki
         if (photoFiles != null) {
@@ -112,7 +121,7 @@ public class OfferService {
                 if (!file.isEmpty()) {
                     try {
                         String imageId = cloudflareImagesService.uploadImage(file);
-                        finalPhotos.add(new OfferPhoto(file.getContentType(), imageId));
+                        uploadedPhotos.add(new OfferPhoto(file.getContentType(), imageId));
                     } catch (java.io.IOException e) {
                         log.error("Failed to upload image to Cloudflare", e);
                         throw new RuntimeException("Failed to upload image", e);
@@ -120,6 +129,8 @@ public class OfferService {
                 }
             });
         }
+
+        List<OfferPhoto> finalPhotos = orderPhotos(request.photoOrder(), photosToKeep, uploadedPhotos);
 
         PhoneModels phoneModel = getAssignedPhoneModel(offer.getPhoneStock());
         offer.updateSpecifications(
@@ -184,6 +195,11 @@ public class OfferService {
     }
 
     @Transactional(readOnly = true)
+    public PublicPhoneOffer getPublicOffer(UUID technicalId) {
+        return toPublicOffer(getOffer(technicalId));
+    }
+
+    @Transactional(readOnly = true)
     public Page<pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto> getAvailablePhones(String search, Pageable pageable) {
         log.debug("Fetching available phones with search: '{}', pageable: {}", search, pageable);
         Specification<PhoneStock> spec = (root, query, cb) -> {
@@ -232,6 +248,11 @@ public class OfferService {
             .map(this::mapToDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<PublicPhoneOffer> getPublicOffers(Specification<Offer> spec, Pageable pageable) {
+        return getOffers(spec, pageable).map(this::toPublicOffer);
+    }
+
     private PhoneOffer mapToDto(Offer offer) {
         PhoneStock phoneStock = offer.getPhoneStock();
         List<Photo> photos = offer.getPhotos().stream()
@@ -248,6 +269,7 @@ public class OfferService {
             .price(phoneStock.getSellingPrice())
             .brand(offer.getBrand())
             .model(phoneStock.getModel())
+            .imei(phoneStock.getImei())
             .status(phoneStock.isUsed() ? "Używany" : "Nowy")
             .color(phoneStock.getColor())
             .location(phoneStock.getLocation() != null ? phoneStock.getLocation().getName() : "Dostępny online")
@@ -296,6 +318,79 @@ public class OfferService {
 
     private String valueOrFallback(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private PublicPhoneOffer toPublicOffer(PhoneOffer offer) {
+        return PublicPhoneOffer.builder()
+            .technicalId(offer.technicalId())
+            .price(offer.price())
+            .brand(offer.brand())
+            .model(offer.model())
+            .status(offer.status())
+            .color(offer.color())
+            .location(offer.location())
+            .screen(offer.screen())
+            .memory(offer.memory())
+            .ram(offer.ram())
+            .simCardType(offer.simCardType())
+            .frontCamerasMpx(offer.frontCamerasMpx())
+            .backCamerasMpx(offer.backCamerasMpx())
+            .batteryCapacity(offer.batteryCapacity())
+            .batteryCondition(offer.batteryCondition())
+            .communication(offer.communication())
+            .operatingSystem(offer.operatingSystem())
+            .photos(offer.photos())
+            .isReserved(offer.isReserved())
+            .build();
+    }
+
+    private List<OfferPhoto> orderPhotos(List<String> photoOrder, List<OfferPhoto> existingPhotos, List<OfferPhoto> uploadedPhotos) {
+        if (photoOrder == null || photoOrder.isEmpty()) {
+            List<OfferPhoto> fallbackOrder = new ArrayList<>(existingPhotos);
+            fallbackOrder.addAll(uploadedPhotos);
+            return fallbackOrder;
+        }
+
+        java.util.Map<String, OfferPhoto> existingById = existingPhotos.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                photo -> photo.getTechnicalId().toString(),
+                java.util.function.Function.identity()
+            ));
+
+        List<OfferPhoto> orderedPhotos = new ArrayList<>();
+        for (String token : photoOrder) {
+            if (token == null || token.isBlank()) {
+                continue;
+            }
+            if (token.startsWith("new:")) {
+                try {
+                    int index = Integer.parseInt(token.substring(4));
+                    if (index >= 0 && index < uploadedPhotos.size()) {
+                        OfferPhoto photo = uploadedPhotos.get(index);
+                        if (!orderedPhotos.contains(photo)) {
+                            orderedPhotos.add(photo);
+                        }
+                    }
+                } catch (NumberFormatException ignored) {
+                    log.warn("Ignoring invalid photo order token: {}", token);
+                }
+                continue;
+            }
+
+            OfferPhoto photo = existingById.get(token);
+            if (photo != null && !orderedPhotos.contains(photo)) {
+                orderedPhotos.add(photo);
+            }
+        }
+
+        existingPhotos.stream()
+            .filter(photo -> !orderedPhotos.contains(photo))
+            .forEach(orderedPhotos::add);
+        uploadedPhotos.stream()
+            .filter(photo -> !orderedPhotos.contains(photo))
+            .forEach(orderedPhotos::add);
+
+        return orderedPhotos;
     }
 
     @EventListener

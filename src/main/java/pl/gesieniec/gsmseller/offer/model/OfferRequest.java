@@ -20,5 +20,6 @@ public record OfferRequest(
     CommunicationSpecs communication,
     String operatingSystem,
     String brand,
-    List<UUID> photos
+    List<UUID> photos,
+    List<String> photoOrder
 ) {}

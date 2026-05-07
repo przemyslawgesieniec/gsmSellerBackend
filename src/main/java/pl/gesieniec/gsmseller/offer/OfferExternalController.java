@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
+import pl.gesieniec.gsmseller.offer.model.PublicPhoneOffer;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -59,9 +59,10 @@ public class OfferExternalController {
     }
 
     @GetMapping
-    public Page<PhoneOffer> getOffers(
+    public Page<PublicPhoneOffer> getOffers(
         @RequestParam(required = false) String brand,
         @RequestParam(required = false) String model,
+        @RequestParam(required = false) String name,
         @RequestParam(required = false) String status,
         @RequestParam(required = false) String location,
         @RequestParam(required = false) BigDecimal minPrice,
@@ -71,6 +72,7 @@ public class OfferExternalController {
     ) {
         Specification<Offer> spec = Specification.allOf(
             OfferSpecifications.hasBrand(brand),
+            OfferSpecifications.hasName(name),
             OfferSpecifications.hasStatus(status),
             OfferSpecifications.hasLocation(location),
             OfferSpecifications.hasPriceBetween(minPrice, maxPrice),
@@ -78,11 +80,11 @@ public class OfferExternalController {
         );
 
         log.info("Searching for external offers: {}", spec);
-        return offerService.getOffers(spec, pageable);
+        return offerService.getPublicOffers(spec, pageable);
     }
 
     @GetMapping("/{technicalId}")
-    public PhoneOffer getOffer(@PathVariable UUID technicalId) {
-        return offerService.getOffer(technicalId);
+    public PublicPhoneOffer getOffer(@PathVariable UUID technicalId) {
+        return offerService.getPublicOffer(technicalId);
     }
 }

@@ -27,6 +27,10 @@ public class OfferPhoto {
     @Setter
     private String imageId;
 
+    @Column(name = "display_order")
+    @Setter
+    private Integer displayOrder;
+
     public OfferPhoto(String contentType, String imageId) {
         this.technicalId = UUID.randomUUID();
         this.contentType = contentType;

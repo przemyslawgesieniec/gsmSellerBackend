@@ -23,6 +23,31 @@ public class OfferSpecifications {
         };
     }
 
+    public static Specification<Offer> hasName(String name) {
+        return (root, query, cb) -> {
+            if (name == null || name.isBlank() || "all".equalsIgnoreCase(name)) {
+                return null;
+            }
+            Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
+            String pattern = "%" + name.toLowerCase() + "%";
+            return cb.or(
+                cb.like(cb.lower(root.get("brand")), pattern),
+                cb.like(cb.lower(phoneStockJoin.get("name")), pattern),
+                cb.like(cb.lower(phoneStockJoin.get("model")), pattern)
+            );
+        };
+    }
+
+    public static Specification<Offer> hasImei(String imei) {
+        return (root, query, cb) -> {
+            if (imei == null || imei.isBlank()) {
+                return null;
+            }
+            Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
+            return cb.like(cb.lower(phoneStockJoin.get("imei")), "%" + imei.toLowerCase() + "%");
+        };
+    }
+
     public static Specification<Offer> hasStatus(String status) {
         return (root, query, cb) -> {
             if (status == null || status.isBlank() || "all".equalsIgnoreCase(status)) {
@@ -47,7 +72,10 @@ public class OfferSpecifications {
                 return null;
             }
             Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
-            return cb.equal(phoneStockJoin.join("location").get("name"), location);
+            if ("__ONLINE__".equals(location)) {
+                return cb.isNull(phoneStockJoin.get("location"));
+            }
+            return cb.equal(phoneStockJoin.join("location", JoinType.LEFT).get("name"), location);
         };
     }
 
@@ -75,7 +103,8 @@ public class OfferSpecifications {
             return cb.or(
                 cb.like(cb.lower(root.get("brand")), pattern),
                 cb.like(cb.lower(phoneStockJoin.get("name")), pattern),
-                cb.like(cb.lower(phoneStockJoin.get("model")), pattern)
+                cb.like(cb.lower(phoneStockJoin.get("model")), pattern),
+                cb.like(cb.lower(phoneStockJoin.get("imei")), pattern)
             );
         };
     }
