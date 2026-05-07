@@ -9,4 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PhoneModelAssignmentRequest {
     private UUID phoneModelTechnicalId;
+    private String ram;
+    private String memory;
+    private String color;
+    private String simCardType;
 }

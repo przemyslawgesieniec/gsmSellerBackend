@@ -22,7 +22,8 @@ public class PhoneModelsMapper {
             model.getBackCameras(),
             model.getBatteryCapacity(),
             model.getBrand(),
-            model.getDisplayName()
+            model.getDisplayName(),
+            model.getDisplayPriority()
         );
     }
 }

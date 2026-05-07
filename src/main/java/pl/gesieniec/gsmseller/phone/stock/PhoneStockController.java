@@ -79,7 +79,7 @@ public class PhoneStockController {
         @PathVariable UUID technicalId,
         @RequestBody PhoneModelAssignmentRequest request
     ) {
-        return service.assignPhoneModel(technicalId, request.getPhoneModelTechnicalId());
+        return service.assignPhoneModel(technicalId, request);
     }
 
     @PostMapping("/{technicalId}/accept")

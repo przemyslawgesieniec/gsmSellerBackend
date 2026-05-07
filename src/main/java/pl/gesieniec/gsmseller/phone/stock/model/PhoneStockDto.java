@@ -19,6 +19,7 @@ public class PhoneStockDto {
     private String ram;
     private String memory;
     private String color;
+    private String simCardType;
     private String imei;
     private String name;
     private String source;

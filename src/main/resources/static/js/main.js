@@ -7,12 +7,13 @@ let assignPhoneModelSelect = null;
 let assignRamSelect = null;
 let assignMemorySelect = null;
 let assignColorSelect = null;
+let assignSimCardTypeSelect = null;
 let assignVariantRequestId = 0;
 
 const listContainer = document.getElementById("phone-list");
 
 function formatPhoneModelOption(item) {
-    const spec = [item.memory, item.ram, item.colors].filter(Boolean).join(" / ");
+    const spec = [item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / ");
     return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
 }
 
@@ -85,6 +86,12 @@ function updateAssignVariantOptions(model, card) {
         card?.dataset.color || "",
         "Wybierz kolor"
     );
+    setAssignVariantOptions(
+        assignSimCardTypeSelect,
+        splitModelOptions(model?.simCardType),
+        card?.dataset.simCardType || "",
+        "Wybierz SIM"
+    );
 }
 
 function getAssignModelVariantContainer() {
@@ -92,7 +99,7 @@ function getAssignModelVariantContainer() {
 }
 
 function destroyAssignVariantSelects() {
-    [assignRamSelect, assignMemorySelect, assignColorSelect].forEach(select => {
+    [assignRamSelect, assignMemorySelect, assignColorSelect, assignSimCardTypeSelect].forEach(select => {
         if (select) {
             select.destroy();
         }
@@ -100,6 +107,7 @@ function destroyAssignVariantSelects() {
     assignRamSelect = null;
     assignMemorySelect = null;
     assignColorSelect = null;
+    assignSimCardTypeSelect = null;
 }
 
 function clearAssignVariantFields(message = "") {
@@ -119,17 +127,21 @@ function renderAssignVariantFields(model, card) {
     destroyAssignVariantSelects();
     container.innerHTML = `
         <div class="row" style="margin-bottom: 0;">
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <select id="assignRamSelect"></select>
                 <label class="active">RAM</label>
             </div>
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <select id="assignMemorySelect"></select>
                 <label class="active">Pamięć</label>
             </div>
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <select id="assignColorSelect"></select>
                 <label class="active">Kolor</label>
+            </div>
+            <div class="input-field col s12 m3">
+                <select id="assignSimCardTypeSelect"></select>
+                <label class="active">SIM</label>
             </div>
         </div>
     `;
@@ -137,6 +149,7 @@ function renderAssignVariantFields(model, card) {
     assignRamSelect = initAssignVariantSelect('#assignRamSelect');
     assignMemorySelect = initAssignVariantSelect('#assignMemorySelect');
     assignColorSelect = initAssignVariantSelect('#assignColorSelect');
+    assignSimCardTypeSelect = initAssignVariantSelect('#assignSimCardTypeSelect');
     updateAssignVariantOptions(model, card);
 }
 
@@ -164,7 +177,7 @@ async function loadAssignModelVariants(phoneModelTechnicalId, card = currentAssi
         if (requestId !== assignVariantRequestId) return;
 
         clearAssignVariantFields();
-        M.toast({ html: "Nie udało się pobrać opcji RAM, pamięci i koloru", classes: "red" });
+        M.toast({ html: "Nie udało się pobrać opcji RAM, pamięci, koloru i SIM", classes: "red" });
     }
 }
 
@@ -175,7 +188,7 @@ function initPhoneModelSelect(selector) {
     return new TomSelect(el, {
         valueField: "technicalId",
         labelField: "displayName",
-        searchField: ["displayName", "brand", "model", "memory", "ram", "colors"],
+        searchField: ["displayName", "brand", "model", "memory", "ram", "colors", "simCardType"],
         create: false,
         shouldSort: false,
         hideSelected: true,
@@ -185,7 +198,7 @@ function initPhoneModelSelect(selector) {
             option: function(item, escape) {
                 return `<div>
                     <span><b>${escape(item.brand || "")}</b> ${escape(item.model || "")}</span><br>
-                    <small class="grey-text">${escape([item.memory, item.ram, item.colors].filter(Boolean).join(" / "))}</small>
+                    <small class="grey-text">${escape([item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / "))}</small>
                 </div>`;
             },
             item: function(item, escape) {
@@ -276,6 +289,7 @@ async function loadStock(page = 0) {
             ram: phone.ram,
             memory: phone.memory,
             color: phone.color,
+            simCardType: phone.simCardType,
             imei: phone.imei,
             sellingPrice: phone.sellingPrice,
             soldFor: phone.soldFor,
@@ -460,6 +474,7 @@ function renderPhones(phones) {
           data-name="${phone.name ?? ""}"
           data-model="${phone.model ?? ""}"
           data-color="${phone.color ?? ""}"
+          data-sim-card-type="${phone.simCardType ?? ""}"
           data-memory="${phone.memory ?? ""}"
           data-ram="${phone.ram ?? ""}"
           data-source="${phone.source ?? ""}"
@@ -515,13 +530,15 @@ function renderPhones(phones) {
                   <b>Model z bazy:</b> ${phone.phoneModelDisplayName || "Nie ustawiono"}
                 </p>
 
-                ${(phone.ram != null || phone.memory != null) ? `
+                ${(phone.ram != null || phone.memory != null || phone.simCardType != null) ? `
                 <p>
                   <i class="material-icons tiny">memory</i>
                   <b>Specyfikacja:</b>
                   ${phone.ram != null ? `${phone.ram}` : ``}
                   ${phone.ram != null && phone.memory != null ? ` / ` : ``}
                   ${phone.memory != null ? `${phone.memory}` : ``}
+                  ${(phone.ram != null || phone.memory != null) && phone.simCardType != null ? ` / ` : ``}
+                  ${phone.simCardType != null ? `${phone.simCardType}` : ``}
                 </p>
                 ` : ``}
                 
@@ -1512,8 +1529,8 @@ document.getElementById("saveAssignModelBtn")
             return;
         }
 
-        if (!assignRamSelect || !assignMemorySelect || !assignColorSelect) {
-            M.toast({ html: "Poczekaj na załadowanie opcji RAM, pamięci i koloru", classes: "red" });
+        if (!assignRamSelect || !assignMemorySelect || !assignColorSelect || !assignSimCardTypeSelect) {
+            M.toast({ html: "Poczekaj na załadowanie opcji RAM, pamięci, koloru i SIM", classes: "red" });
             return;
         }
 
@@ -1526,6 +1543,7 @@ document.getElementById("saveAssignModelBtn")
                     name: card?.dataset.name || null,
                     model: card?.dataset.model || null,
                     color: assignColorSelect?.getValue() || null,
+                    simCardType: assignSimCardTypeSelect?.getValue() || null,
                     imei: card?.dataset.imei || null,
                     source: card?.dataset.source || null,
                     sellingPrice: card?.dataset.sellingPrice || null,

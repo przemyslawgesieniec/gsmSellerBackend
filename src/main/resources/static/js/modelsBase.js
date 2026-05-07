@@ -1,4 +1,11 @@
 const modelsPageSize = 20;
+const SIM_CARD_TYPE_OPTIONS = [
+    "sim",
+    "e-sim",
+    "sim 1 + sim 2",
+    "sim + e-sim",
+    "e-sim 1 + e-sim 2"
+];
 let modelsCurrentPage = 1;
 let modelToDelete = null;
 
@@ -12,9 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("modelSearch").addEventListener("input", debounce(() => loadModels(1), 300));
     document.getElementById("addMemoryBtn").addEventListener("click", () => addNumericField("memoryFields", "Pamięć"));
     document.getElementById("addRamBtn").addEventListener("click", () => addNumericField("ramFields", "RAM"));
+    document.getElementById("addSimCardTypeBtn").addEventListener("click", () => addSimCardTypeField());
     document.getElementById("addColorBtn").addEventListener("click", () => addDynamicField("colorsFields", "Kolor"));
     document.getElementById("addFrontCameraBtn").addEventListener("click", () => addNumericField("frontCameraFields", "Aparat przód (Mpx)"));
     document.getElementById("addBackCameraBtn").addEventListener("click", () => addNumericField("backCameraFields", "Aparat tył (Mpx)"));
+    document.getElementById("displayPriority").addEventListener("input", updateDisplayPriorityValue);
 
     loadModels(1);
 });
@@ -71,6 +80,7 @@ function renderModels(models) {
                 ${model.dualSim ? '<br><span class="badge blue white-text">Dual SIM</span>' : ""}
             </td>
             <td>${escapeHtml(model.colors || "—")}</td>
+            <td>${escapeHtml(model.displayPriority ?? 0)}/10</td>
             <td>
                 <span class="grey-text">Przód:</span> ${escapeHtml(model.frontCameras || "—")}
                 <br>
@@ -107,12 +117,14 @@ function openEditModelModal(model) {
     document.getElementById("screen").value = model.screen || "";
     document.getElementById("screenResolution").value = model.screenResolution || "";
     document.getElementById("displayType").value = model.displayType || "";
-    document.getElementById("simCardType").value = model.simCardType || "";
     document.getElementById("portType").value = model.portType || "";
     document.getElementById("dualSim").checked = model.dualSim === true;
     document.getElementById("batteryCapacity").value = model.batteryCapacity || "";
+    document.getElementById("displayPriority").value = normalizePriority(model.displayPriority);
+    updateDisplayPriorityValue();
     setNumericFields("memoryFields", "Pamięć", splitCommaList(model.memory));
     setNumericFields("ramFields", "RAM", splitCommaList(model.ram));
+    setSimCardTypeFields(splitCommaList(model.simCardType));
     setDynamicFields("colorsFields", "Kolor", splitCommaList(model.colors));
     setNumericFields("frontCameraFields", "Aparat przód (Mpx)", splitCommaList(model.frontCameras));
     setNumericFields("backCameraFields", "Aparat tył (Mpx)", splitCommaList(model.backCameras));
@@ -136,13 +148,14 @@ async function saveModel() {
         displayType: document.getElementById("displayType").value.trim(),
         memory: collectDynamicFields("memoryFields"),
         ram: collectDynamicFields("ramFields"),
-        simCardType: document.getElementById("simCardType").value.trim(),
+        simCardType: collectSimCardTypeFields(),
         portType: document.getElementById("portType").value,
         dualSim: document.getElementById("dualSim").checked,
         colors: collectDynamicFields("colorsFields"),
         frontCameras: collectDynamicFields("frontCameraFields"),
         backCameras: collectDynamicFields("backCameraFields"),
-        batteryCapacity: document.getElementById("batteryCapacity").value.trim()
+        batteryCapacity: document.getElementById("batteryCapacity").value.trim(),
+        displayPriority: normalizePriority(document.getElementById("displayPriority").value)
     };
 
     try {
@@ -190,8 +203,11 @@ function resetModelForm() {
     document.getElementById("modelTechnicalId").value = "";
     document.getElementById("dualSim").checked = false;
     document.getElementById("portType").value = "";
+    document.getElementById("displayPriority").value = "0";
+    updateDisplayPriorityValue();
     setNumericFields("memoryFields", "Pamięć", [""]);
     setNumericFields("ramFields", "RAM", [""]);
+    setSimCardTypeFields([""]);
     setDynamicFields("colorsFields", "Kolor", [""]);
     setNumericFields("frontCameraFields", "Aparat przód (Mpx)", [""]);
     setNumericFields("backCameraFields", "Aparat tył (Mpx)", [""]);
@@ -251,9 +267,57 @@ function setNumericFields(containerId, label, values) {
     normalized.forEach(value => addNumericField(containerId, label, value));
 }
 
+function addSimCardTypeField(value = "") {
+    const container = document.getElementById("simCardTypeFields");
+    const row = document.createElement("div");
+    const optionValues = value && !SIM_CARD_TYPE_OPTIONS.includes(value)
+        ? [...SIM_CARD_TYPE_OPTIONS, value]
+        : SIM_CARD_TYPE_OPTIONS;
+
+    row.className = "dynamic-field-row";
+    row.innerHTML = `
+        <div class="input-field dynamic-field-input">
+            <select>
+                <option value="" ${value ? "" : "selected"}>Wybierz typ SIM</option>
+                ${optionValues.map(option => `
+                    <option value="${escapeHtml(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>
+                `).join("")}
+            </select>
+            <label class="active">Typ karty SIM</label>
+        </div>
+        <button type="button" class="btn-flat red-text dynamic-remove-btn" title="Usuń">
+            <i class="material-icons">close</i>
+        </button>
+    `;
+
+    row.querySelector(".dynamic-remove-btn").addEventListener("click", () => {
+        row.remove();
+        if (container.children.length === 0) {
+            addSimCardTypeField();
+        }
+    });
+
+    container.appendChild(row);
+    M.FormSelect.init(row.querySelectorAll("select"));
+}
+
+function setSimCardTypeFields(values) {
+    const container = document.getElementById("simCardTypeFields");
+    container.innerHTML = "";
+    const normalized = values.length > 0 ? values : [""];
+    normalized.forEach(value => addSimCardTypeField(value));
+}
+
 function collectDynamicFields(containerId) {
     return Array.from(document.querySelectorAll(`#${containerId} input`))
         .map(input => input.value.trim())
+        .filter(Boolean)
+        .join(",");
+}
+
+function collectSimCardTypeFields() {
+    return Array.from(document.querySelectorAll("#simCardTypeFields select"))
+        .map(select => select.value.trim())
         .filter(Boolean)
         .join(",");
 }
@@ -267,8 +331,10 @@ function splitCommaList(value) {
 
 function validateNumericModelFields() {
     const battery = document.getElementById("batteryCapacity");
+    const displayPriority = document.getElementById("displayPriority");
     const numericInputs = [
         battery,
+        displayPriority,
         ...document.querySelectorAll("#memoryFields input, #ramFields input, #frontCameraFields input, #backCameraFields input")
     ];
 
@@ -283,7 +349,25 @@ function validateNumericModelFields() {
         return false;
     }
 
+    if (normalizePriority(displayPriority.value) !== Number(displayPriority.value)) {
+        displayPriority.focus();
+        M.toast({ html: "Priorytet musi być liczbą od 0 do 10", classes: "red" });
+        return false;
+    }
+
     return true;
+}
+
+function normalizePriority(value) {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) return 0;
+    return Math.max(0, Math.min(10, parsed));
+}
+
+function updateDisplayPriorityValue() {
+    document.getElementById("displayPriorityValue").textContent = normalizePriority(
+        document.getElementById("displayPriority").value
+    );
 }
 
 function showModelsLoader(show) {

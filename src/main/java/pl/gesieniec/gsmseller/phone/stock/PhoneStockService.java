@@ -34,6 +34,7 @@ import pl.gesieniec.gsmseller.phone.stock.handler.PhoneSoldHandler;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneModelAssignmentRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
 import pl.gesieniec.gsmseller.repair.Repair;
@@ -103,6 +104,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             dto.getRam(),
             dto.getMemory(),
             dto.getColor(),
+            dto.getSimCardType(),
             dto.getImei(),
             dto.getName(),
             dto.getSource(),
@@ -170,18 +172,34 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     }
 
     @Transactional
-    public PhoneStockDto assignPhoneModel(UUID technicalId, UUID phoneModelTechnicalId) {
-        if (phoneModelTechnicalId == null) {
+    public PhoneStockDto assignPhoneModel(UUID technicalId, PhoneModelAssignmentRequest request) {
+        if (request.getPhoneModelTechnicalId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Model z bazy jest wymagany");
         }
 
         PhoneStock phone = repository.findByTechnicalId(technicalId)
             .orElseThrow(() -> new EntityNotFoundException("Phone not found: " + technicalId));
 
-        PhoneModels phoneModel = phoneModelsRepository.findByTechnicalId(phoneModelTechnicalId)
-            .orElseThrow(() -> new EntityNotFoundException("Phone model not found: " + phoneModelTechnicalId));
+        PhoneModels phoneModel = phoneModelsRepository.findByTechnicalId(request.getPhoneModelTechnicalId())
+            .orElseThrow(() -> new EntityNotFoundException("Phone model not found: " + request.getPhoneModelTechnicalId()));
 
         phone.assignPhoneModel(phoneModel);
+        phone.update(
+            null,
+            request.getRam(),
+            request.getMemory(),
+            request.getColor(),
+            request.getSimCardType(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
         return phoneStockMapper.toDto(phone);
     }
 

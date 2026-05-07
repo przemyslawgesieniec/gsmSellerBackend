@@ -3,11 +3,27 @@ package pl.gesieniec.gsmseller.offer;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
+import pl.gesieniec.gsmseller.phone.model.PhoneModels;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 
 import java.math.BigDecimal;
 
 public class OfferSpecifications {
+
+    public static Specification<Offer> orderByModelDisplayPriority() {
+        return (root, query, cb) -> {
+            if (!isCountQuery(query.getResultType())) {
+                Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.LEFT);
+                Join<PhoneStock, PhoneModels> phoneModelJoin = phoneStockJoin.join("phoneModel", JoinType.LEFT);
+
+                query.orderBy(
+                    cb.desc(cb.coalesce(phoneModelJoin.get("displayPriority"), 0)),
+                    cb.desc(root.get("id"))
+                );
+            }
+            return null;
+        };
+    }
 
     public static Specification<Offer> hasBrand(String brand) {
         return (root, query, cb) -> {
@@ -107,5 +123,9 @@ public class OfferSpecifications {
                 cb.like(cb.lower(phoneStockJoin.get("imei")), pattern)
             );
         };
+    }
+
+    private static boolean isCountQuery(Class<?> resultType) {
+        return resultType == Long.class || resultType == long.class;
     }
 }

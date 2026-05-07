@@ -5,7 +5,7 @@ function isModelIdentityMode() {
 }
 
 function formatPhoneModelOption(item) {
-    const spec = [item.memory, item.ram, item.colors].filter(Boolean).join(" / ");
+    const spec = [item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / ");
     return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
 }
 
@@ -50,7 +50,7 @@ async function getPhoneModelData(select) {
     if (!value) return null;
 
     const cached = selectEl.tomselect.options[value];
-    if (cached && (cached.memory || cached.ram || cached.colors)) {
+    if (cached && (cached.memory || cached.ram || cached.colors || cached.simCardType)) {
         return cached;
     }
 
@@ -266,6 +266,7 @@ async function updateVariantSelectsForBlock(block) {
     const memorySelect = block.querySelector(".memory-select");
     const ramSelect = block.querySelector(".ram-select");
     const colorSelect = block.querySelector(".color-select");
+    const simCardTypeSelect = block.querySelector(".sim-card-type-select");
 
     setVariantOptions(
         memorySelect,
@@ -282,12 +283,18 @@ async function updateVariantSelectsForBlock(block) {
         splitModelOptions(phoneModel.colors),
         colorSelect?.tomselect?.getValue() || colorSelect?.dataset.currentValue || ""
     );
+    setVariantOptions(
+        simCardTypeSelect,
+        splitModelOptions(phoneModel.simCardType),
+        simCardTypeSelect?.tomselect?.getValue() || simCardTypeSelect?.dataset.currentValue || ""
+    );
 }
 
 function initVariantSelects(container = document) {
     container.querySelectorAll(".memory-select").forEach(select => initVariantSelect(select, "Wybierz pamięć"));
     container.querySelectorAll(".ram-select").forEach(select => initVariantSelect(select, "Wybierz RAM"));
     container.querySelectorAll(".color-select").forEach(select => initVariantSelect(select, "Wybierz kolor"));
+    container.querySelectorAll(".sim-card-type-select").forEach(select => initVariantSelect(select, "Wybierz SIM"));
     container.querySelectorAll(".scan-item").forEach(block => updateVariantSelectsForBlock(block));
 }
 
@@ -397,25 +404,32 @@ function addManualPhone() {
         </div>
 
         <div class="row">
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <select data-field="ram"
                         class="ram-select"
                         data-placeholder="Wybierz RAM"></select>
                 <label class="active">RAM</label>
             </div>
 
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <select data-field="memory"
                         class="memory-select"
                         data-placeholder="Wybierz pamięć"></select>
                 <label class="active">Pamięć</label>
             </div>
 
-            <div class="input-field col s12 m4">
+            <div class="input-field col s12 m3">
                 <select data-field="color"
                         class="color-select"
                         data-placeholder="Wybierz kolor"></select>
                 <label class="active">Kolor</label>
+            </div>
+
+            <div class="input-field col s12 m3">
+                <select data-field="simCardType"
+                        class="sim-card-type-select"
+                        data-placeholder="Wybierz SIM"></select>
+                <label class="active">SIM</label>
             </div>
         </div>
 
@@ -882,7 +896,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <!-- RAM, Memory, Color -->
             <div class="row">
-                <div class="input-field col s12 m4">
+                <div class="input-field col s12 m3">
                     <select data-field="ram"
                             class="ram-select"
                             data-current-value="${p.ram || ''}"
@@ -890,7 +904,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <label class="active">RAM</label>
                 </div>
 
-                <div class="input-field col s12 m4">
+                <div class="input-field col s12 m3">
                     <select data-field="memory"
                             class="memory-select"
                             data-current-value="${p.memory || ''}"
@@ -898,12 +912,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     <label class="active">Pamięć</label>
                 </div>
 
-                <div class="input-field col s12 m4">
+                <div class="input-field col s12 m3">
                     <select data-field="color"
                             class="color-select"
                             data-current-value="${p.color || ''}"
                             data-placeholder="Wybierz kolor"></select>
                     <label class="active">Kolor</label>
+                </div>
+
+                <div class="input-field col s12 m3">
+                    <select data-field="simCardType"
+                            class="sim-card-type-select"
+                            data-current-value="${p.simCardType || ''}"
+                            data-placeholder="Wybierz SIM"></select>
+                    <label class="active">SIM</label>
                 </div>
             </div>
 

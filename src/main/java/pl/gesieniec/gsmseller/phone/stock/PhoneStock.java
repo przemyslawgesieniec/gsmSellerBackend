@@ -27,6 +27,7 @@ public class PhoneStock {
     private String ram;
     private String memory;
     private String color;
+    private String simCardType;
     private String imei;
     private String name;
     private String source;
@@ -66,7 +67,7 @@ public class PhoneStock {
     @Enumerated(EnumType.STRING)
     private PurchaseType purchaseType;
 
-    public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String imei,
+    public PhoneStock(UUID technicalId, String model, String ram, String memory, String color, String simCardType, String imei,
                       String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice,
                       LocationEntity location, Status status, PurchaseType purchaseType, String comment,
         String description,
@@ -77,6 +78,7 @@ public class PhoneStock {
         this.ram = ram;
         this.memory = memory;
         this.color = color;
+        this.simCardType = simCardType;
         this.imei = imei;
         this.name = name;
         this.source = source;
@@ -92,11 +94,11 @@ public class PhoneStock {
         this.createDateTime = LocalDateTime.now();
     }
 
-    public static PhoneStock create(String model, String ram, String memory, String color, String imei,
+    public static PhoneStock create(String model, String ram, String memory, String color, String simCardType, String imei,
                                     String name, String source, BigDecimal purchasePrice, BigDecimal sellingPrice, PurchaseType purchaseType,
                                     String comment, String description, String batteryCondition, boolean isUsed ) {
 
-        return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, imei, name,
+        return new PhoneStock(UUID.randomUUID(), model, ram, memory, color, simCardType, imei, name,
             source, purchasePrice, sellingPrice, null, Status.WPROWADZONY, purchaseType, comment, description, batteryCondition, isUsed);
     }
 
@@ -105,6 +107,7 @@ public class PhoneStock {
         String ram,
         String memory,
         String color,
+        String simCardType,
         String imei,
         String name,
         String source,
@@ -126,6 +129,9 @@ public class PhoneStock {
         }
         if (color != null) {
             this.color = color;
+        }
+        if (simCardType != null) {
+            this.simCardType = simCardType;
         }
         if (imei != null) {
             this.imei = imei;

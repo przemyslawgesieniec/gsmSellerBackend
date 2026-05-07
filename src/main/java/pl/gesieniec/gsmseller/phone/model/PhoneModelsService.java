@@ -65,7 +65,8 @@ public class PhoneModelsService {
             dto.getFrontCameras(),
             dto.getBackCameras(),
             dto.getBatteryCapacity(),
-            dto.getBrand()
+            dto.getBrand(),
+            dto.getDisplayPriority()
         );
 
         return mapper.toDto(repository.save(model));
@@ -90,7 +91,8 @@ public class PhoneModelsService {
             dto.getFrontCameras(),
             dto.getBackCameras(),
             dto.getBatteryCapacity(),
-            dto.getBrand()
+            dto.getBrand(),
+            dto.getDisplayPriority()
         );
 
         offerService.refreshOffersForPhoneModel(model);

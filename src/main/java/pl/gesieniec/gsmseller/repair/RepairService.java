@@ -297,6 +297,7 @@ public class RepairService {
             null, // ram
             null, // memory
             null, // color
+            null, // simCardType
             null, // imei
             null, // name
             null, // source

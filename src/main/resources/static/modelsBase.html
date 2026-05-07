@@ -53,6 +53,7 @@
                             <th>Pamięć</th>
                             <th>SIM</th>
                             <th>Kolory</th>
+                            <th>Priorytet</th>
                             <th>Aparaty</th>
                             <th>Bateria</th>
                             <th class="right-align">Akcje</th>
@@ -108,10 +109,6 @@
                     <label for="displayType">Rodzaj wyświetlacza</label>
                 </div>
                 <div class="input-field col s12 m4">
-                    <input id="simCardType" type="text">
-                    <label for="simCardType">Typ karty SIM</label>
-                </div>
-                <div class="input-field col s12 m4">
                     <select id="portType">
                         <option value="" selected>Wybierz</option>
                         <option value="USB-C">USB-C</option>
@@ -132,6 +129,12 @@
                 <div class="input-field col s12 m4">
                     <input id="batteryCapacity" type="number" min="0" step="1">
                     <label for="batteryCapacity">Pojemność baterii</label>
+                </div>
+                <div class="col s12 m4">
+                    <label for="displayPriority" class="active">Priorytet wyświetlania oferty: <span id="displayPriorityValue">0</span></label>
+                    <p class="range-field" style="margin-top: 8px;">
+                        <input id="displayPriority" type="range" min="0" max="10" step="1" value="0">
+                    </p>
                 </div>
 
                 <div class="col s12 m6">
@@ -157,6 +160,19 @@
                             </button>
                         </div>
                         <div id="ramFields" class="dynamic-fields"></div>
+                    </div>
+                </div>
+
+                <div class="col s12">
+                    <div class="dynamic-field-group">
+                        <div class="dynamic-field-header">
+                            <h6>Typy kart SIM</h6>
+                            <button type="button" class="btn-small blue darken-2" id="addSimCardTypeBtn">
+                                <i class="material-icons left">add</i>
+                                Dodaj SIM
+                            </button>
+                        </div>
+                        <div id="simCardTypeFields" class="dynamic-fields"></div>
                     </div>
                 </div>
 

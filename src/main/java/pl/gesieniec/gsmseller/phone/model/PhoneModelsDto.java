@@ -26,4 +26,5 @@ public class PhoneModelsDto {
     private String batteryCapacity;
     private String brand;
     private String displayName;
+    private Integer displayPriority;
 }

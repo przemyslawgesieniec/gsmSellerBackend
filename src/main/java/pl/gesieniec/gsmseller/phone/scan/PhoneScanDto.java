@@ -17,6 +17,8 @@ public class PhoneScanDto {
     private String ram;
     private String memory;
     private String color;
+    @Setter
+    private String simCardType;
     private String imei;
     @Setter
     private String source;

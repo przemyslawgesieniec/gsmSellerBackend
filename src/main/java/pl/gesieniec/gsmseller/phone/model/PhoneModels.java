@@ -44,10 +44,12 @@ public class PhoneModels {
     private String backCameras;
     private String batteryCapacity;
     private String brand;
+    @Column(columnDefinition = "integer default 0")
+    private Integer displayPriority = 0;
 
     public PhoneModels(String model, String screen, String screenResolution, String displayType, String memory, String ram,
                        String simCardType, String portType, Boolean dualSim, String colors, String frontCameras, String backCameras,
-                       String batteryCapacity, String brand) {
+                       String batteryCapacity, String brand, Integer displayPriority) {
         this.technicalId = UUID.randomUUID();
         this.model = model;
         this.screen = screen;
@@ -63,11 +65,12 @@ public class PhoneModels {
         this.backCameras = backCameras;
         this.batteryCapacity = batteryCapacity;
         this.brand = brand;
+        this.displayPriority = normalizeDisplayPriority(displayPriority);
     }
 
     public void update(String model, String screen, String screenResolution, String displayType, String memory, String ram,
                        String simCardType, String portType, Boolean dualSim, String colors, String frontCameras, String backCameras,
-                       String batteryCapacity, String brand) {
+                       String batteryCapacity, String brand, Integer displayPriority) {
         this.model = model;
         this.screen = screen;
         this.screenResolution = screenResolution;
@@ -82,6 +85,7 @@ public class PhoneModels {
         this.backCameras = backCameras;
         this.batteryCapacity = batteryCapacity;
         this.brand = brand;
+        this.displayPriority = normalizeDisplayPriority(displayPriority);
     }
 
     public String getDisplayName() {
@@ -97,6 +101,17 @@ public class PhoneModels {
 
     public List<Integer> getBackCamerasMpx() {
         return mapCamerasToList(backCameras);
+    }
+
+    public Integer getDisplayPriority() {
+        return displayPriority == null ? 0 : displayPriority;
+    }
+
+    private Integer normalizeDisplayPriority(Integer displayPriority) {
+        if (displayPriority == null) {
+            return 0;
+        }
+        return Math.max(0, Math.min(10, displayPriority));
     }
 
     private List<Integer> mapCamerasToList(String cameras) {

@@ -141,7 +141,7 @@ public class OfferService {
                 .build(),
             valueOrFallback(offer.getPhoneStock().getMemory(), phoneModel.getMemory()),
             valueOrFallback(offer.getPhoneStock().getRam(), phoneModel.getRam()),
-            phoneModel.getSimCardType(),
+            valueOrFallback(offer.getPhoneStock().getSimCardType(), phoneModel.getSimCardType()),
             phoneModel.getFrontCamerasMpx(),
             phoneModel.getBackCamerasMpx(),
             phoneModel.getBatteryCapacity(),
@@ -239,7 +239,6 @@ public class OfferService {
         log.info("Fetching offers with spec and pageable: {}", pageable);
         // Filtrowanie ofert, które mają telefon przypisany
         Specification<Offer> nonNullPhoneSpec = (root, query, cb) -> {
-            query.distinct(true);
             return cb.isNotNull(root.get("phoneStock"));
         };
         Specification<Offer> finalSpec = Specification.allOf(spec, nonNullPhoneSpec);
@@ -304,7 +303,7 @@ public class OfferService {
                 .build(),
             valueOrFallback(phoneStock.getMemory(), phoneModel.getMemory()),
             valueOrFallback(phoneStock.getRam(), phoneModel.getRam()),
-            phoneModel.getSimCardType(),
+            valueOrFallback(phoneStock.getSimCardType(), phoneModel.getSimCardType()),
             phoneModel.getFrontCamerasMpx(),
             phoneModel.getBackCamerasMpx(),
             phoneModel.getBatteryCapacity(),
