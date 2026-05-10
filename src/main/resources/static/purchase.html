@@ -3,87 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skup Telefonów - Panel Pracownika</title>
+    <title>Zgłoszenia skupu</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="navbar"></div>
-    <script src="js/loadNavbar.js"></script>
+<div id="navbar"></div>
+<script src="js/auth.js"></script>
+<script src="js/loadNavbar.js"></script>
 
-    <div class="container">
-        <h3 class="center-align">Zgłoszenia skupu</h3>
-        
-        <div id="purchase-list-container">
-            <table class="highlight responsive-table">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Model</th>
-                        <th>Numer telefonu</th>
-                        <th>Opis</th>
-                        <th>Status</th>
-                        <th>Akcje</th>
-                    </tr>
-                </thead>
-                <tbody id="purchase-list">
-                    <!-- Dynamicznie wypełniane -->
-                </tbody>
-            </table>
+<div class="container wide-layout">
+    <div class="row">
+        <div class="col s12">
+            <div class="page-heading">
+                <div>
+                    <h4 class="blue-text text-darken-2">Zgłoszenia skupu</h4>
+                    <p class="grey-text">Obsługa zgłoszeń od klientów, ustaleń cenowych i historii kontaktu.</p>
+                </div>
+                <button class="btn blue darken-2 waves-effect" id="refreshPurchasesBtn">
+                    <i class="material-icons left">refresh</i>
+                    Odśwież
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Szczegółów i Zamykania -->
-    <div id="modal-details" class="modal">
-        <div class="modal-content">
-            <h4>Szczegóły zgłoszenia</h4>
-            <div class="row">
-                <div class="col s12 m6">
-                    <p><strong>Model:</strong> <span id="detail-model"></span></p>
-                    <p><strong>Telefon:</strong> <span id="detail-phone"></span></p>
-                    <p><strong>Data:</strong> <span id="detail-date"></span></p>
-                    <p><strong>Opis:</strong> <span id="detail-description"></span></p>
-                </div>
-                <div class="col s12 m6" id="detail-photos">
-                    <!-- Zdjęcia tutaj -->
+    <div class="row">
+        <div class="col s12 m4">
+            <div class="input-field">
+                <input id="purchaseSearch" type="text">
+                <label for="purchaseSearch">Szukaj po modelu, telefonie lub opisie</label>
+            </div>
+        </div>
+        <div class="col s12 m4">
+            <div class="input-field">
+                <select id="purchaseStatusFilter">
+                    <option value="all" selected>Wszystkie</option>
+                    <option value="active">Aktywne</option>
+                    <option value="closed">Zamknięte</option>
+                </select>
+                <label class="active" for="purchaseStatusFilter">Status zgłoszeń</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <table class="highlight responsive-table models-table">
+                        <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Klient</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Kwota</th>
+                            <th>Materiały</th>
+                            <th>Ostatni komentarz</th>
+                            <th class="right-align">Akcje</th>
+                        </tr>
+                        </thead>
+                        <tbody id="purchaseTableBody"></tbody>
+                    </table>
+                    <div id="purchaseEmptyState" class="center-align grey-text hide" style="padding: 32px;">
+                        Brak zgłoszeń skupu dla wybranego filtra.
+                    </div>
+                    <div id="purchaseLoader" class="center-align hide" style="padding: 24px;">
+                        <div class="preloader-wrapper small active">
+                            <div class="spinner-layer spinner-blue-only">
+                                <div class="circle-clipper left"><div class="circle"></div></div>
+                                <div class="gap-patch"><div class="circle"></div></div>
+                                <div class="circle-clipper right"><div class="circle"></div></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div id="closure-section" style="display: none;">
-                <hr>
-                <h5>Zamknij ofertę</h5>
-                <form id="close-purchase-form">
-                    <input type="hidden" id="close-purchase-id">
-                    <div class="input-field col s12">
-                        <textarea id="closure-reason" class="materialize-textarea" required></textarea>
-                        <label for="closure-reason">Powód zamknięcia</label>
+            <ul id="purchasePagination" class="pagination center-align"></ul>
+        </div>
+    </div>
+</div>
+
+<div id="purchaseDetailsModal" class="modal modal-fixed-footer">
+    <div class="modal-content" style="position: relative;">
+        <h5>Szczegóły zgłoszenia</h5>
+        <a class="modal-close right"><i class="material-icons">close</i></a>
+
+        <input type="hidden" id="detailPurchaseId">
+
+        <div class="row purchase-details-layout">
+            <div class="col s12 m7">
+                <div class="purchase-summary-panel">
+                    <div>
+                        <span class="grey-text">Model</span>
+                        <h5 id="detailModel"></h5>
+                    </div>
+                    <span id="detailStatus"></span>
+                </div>
+
+                <div class="row purchase-detail-grid">
+                    <div class="col s12 m6">
+                        <span class="grey-text">Telefon</span>
+                        <p id="detailPhone"></p>
+                    </div>
+                    <div class="col s12 m6">
+                        <span class="grey-text">Data zgłoszenia</span>
+                        <p id="detailDate"></p>
+                    </div>
+                    <div class="col s12 m6">
+                        <span class="grey-text">Ustalona kwota</span>
+                        <p id="detailPrice"></p>
+                    </div>
+                    <div class="col s12 m6">
+                        <span class="grey-text">Kontakt z klientem</span>
+                        <p id="detailContacted"></p>
                     </div>
                     <div class="col s12">
-                        <label>
-                            <input type="checkbox" id="contacted-customer" />
-                            <span>Zadzwoniono do klienta</span>
-                        </label>
+                        <span class="grey-text">Opis klienta</span>
+                        <p id="detailDescription"></p>
                     </div>
-                    <div class="col s12" style="margin-top: 20px;">
-                        <button type="submit" class="btn waves-effect waves-light red">Zamknij ofertę</button>
-                    </div>
-                </form>
+                </div>
             </div>
 
-            <div id="closed-info-section" style="display: none;">
-                <hr>
-                <h5>Informacje o zamknięciu</h5>
-                <p><strong>Powód:</strong> <span id="info-closure-reason"></span></p>
-                <p><strong>Kontakt:</strong> <span id="info-contacted"></span></p>
+            <div class="col s12 m5">
+                <div class="dynamic-field-group">
+                    <div class="dynamic-field-header">
+                        <h6>Zdjęcia</h6>
+                    </div>
+                    <div id="detailPhotos" class="purchase-photos-grid"></div>
+                </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <a href="#!" class="modal-close waves-effect waves-green btn-flat">Zamknij</a>
+
+            <div class="col s12">
+                <div id="purchaseActionSection" class="dynamic-field-group purchase-action-section">
+                    <div class="dynamic-field-header">
+                        <h6>Obsługa skupu</h6>
+                    </div>
+                    <div class="purchase-actions-grid">
+                        <div class="purchase-success-actions">
+                            <div class="input-field purchase-price-field">
+                                <input id="agreedPriceInput" type="number" min="0.01" step="0.01">
+                                <label for="agreedPriceInput">Ustalona kwota</label>
+                            </div>
+                            <div class="purchase-action-buttons">
+                                <button class="btn-small blue darken-2" id="saveAgreedPriceBtn">
+                                    <i class="material-icons left">price_check</i>
+                                    Cena ustalona
+                                </button>
+                                <button class="btn-small green darken-2" id="markPurchasedBtn">
+                                    <i class="material-icons left">check_circle</i>
+                                    Skup udany
+                                </button>
+                            </div>
+                        </div>
+                        <div class="purchase-failure-actions">
+                            <div class="input-field purchase-failure-reason">
+                                <textarea id="closureReasonInput" class="materialize-textarea"></textarea>
+                                <label for="closureReasonInput">Powód zamknięcia bez skupu</label>
+                            </div>
+                            <div class="purchase-close-row">
+                                <label>
+                                    <input type="checkbox" id="contactedCustomerInput">
+                                    <span>Klient został poinformowany</span>
+                                </label>
+                                <button class="btn-small red darken-2" id="closeFailedBtn">
+                                    <i class="material-icons left">cancel</i>
+                                    Zamknij niepowodzeniem
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col s12">
+                <div class="dynamic-field-group">
+                    <div class="dynamic-field-header">
+                        <h6>Komentarze</h6>
+                    </div>
+                    <div id="purchaseComments" class="purchase-comments"></div>
+                    <div class="purchase-comment-form">
+                        <div class="input-field">
+                            <textarea id="newCommentInput" class="materialize-textarea"></textarea>
+                            <label for="newCommentInput">Dodaj komentarz</label>
+                        </div>
+                        <button class="btn-small blue darken-2" id="addCommentBtn">
+                            <i class="material-icons left">add_comment</i>
+                            Dodaj komentarz
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    <div class="modal-footer">
+        <button class="btn-flat modal-close">Zamknij</button>
+    </div>
+</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="js/purchase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/purchase.js"></script>
 </body>
 </html>

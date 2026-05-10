@@ -21,11 +21,20 @@ public class PurchasePhoto {
     private UUID technicalId;
 
     @Lob
-    @Column(nullable = false)
+    @Column
     private byte[] data;
 
     @Column(nullable = false)
     private String contentType;
+
+    @Column
+    private String imageId;
+
+    public PurchasePhoto(String contentType, String imageId) {
+        this.technicalId = UUID.randomUUID();
+        this.contentType = contentType;
+        this.imageId = imageId;
+    }
 
     public PurchasePhoto(byte[] data, String contentType) {
         this.technicalId = UUID.randomUUID();
