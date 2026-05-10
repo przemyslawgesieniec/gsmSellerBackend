@@ -254,6 +254,9 @@ public class OfferService {
 
     private PhoneOffer mapToDto(Offer offer) {
         PhoneStock phoneStock = offer.getPhoneStock();
+        String phoneModelName = phoneStock.getPhoneModel() != null
+            ? phoneStock.getPhoneModel().getModel()
+            : phoneStock.getModel();
         List<Photo> photos = offer.getPhotos().stream()
             .map(photo -> Photo.builder()
                 .uuid(photo.getTechnicalId())
@@ -267,6 +270,7 @@ public class OfferService {
             .technicalId(phoneStock.getTechnicalId())
             .price(phoneStock.getSellingPrice())
             .brand(offer.getBrand())
+            .phoneModelName(phoneModelName)
             .model(phoneStock.getModel())
             .imei(phoneStock.getImei())
             .status(phoneStock.isUsed() ? "Używany" : "Nowy")
@@ -324,6 +328,7 @@ public class OfferService {
             .technicalId(offer.technicalId())
             .price(offer.price())
             .brand(offer.brand())
+            .phoneModelName(offer.phoneModelName())
             .model(offer.model())
             .status(offer.status())
             .color(offer.color())

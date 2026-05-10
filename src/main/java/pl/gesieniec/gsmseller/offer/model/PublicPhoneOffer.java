@@ -13,6 +13,7 @@ public record PublicPhoneOffer(
     UUID technicalId,
     BigDecimal price,
     String brand,
+    String phoneModelName,
     String model,
     String status,
     String color,

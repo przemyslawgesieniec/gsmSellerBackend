@@ -14,13 +14,13 @@ import java.util.UUID;
 
 @Repository
 public interface OfferRepository extends JpaRepository<Offer, Long>, JpaSpecificationExecutor<Offer> {
-    @EntityGraph(attributePaths = {"phoneStock", "phoneStock.location"})
+    @EntityGraph(attributePaths = {"phoneStock", "phoneStock.location", "phoneStock.phoneModel"})
     Optional<Offer> findByPhoneStockTechnicalId(UUID technicalId);
 
     @EntityGraph(attributePaths = {"phoneStock", "phoneStock.phoneModel"})
     List<Offer> findAllByPhoneStockPhoneModelTechnicalId(UUID technicalId);
 
     @Override
-    @EntityGraph(attributePaths = {"phoneStock", "phoneStock.location"})
+    @EntityGraph(attributePaths = {"phoneStock", "phoneStock.location", "phoneStock.phoneModel"})
     Page<Offer> findAll(Specification<Offer> spec, Pageable pageable);
 }

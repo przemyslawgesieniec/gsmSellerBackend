@@ -361,15 +361,16 @@ function renderOffers(offers) {
         const mainPhoto = offer.photos && offer.photos.length > 0
             ? offer.photos[0].thumbnailUrl
             : "https://via.placeholder.com/300x220?text=Brak+zdjecia";
+        const offerTitle = offer.phoneModelName || offer.model || offer.brand || "Oferta";
 
         const item = document.createElement("div");
         item.className = "offer-list-item";
         item.dataset.offerId = offer.technicalId;
         item.innerHTML = `
             <div class="offer-summary" role="button" tabindex="0" aria-expanded="false">
-                <img class="offer-thumbnail" data-src="${escapeHtml(mainPhoto)}" src="https://via.placeholder.com/96x72?text=..." alt="${escapeHtml(offer.brand || "Oferta")} ${escapeHtml(offer.model || "")}">
+                <img class="offer-thumbnail" data-src="${escapeHtml(mainPhoto)}" src="https://via.placeholder.com/96x72?text=..." alt="${escapeHtml(offerTitle)}">
                 <div class="offer-main">
-                    <h6>${escapeHtml(offer.brand || "")} ${escapeHtml(offer.model || "")}</h6>
+                    <h6>${escapeHtml(offerTitle)}</h6>
                     <div class="offer-meta">
                         <span><i class="material-icons tiny">fingerprint</i> IMEI: ${escapeHtml(offer.imei || "brak")}</span>
                         <span><i class="material-icons tiny">place</i> ${escapeHtml(offer.location || "Dostępny online")}</span>
@@ -474,11 +475,12 @@ async function editOffer(technicalId, event) {
 
         document.getElementById("phoneSelectWrapper").classList.add("hide");
         document.getElementById("selectedPhoneInfo").classList.remove("hide");
-        document.getElementById("phoneDetails").textContent = `${offer.brand || ""} ${offer.model || ""}`;
+        const offerTitle = offer.phoneModelName || offer.model || offer.brand || "";
+        document.getElementById("phoneDetails").textContent = offerTitle;
         document.getElementById("modelSpecsPreview").classList.remove("hide");
         document.getElementById("modelSpecsPreview").innerHTML = `
             <div class="card-panel grey lighten-5 model-specs-panel">
-                <div><b>Oferta:</b> ${escapeHtml(offer.brand || "")} ${escapeHtml(offer.model || "")}</div>
+                <div><b>Oferta:</b> ${escapeHtml(offerTitle)}</div>
                 <div><b>IMEI:</b> ${escapeHtml(offer.imei || "brak")}</div>
                 <div><b>Pamięć:</b> ${escapeHtml(offer.memory || "-")} / ${escapeHtml(offer.ram || "-")}</div>
                 <div><b>SIM:</b> ${escapeHtml(offer.simCardType || "-")}</div>
