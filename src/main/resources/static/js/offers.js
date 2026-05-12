@@ -3,18 +3,20 @@ let phoneSelect;
 let offerLocationSelect;
 let currentPage = 1;
 let offerFiltersDebounce;
+let isRestoringOfferListState = false;
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
     initOfferFormToggle();
     initPhoneSelect();
     initOfferFilters();
-    loadOfferLocations();
-    loadOffers();
 
     document.getElementById("photoFiles").addEventListener("change", handleFileSelect);
     document.getElementById("offerForm").addEventListener("submit", saveOffer);
     document.getElementById("clearPhone").addEventListener("click", clearSelectedPhone);
     document.getElementById("cancelBtn").addEventListener("click", resetForm);
+
+    await loadOfferLocations();
+    loadOffers(restoreOfferListStateFromUrl());
 });
 
 function initOfferFormToggle() {
@@ -85,6 +87,8 @@ function initOfferFilters() {
     [imeiInput, nameInput].forEach(input => {
         input?.addEventListener("input", () => {
             clearTimeout(offerFiltersDebounce);
+            currentPage = 1;
+            syncOfferListStateToUrl(1);
             offerFiltersDebounce = setTimeout(() => loadOffers(1), 250);
         });
     });
@@ -92,16 +96,72 @@ function initOfferFilters() {
     offerLocationSelect = new TomSelect("#offerLocationFilter", {
         create: false,
         allowEmptyOption: true,
-        onChange: () => loadOffers(1)
+        onChange: () => {
+            if (!isRestoringOfferListState) {
+                loadOffers(1);
+            }
+        }
     });
 
     clearButton?.addEventListener("click", () => {
         if (imeiInput) imeiInput.value = "";
         if (nameInput) nameInput.value = "";
         M.updateTextFields();
-        offerLocationSelect?.clear();
+        offerLocationSelect?.clear(true);
         loadOffers(1);
     });
+}
+
+function restoreOfferListStateFromUrl() {
+    isRestoringOfferListState = true;
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const imeiInput = document.getElementById("offerImeiFilter");
+        const nameInput = document.getElementById("offerNameFilter");
+        const location = params.get("location") || "";
+
+        if (imeiInput) imeiInput.value = params.get("imei") || "";
+        if (nameInput) nameInput.value = params.get("name") || "";
+
+        if (offerLocationSelect) {
+            if (location && !offerLocationSelect.options[location]) {
+                offerLocationSelect.addOption({ value: location, text: location });
+            }
+            offerLocationSelect.setValue(location, true);
+        }
+
+        M.updateTextFields();
+        return normalizeOfferPage(params.get("page"));
+    } finally {
+        isRestoringOfferListState = false;
+    }
+}
+
+function normalizeOfferPage(page) {
+    const parsed = Number.parseInt(page, 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function syncOfferListStateToUrl(page = currentPage) {
+    const url = new URL(window.location.href);
+    const imei = document.getElementById("offerImeiFilter")?.value.trim();
+    const name = document.getElementById("offerNameFilter")?.value.trim();
+    const location = offerLocationSelect?.getValue();
+
+    url.searchParams.set("page", String(normalizeOfferPage(page)));
+    setOrDeleteSearchParam(url.searchParams, "imei", imei);
+    setOrDeleteSearchParam(url.searchParams, "name", name);
+    setOrDeleteSearchParam(url.searchParams, "location", location);
+
+    window.history.replaceState({}, "", url);
+}
+
+function setOrDeleteSearchParam(params, key, value) {
+    if (value) {
+        params.set(key, value);
+    } else {
+        params.delete(key);
+    }
 }
 
 async function loadOfferLocations() {
@@ -302,7 +362,9 @@ function resetForm() {
 }
 
 async function loadOffers(page = 1) {
+    page = normalizeOfferPage(page);
     currentPage = page;
+    syncOfferListStateToUrl(page);
     const loader = document.getElementById("offersLoader");
     if (loader) loader.classList.remove("hide");
 
