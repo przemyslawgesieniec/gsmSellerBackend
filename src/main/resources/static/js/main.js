@@ -9,8 +9,23 @@ let assignMemorySelect = null;
 let assignColorSelect = null;
 let assignSimCardTypeSelect = null;
 let assignVariantRequestId = 0;
+let stockStatusSelect = null;
+let stockLocationSelect = null;
+let isRestoringStockListState = false;
 
 const listContainer = document.getElementById("phone-list");
+const stockFilterFieldIds = [
+    "filterName",
+    "filterModel",
+    "filterColor",
+    "filterImei",
+    "filterPriceMin",
+    "filterPriceMax"
+];
+const stockBooleanFilterIds = [
+    "filterHasOffer",
+    "filterAfterService"
+];
 
 function formatPhoneModelOption(item) {
     const spec = [item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / ");
@@ -274,13 +289,100 @@ function getFilters() {
     };
 }
 
+function normalizeStockPageIndex(page) {
+    const parsed = Number.parseInt(page, 10);
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function normalizeStockUrlPage(page) {
+    const parsed = Number.parseInt(page, 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function restoreStockListStateFromUrl() {
+    isRestoringStockListState = true;
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const filterParamMap = {
+            filterName: "name",
+            filterModel: "model",
+            filterColor: "color",
+            filterImei: "imei",
+            filterPriceMin: "priceMin",
+            filterPriceMax: "priceMax"
+        };
+
+        Object.entries(filterParamMap).forEach(([id, param]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = params.get(param) || "";
+        });
+
+        const hasOffer = document.getElementById("filterHasOffer");
+        const afterService = document.getElementById("filterAfterService");
+        if (hasOffer) hasOffer.checked = params.get("hasOffer") === "true";
+        if (afterService) afterService.checked = params.get("afterService") === "true";
+
+        setTomSelectValue("#filterStatus", params.get("status") || "");
+        setTomSelectValue("#filterLocation", params.get("locationName") || "");
+
+        M.updateTextFields();
+        return normalizeStockUrlPage(params.get("page")) - 1;
+    } finally {
+        isRestoringStockListState = false;
+    }
+}
+
+function setTomSelectValue(selector, value) {
+    const select = TomSelect.getInstance(selector);
+    if (!select) return;
+
+    if (value && !select.options[value]) {
+        select.addOption({ value, text: value });
+    }
+    select.setValue(value, true);
+}
+
+function syncStockListStateToUrl(page = currentPage) {
+    const url = new URL(window.location.href);
+    const filters = getFilters();
+
+    url.searchParams.set("page", String(normalizeStockPageIndex(page) + 1));
+    setOrDeleteStockSearchParam(url.searchParams, "name", filters.name);
+    setOrDeleteStockSearchParam(url.searchParams, "model", filters.model);
+    setOrDeleteStockSearchParam(url.searchParams, "color", filters.color);
+    setOrDeleteStockSearchParam(url.searchParams, "imei", filters.imei);
+    setOrDeleteStockSearchParam(url.searchParams, "priceMin", filters.priceMin);
+    setOrDeleteStockSearchParam(url.searchParams, "priceMax", filters.priceMax);
+    setOrDeleteStockSearchParam(url.searchParams, "status", filters.status);
+    setOrDeleteStockSearchParam(url.searchParams, "locationName", filters.locationName);
+    setOrDeleteStockSearchParam(url.searchParams, "hasOffer", filters.hasOffer ? "true" : "");
+    setOrDeleteStockSearchParam(url.searchParams, "afterService", filters.afterService ? "true" : "");
+
+    window.history.replaceState({}, "", url);
+}
+
+function setOrDeleteStockSearchParam(params, key, value) {
+    if (value) {
+        params.set(key, value);
+    } else {
+        params.delete(key);
+    }
+}
+
 async function loadStock(page = 0) {
+    page = normalizeStockPageIndex(page);
+    currentPage = page;
+    syncStockListStateToUrl(page);
     const filters = getFilters();
 
     try {
         renderFilterChips();
 
         const data = await fetchPhonesPage(page, filters);
+        if (data.content.length === 0 && page > 0) {
+            loadStock(page - 1);
+            return;
+        }
 
         const phones = data.content.map(phone => ({
             technicalId: phone.technicalId,
@@ -912,10 +1014,8 @@ function createCartButton() {
     document.body.appendChild(cartBtn);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     // Inicjalizacja modali
-    loadStock(0);
-
     const dropArea = document.getElementById('dropArea');
     const fileInput = document.getElementById('fileInput');
 
@@ -947,14 +1047,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     createCartButton();
     [
-        "filterName",
-        "filterModel",
-        "filterColor",
-        "filterImei",
-        "filterPriceMin",
-        "filterPriceMax",
-        "filterHasOffer",
-        "filterAfterService"
+        ...stockFilterFieldIds,
+        ...stockBooleanFilterIds
     ].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -968,26 +1062,33 @@ document.addEventListener("DOMContentLoaded", function () {
     ].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        // status i lokalizacja to TomSelect, więc zdarzenia natywne mogą nie wystarczyć
-        // ale zostawiamy dla pewności lub obsługi gdyby TS nie był zainicjalizowany
-        el.addEventListener("change", liveReload);
+        el.addEventListener("change", () => {
+            if (!TomSelect.getInstance(`#${id}`)) {
+                liveReload();
+            }
+        });
     });
 
-    loadLocationsFilter();
-
-    const statusSelect = initSimpleSelect('#filterStatus');
-    const locationSelect = initSimpleSelect('#filterLocation');
+    stockStatusSelect = initSimpleSelect('#filterStatus');
+    stockLocationSelect = initSimpleSelect('#filterLocation');
     assignPhoneModelSelect = initPhoneModelSelect('#assignPhoneModelSelect');
     assignPhoneModelSelect?.on('change', value => {
         loadAssignModelVariants(value, currentAssignModelCard());
     });
 
-    if (statusSelect) {
-        statusSelect.on('change', () => liveReload());
+    if (stockStatusSelect) {
+        stockStatusSelect.on('change', () => {
+            if (!isRestoringStockListState) liveReload();
+        });
     }
-    if (locationSelect) {
-        locationSelect.on('change', () => liveReload());
+    if (stockLocationSelect) {
+        stockLocationSelect.on('change', () => {
+            if (!isRestoringStockListState) liveReload();
+        });
     }
+
+    await loadLocationsFilter();
+    loadStock(restoreStockListStateFromUrl());
 });
 
 function editPhone(technicalId) {
@@ -1146,21 +1247,21 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("resetFilters").addEventListener("click", () => {
-    document.getElementById("filterName").value = "";
-    document.getElementById("filterModel").value = "";
-    document.getElementById("filterColor").value = "";
-    document.getElementById("filterImei").value = "";
-    document.getElementById("filterPriceMin").value = "";
-    document.getElementById("filterPriceMax").value = "";
-    document.getElementById("filterHasOffer").checked = false;
-    document.getElementById("filterAfterService").checked = false;
-    liveReload();
+    stockFilterFieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+    stockBooleanFilterIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+    });
+    M.updateTextFields();
 
     const statusSelect = TomSelect.getInstance('#filterStatus');
     const locationSelect = TomSelect.getInstance('#filterLocation');
 
-    statusSelect?.clear();
-    locationSelect?.clear();
+    statusSelect?.clear(true);
+    locationSelect?.clear(true);
 
     renderFilterChips();
     loadStock(0);
@@ -1223,17 +1324,14 @@ function renderChips(filters) {
             if (el) {
                 if (el.type === "checkbox") {
                     el.checked = false;
-                    liveReload();
+                } else if (el.tagName === "SELECT") {
+                    TomSelect.getInstance(`#${inputId}`)?.clear(true);
                 } else {
                     el.value = "";
                 }
-
-                // // re-init selectów (status, lokalizacja)
-                // if (el.tagName === "SELECT") {
-                //     M.FormSelect.init(el);
-                // }
             }
 
+            M.updateTextFields();
             loadStock(0);
         });
     });
@@ -1295,19 +1393,14 @@ function renderFilterChips() {
             if (el) {
                 if (el.type === "checkbox") {
                     el.checked = false;
-                    // Dla checkboxów wywołujemy liveReload() bezpośrednio, 
-                    // ponieważ zdarzenie 'change' może nie zostać wywołane przy programowej zmianie
-                    liveReload();
+                } else if (el.tagName === "SELECT") {
+                    TomSelect.getInstance(`#${inputId}`)?.clear(true);
                 } else {
                     el.value = "";
                 }
-
-                // // re-init selectów
-                // if (el.tagName === "SELECT") {
-                //     M.FormSelect.init(el);
-                // }
             }
 
+            M.updateTextFields();
             renderFilterChips();
             loadStock(0);
         });
@@ -1400,7 +1493,15 @@ function debounce(fn, delay = 300) {
 
 
 
-const liveReload = debounce(() => loadStock(0), 300);
+const debouncedStockReload = debounce(() => loadStock(0), 300);
+
+function liveReload() {
+    if (isRestoringStockListState) return;
+
+    currentPage = 0;
+    syncStockListStateToUrl(0);
+    debouncedStockReload();
+}
 
 
 let phoneToDelete = null;
@@ -1652,7 +1753,7 @@ document.getElementById("confirmHandoverBtn")
             );
             modal.close();
 
-            loadStock(); // refresh listy
+            loadStock(currentPage); // refresh listy
 
         } catch (err) {
             console.error(err);
