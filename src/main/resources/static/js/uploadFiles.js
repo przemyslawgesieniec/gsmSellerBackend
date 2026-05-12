@@ -5,7 +5,7 @@ function isModelIdentityMode() {
 }
 
 function formatPhoneModelOption(item) {
-    const spec = [item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / ");
+    const spec = [item.memory, item.ram, item.batteryCapacity, item.colors, item.simCardType].filter(Boolean).join(" / ");
     return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
 }
 
@@ -50,7 +50,7 @@ async function getPhoneModelData(select) {
     if (!value) return null;
 
     const cached = selectEl.tomselect.options[value];
-    if (cached && (cached.memory || cached.ram || cached.colors || cached.simCardType)) {
+    if (cached && (cached.memory || cached.ram || cached.batteryCapacity || cached.colors || cached.simCardType)) {
         return cached;
     }
 
@@ -77,7 +77,7 @@ function initPhoneModelSelect(select, selectedValue = null) {
     const ts = new TomSelect(selectEl, {
         valueField: "technicalId",
         labelField: "displayName",
-        searchField: ["displayName", "brand", "model", "memory", "ram", "colors"],
+        searchField: ["displayName", "brand", "model", "memory", "ram", "batteryCapacity", "colors", "simCardType"],
         maxOptions: 20,
         preload: true,
         placeholder: "Wybierz model z bazy",
@@ -94,7 +94,7 @@ function initPhoneModelSelect(select, selectedValue = null) {
             option: function(item, escape) {
                 return `<div>
                     <span><b>${escape(item.brand || "")}</b> ${escape(item.model || "")}</span><br>
-                    <small class="grey-text">${escape([item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / "))}</small>
+                    <small class="grey-text">${escape([item.memory, item.ram, item.batteryCapacity, item.colors, item.simCardType].filter(Boolean).join(" / "))}</small>
                 </div>`;
             },
             item: function(item, escape) {

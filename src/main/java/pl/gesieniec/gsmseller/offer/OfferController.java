@@ -95,10 +95,12 @@ public class OfferController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PhoneOffer createOffer(
         @RequestParam UUID phoneStockTechnicalId,
+        @RequestParam(required = false) String batteryCapacity,
         @RequestParam(required = false) List<MultipartFile> photoFiles
     ) {
         OfferRequest request = OfferRequest.builder()
             .phoneStockTechnicalId(phoneStockTechnicalId)
+            .batteryCapacity(batteryCapacity)
             .build();
         return offerService.createOffer(request, photoFiles);
     }
@@ -107,10 +109,12 @@ public class OfferController {
     public PhoneOffer updateOffer(
         @PathVariable UUID technicalId,
         @RequestParam(required = false) List<MultipartFile> photoFiles,
+        @RequestParam(required = false) String batteryCapacity,
         @RequestParam(required = false) List<UUID> photos,
         @RequestParam(required = false) List<String> photoOrder
     ) {
         OfferRequest request = OfferRequest.builder()
+            .batteryCapacity(batteryCapacity)
             .photos(photos)
             .photoOrder(photoOrder)
             .build();

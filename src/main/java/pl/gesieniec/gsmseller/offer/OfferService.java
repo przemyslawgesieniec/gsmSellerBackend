@@ -74,7 +74,7 @@ public class OfferService {
             .photos(photos)
             .isReserved(phoneStock.isReserved())
             .build();
-        applyPhoneModelToOffer(offer, phoneStock, phoneModel);
+        applyPhoneModelToOffer(offer, phoneStock, phoneModel, request.batteryCapacity());
 
         PhoneOffer savedOffer = mapToDto(offerRepository.save(offer));
         eventPublisher.publishEvent(new OfferCreatedEvent(request.phoneStockTechnicalId()));
@@ -144,7 +144,7 @@ public class OfferService {
             valueOrFallback(offer.getPhoneStock().getSimCardType(), phoneModel.getSimCardType()),
             phoneModel.getFrontCamerasMpx(),
             phoneModel.getBackCamerasMpx(),
-            phoneModel.getBatteryCapacity(),
+            resolveOfferBatteryCapacity(request.batteryCapacity(), offer.getBatteryCapacity(), phoneModel.getBatteryCapacity()),
             CommunicationSpecs.builder()
                 .portType(phoneModel.getPortType())
                 .build(),
@@ -172,7 +172,7 @@ public class OfferService {
     public void refreshOffersForPhoneModel(PhoneModels phoneModel) {
         List<Offer> offers = offerRepository.findAllByPhoneStockPhoneModelTechnicalId(phoneModel.getTechnicalId());
 
-        offers.forEach(offer -> applyPhoneModelToOffer(offer, offer.getPhoneStock(), phoneModel));
+        offers.forEach(offer -> applyPhoneModelToOffer(offer, offer.getPhoneStock(), phoneModel, null));
 
         log.info("Refreshed {} offers for phone model {}", offers.size(), phoneModel.getTechnicalId());
     }
@@ -298,7 +298,7 @@ public class OfferService {
         return phoneStock.getPhoneModel();
     }
 
-    private void applyPhoneModelToOffer(Offer offer, PhoneStock phoneStock, PhoneModels phoneModel) {
+    private void applyPhoneModelToOffer(Offer offer, PhoneStock phoneStock, PhoneModels phoneModel, String requestedBatteryCapacity) {
         offer.updateSpecifications(
             ScreenSpecs.builder()
                 .size(phoneModel.getScreen())
@@ -310,7 +310,7 @@ public class OfferService {
             valueOrFallback(phoneStock.getSimCardType(), phoneModel.getSimCardType()),
             phoneModel.getFrontCamerasMpx(),
             phoneModel.getBackCamerasMpx(),
-            phoneModel.getBatteryCapacity(),
+            resolveOfferBatteryCapacity(requestedBatteryCapacity, offer.getBatteryCapacity(), phoneModel.getBatteryCapacity()),
             CommunicationSpecs.builder()
                 .portType(phoneModel.getPortType())
                 .build(),
@@ -321,6 +321,40 @@ public class OfferService {
 
     private String valueOrFallback(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private String resolveOfferBatteryCapacity(String requestedValue, String currentOfferValue, String modelVariants) {
+        String requested = trimToNull(requestedValue);
+        if (requested != null) {
+            return requested;
+        }
+
+        String current = trimToNull(currentOfferValue);
+        if (current != null) {
+            return current;
+        }
+
+        return firstModelVariant(modelVariants);
+    }
+
+    private String firstModelVariant(String variants) {
+        String normalized = trimToNull(variants);
+        if (normalized == null) {
+            return null;
+        }
+
+        return java.util.Arrays.stream(normalized.split(","))
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .findFirst()
+            .orElse(normalized);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private PublicPhoneOffer toPublicOffer(PhoneOffer offer) {

@@ -126,10 +126,6 @@
                         </label>
                     </p>
                 </div>
-                <div class="input-field col s12 m4">
-                    <input id="batteryCapacity" type="number" min="0" step="1">
-                    <label for="batteryCapacity">Pojemność baterii</label>
-                </div>
                 <div class="col s12 m4">
                     <label for="displayPriority" class="active">Priorytet wyświetlania oferty: <span id="displayPriorityValue">0</span></label>
                     <p class="range-field" style="margin-top: 8px;">
@@ -160,6 +156,19 @@
                             </button>
                         </div>
                         <div id="ramFields" class="dynamic-fields"></div>
+                    </div>
+                </div>
+
+                <div class="col s12 m6">
+                    <div class="dynamic-field-group">
+                        <div class="dynamic-field-header">
+                            <h6>Pojemność baterii</h6>
+                            <button type="button" class="btn-small blue darken-2" id="addBatteryCapacityBtn">
+                                <i class="material-icons left">add</i>
+                                Dodaj
+                            </button>
+                        </div>
+                        <div id="batteryCapacityFields" class="dynamic-fields"></div>
                     </div>
                 </div>
 

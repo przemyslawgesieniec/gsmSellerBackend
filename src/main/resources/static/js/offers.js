@@ -1,12 +1,14 @@
 let photos = [];
 let phoneSelect;
 let offerLocationSelect;
+let offerBatteryCapacitySelect;
 let currentPage = 1;
 let offerFiltersDebounce;
 
 document.addEventListener("DOMContentLoaded", function() {
     initOfferFormToggle();
     initPhoneSelect();
+    initOfferBatterySelect();
     initOfferFilters();
     loadOfferLocations();
     loadOffers();
@@ -40,6 +42,16 @@ function toggleOfferForm(forceOpen) {
     body.classList.toggle("hide", !shouldOpen);
     if (toggle) toggle.setAttribute("aria-expanded", String(shouldOpen));
     if (icon) icon.textContent = shouldOpen ? "expand_less" : "expand_more";
+}
+
+function initOfferBatterySelect() {
+    offerBatteryCapacitySelect = new TomSelect("#offerBatteryCapacitySelect", {
+        create: false,
+        allowEmptyOption: true,
+        placeholder: "Wybierz pojemność baterii",
+        dropdownParent: "body",
+        onChange: updateSelectedPhonePreviewBattery
+    });
 }
 
 function initPhoneSelect() {
@@ -131,6 +143,56 @@ function selectPhone(phone) {
         `${phone.name || ""} ${phone.model || ""} | ${phone.phoneModelDisplayName || "model z bazy"}`;
     document.getElementById("editTechnicalId").value = phone.technicalId;
     renderSelectedPhonePreview(phone);
+    loadOfferBatteryCapacityOptions(phone);
+}
+
+async function loadOfferBatteryCapacityOptions(phone, selectedValue = "") {
+    const wrapper = document.getElementById("offerBatteryCapacityWrapper");
+    if (!wrapper || !offerBatteryCapacitySelect) return;
+
+    offerBatteryCapacitySelect.clear(true);
+    offerBatteryCapacitySelect.clearOptions();
+    wrapper.classList.add("hide");
+
+    if (!phone?.phoneModelTechnicalId) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/phone-models/${encodeURIComponent(phone.phoneModelTechnicalId)}`);
+        if (!response.ok) throw new Error("Nie udało się pobrać modelu");
+
+        const model = await response.json();
+        const variants = splitCommaList(model.batteryCapacity);
+        if (variants.length === 0) {
+            return;
+        }
+
+        variants.forEach(value => offerBatteryCapacitySelect.addOption({ value, text: `${value} mAh` }));
+        offerBatteryCapacitySelect.refreshOptions(false);
+        offerBatteryCapacitySelect.setValue(selectedValue || variants[0], true);
+        wrapper.classList.remove("hide");
+        updateSelectedPhonePreviewBattery();
+    } catch (err) {
+        console.warn("Nie udało się pobrać wariantów baterii", err);
+        M.toast({ html: "Nie udało się pobrać wariantów baterii dla modelu", classes: "red" });
+    }
+}
+
+function splitCommaList(value) {
+    if (!value) return [];
+    return String(value)
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
+function updateSelectedPhonePreviewBattery() {
+    const batteryRow = document.getElementById("selectedPhoneBatteryPreview");
+    if (!batteryRow || !offerBatteryCapacitySelect) return;
+
+    const value = offerBatteryCapacitySelect.getValue();
+    batteryRow.textContent = value ? `${value} mAh` : "-";
 }
 
 function renderSelectedPhonePreview(phone) {
@@ -142,6 +204,7 @@ function renderSelectedPhonePreview(phone) {
             <div><b>Model z bazy:</b> ${escapeHtml(phone.phoneModelDisplayName || "Nie ustawiono")}</div>
             <div><b>IMEI:</b> ${escapeHtml(phone.imei || "brak")}</div>
             <div><b>Pamięć:</b> ${escapeHtml([phone.memory, phone.ram].filter(Boolean).join(" / ") || "z bazy modelu")}</div>
+            <div><b>Bateria:</b> <span id="selectedPhoneBatteryPreview">-</span></div>
             <div><b>Cena:</b> ${escapeHtml(phone.sellingPrice || "")} PLN</div>
         </div>
     `;
@@ -153,6 +216,9 @@ function clearSelectedPhone() {
     document.getElementById("editTechnicalId").value = "";
     document.getElementById("modelSpecsPreview").classList.add("hide");
     document.getElementById("modelSpecsPreview").innerHTML = "";
+    document.getElementById("offerBatteryCapacityWrapper")?.classList.add("hide");
+    offerBatteryCapacitySelect?.clear(true);
+    offerBatteryCapacitySelect?.clearOptions();
     phoneSelect.clear();
     phoneSelect.clearOptions();
 }
@@ -256,6 +322,11 @@ async function saveOffer(e) {
     if (!isEdit) {
         formData.append("phoneStockTechnicalId", technicalId);
     }
+    const batteryWrapper = document.getElementById("offerBatteryCapacityWrapper");
+    const batteryCapacity = offerBatteryCapacitySelect?.getValue();
+    if (batteryCapacity && batteryWrapper && !batteryWrapper.classList.contains("hide")) {
+        formData.append("batteryCapacity", batteryCapacity);
+    }
 
     const newPhotos = photos.filter(photo => photo instanceof File);
     newPhotos.forEach(photo => formData.append("photoFiles", photo));
@@ -298,6 +369,7 @@ function resetForm() {
     document.getElementById("formTitle").textContent = "Stwórz nową ofertę";
     document.getElementById("cancelBtn").classList.add("hide");
     document.getElementById("phoneSelectWrapper").classList.remove("hide");
+    document.getElementById("offerBatteryCapacityWrapper")?.classList.add("hide");
     toggleOfferForm(false);
 }
 
@@ -484,8 +556,12 @@ async function editOffer(technicalId, event) {
                 <div><b>IMEI:</b> ${escapeHtml(offer.imei || "brak")}</div>
                 <div><b>Pamięć:</b> ${escapeHtml(offer.memory || "-")} / ${escapeHtml(offer.ram || "-")}</div>
                 <div><b>SIM:</b> ${escapeHtml(offer.simCardType || "-")}</div>
+                <div><b>Bateria:</b> ${escapeHtml(offer.batteryCapacity || "-")}</div>
             </div>
         `;
+        document.getElementById("offerBatteryCapacityWrapper")?.classList.add("hide");
+        offerBatteryCapacitySelect?.clear(true);
+        offerBatteryCapacitySelect?.clearOptions();
 
         toggleOfferForm(true);
         window.scrollTo({ top: 0, behavior: "smooth" });

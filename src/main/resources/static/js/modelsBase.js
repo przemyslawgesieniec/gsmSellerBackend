@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("modelSearch").addEventListener("input", debounce(() => loadModels(1), 300));
     document.getElementById("addMemoryBtn").addEventListener("click", () => addNumericField("memoryFields", "Pamięć"));
     document.getElementById("addRamBtn").addEventListener("click", () => addNumericField("ramFields", "RAM"));
+    document.getElementById("addBatteryCapacityBtn").addEventListener("click", () => addNumericField("batteryCapacityFields", "Pojemność baterii"));
     document.getElementById("addSimCardTypeBtn").addEventListener("click", () => addSimCardTypeField());
     document.getElementById("addColorBtn").addEventListener("click", () => addDynamicField("colorsFields", "Kolor"));
     document.getElementById("addFrontCameraBtn").addEventListener("click", () => addNumericField("frontCameraFields", "Aparat przód (Mpx)"));
@@ -119,11 +120,11 @@ function openEditModelModal(model) {
     document.getElementById("displayType").value = model.displayType || "";
     document.getElementById("portType").value = model.portType || "";
     document.getElementById("dualSim").checked = model.dualSim === true;
-    document.getElementById("batteryCapacity").value = model.batteryCapacity || "";
     document.getElementById("displayPriority").value = normalizePriority(model.displayPriority);
     updateDisplayPriorityValue();
     setNumericFields("memoryFields", "Pamięć", splitCommaList(model.memory));
     setNumericFields("ramFields", "RAM", splitCommaList(model.ram));
+    setNumericFields("batteryCapacityFields", "Pojemność baterii", splitCommaList(model.batteryCapacity));
     setSimCardTypeFields(splitCommaList(model.simCardType));
     setDynamicFields("colorsFields", "Kolor", splitCommaList(model.colors));
     setNumericFields("frontCameraFields", "Aparat przód (Mpx)", splitCommaList(model.frontCameras));
@@ -154,7 +155,7 @@ async function saveModel() {
         colors: collectDynamicFields("colorsFields"),
         frontCameras: collectDynamicFields("frontCameraFields"),
         backCameras: collectDynamicFields("backCameraFields"),
-        batteryCapacity: document.getElementById("batteryCapacity").value.trim(),
+        batteryCapacity: collectDynamicFields("batteryCapacityFields"),
         displayPriority: normalizePriority(document.getElementById("displayPriority").value)
     };
 
@@ -207,6 +208,7 @@ function resetModelForm() {
     updateDisplayPriorityValue();
     setNumericFields("memoryFields", "Pamięć", [""]);
     setNumericFields("ramFields", "RAM", [""]);
+    setNumericFields("batteryCapacityFields", "Pojemność baterii", [""]);
     setSimCardTypeFields([""]);
     setDynamicFields("colorsFields", "Kolor", [""]);
     setNumericFields("frontCameraFields", "Aparat przód (Mpx)", [""]);
@@ -330,12 +332,10 @@ function splitCommaList(value) {
 }
 
 function validateNumericModelFields() {
-    const battery = document.getElementById("batteryCapacity");
     const displayPriority = document.getElementById("displayPriority");
     const numericInputs = [
-        battery,
         displayPriority,
-        ...document.querySelectorAll("#memoryFields input, #ramFields input, #frontCameraFields input, #backCameraFields input")
+        ...document.querySelectorAll("#memoryFields input, #ramFields input, #batteryCapacityFields input, #frontCameraFields input, #backCameraFields input")
     ];
 
     const invalid = numericInputs.find(input => {
@@ -345,7 +345,7 @@ function validateNumericModelFields() {
 
     if (invalid) {
         invalid.focus();
-        M.toast({ html: "Pamięć, RAM, aparaty i bateria mogą zawierać tylko liczby", classes: "red" });
+        M.toast({ html: "Pamięć, RAM, bateria i aparaty mogą zawierać tylko liczby", classes: "red" });
         return false;
     }
 

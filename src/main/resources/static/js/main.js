@@ -13,7 +13,7 @@ let assignVariantRequestId = 0;
 const listContainer = document.getElementById("phone-list");
 
 function formatPhoneModelOption(item) {
-    const spec = [item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / ");
+    const spec = [item.memory, item.ram, item.batteryCapacity, item.colors, item.simCardType].filter(Boolean).join(" / ");
     return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
 }
 
@@ -188,7 +188,7 @@ function initPhoneModelSelect(selector) {
     return new TomSelect(el, {
         valueField: "technicalId",
         labelField: "displayName",
-        searchField: ["displayName", "brand", "model", "memory", "ram", "colors", "simCardType"],
+        searchField: ["displayName", "brand", "model", "memory", "ram", "batteryCapacity", "colors", "simCardType"],
         create: false,
         shouldSort: false,
         hideSelected: true,
@@ -198,7 +198,7 @@ function initPhoneModelSelect(selector) {
             option: function(item, escape) {
                 return `<div>
                     <span><b>${escape(item.brand || "")}</b> ${escape(item.model || "")}</span><br>
-                    <small class="grey-text">${escape([item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / "))}</small>
+                    <small class="grey-text">${escape([item.memory, item.ram, item.batteryCapacity, item.colors, item.simCardType].filter(Boolean).join(" / "))}</small>
                 </div>`;
             },
             item: function(item, escape) {
