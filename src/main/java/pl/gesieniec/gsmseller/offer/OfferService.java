@@ -1,36 +1,36 @@
 package pl.gesieniec.gsmseller.offer;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
+import pl.gesieniec.gsmseller.offer.event.OfferCreatedEvent;
+import pl.gesieniec.gsmseller.offer.event.OfferRemovedEvent;
 import pl.gesieniec.gsmseller.offer.model.OfferRequest;
 import pl.gesieniec.gsmseller.offer.model.PhoneOffer;
 import pl.gesieniec.gsmseller.offer.model.Photo;
 import pl.gesieniec.gsmseller.offer.model.PublicPhoneOffer;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
-import pl.gesieniec.gsmseller.offer.event.OfferCreatedEvent;
-import pl.gesieniec.gsmseller.offer.event.OfferRemovedEvent;
 import pl.gesieniec.gsmseller.offer.model.specs.CommunicationSpecs;
 import pl.gesieniec.gsmseller.offer.model.specs.ScreenSpecs;
 import pl.gesieniec.gsmseller.phone.model.PhoneModels;
-import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
-import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockRepository;
-import pl.gesieniec.gsmseller.storage.FileStorageService;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
+import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationCreatedEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import pl.gesieniec.gsmseller.storage.FileStorageService;
 
 @Service
 @Slf4j
@@ -104,7 +104,7 @@ public class OfferService {
             .map(existingPhotosById::get)
             .filter(java.util.Objects::nonNull)
             .toList();
-        
+
         // Zdjęcia do usunięcia z Cloudflare
         List<String> imageIdsToDelete = existingPhotos.stream()
             .filter(p -> !photosToKeep.contains(p))
@@ -200,7 +200,8 @@ public class OfferService {
     }
 
     @Transactional(readOnly = true)
-    public Page<pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto> getAvailablePhones(String search, Pageable pageable) {
+    public Page<pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto> getAvailablePhones(String search,
+                                                                                           Pageable pageable) {
         log.debug("Fetching available phones with search: '{}', pageable: {}", search, pageable);
         Specification<PhoneStock> spec = (root, query, cb) -> {
             query.distinct(true);
@@ -209,7 +210,8 @@ public class OfferService {
             subquery.select(offerRoot.get("phoneStock").get("id"));
 
             jakarta.persistence.criteria.Predicate noOffer = cb.not(root.get("id").in(subquery));
-            jakarta.persistence.criteria.Predicate isAvailable = cb.equal(root.get("status"), pl.gesieniec.gsmseller.phone.stock.model.Status.DOSTĘPNY);
+            jakarta.persistence.criteria.Predicate isAvailable =
+                cb.equal(root.get("status"), pl.gesieniec.gsmseller.phone.stock.model.Status.DOSTĘPNY);
             jakarta.persistence.criteria.Predicate hasModel = cb.isNotNull(root.get("phoneModel"));
 
             jakarta.persistence.criteria.Predicate basePredicate = cb.and(noOffer, isAvailable, hasModel);
@@ -223,8 +225,10 @@ public class OfferService {
                 cb.like(cb.lower(root.get("name")), pattern),
                 cb.like(cb.lower(root.get("model")), pattern),
                 cb.like(cb.lower(root.get("imei")), pattern),
-                cb.like(cb.lower(root.join("phoneModel", jakarta.persistence.criteria.JoinType.LEFT).get("brand")), pattern),
-                cb.like(cb.lower(root.join("phoneModel", jakarta.persistence.criteria.JoinType.LEFT).get("model")), pattern)
+                cb.like(cb.lower(root.join("phoneModel", jakarta.persistence.criteria.JoinType.LEFT).get("brand")),
+                    pattern),
+                cb.like(cb.lower(root.join("phoneModel", jakarta.persistence.criteria.JoinType.LEFT).get("model")),
+                    pattern)
             );
 
             return cb.and(basePredicate, searchPredicate);
@@ -254,9 +258,10 @@ public class OfferService {
 
     private PhoneOffer mapToDto(Offer offer) {
         PhoneStock phoneStock = offer.getPhoneStock();
-        String phoneModelName = phoneStock.getPhoneModel() != null
-            ? phoneStock.getPhoneModel().getModel()
-            : phoneStock.getModel();
+        String phoneModelName = phoneStock.getModel();
+        if (phoneStock.getPhoneModel() != null) {
+            phoneModelName = phoneStock.getPhoneModel().getBrand() + " " + phoneStock.getPhoneModel().getModel();
+        }
         List<Photo> photos = offer.getPhotos().stream()
             .map(photo -> Photo.builder()
                 .uuid(photo.getTechnicalId())
@@ -348,7 +353,8 @@ public class OfferService {
             .build();
     }
 
-    private List<OfferPhoto> orderPhotos(List<String> photoOrder, List<OfferPhoto> existingPhotos, List<OfferPhoto> uploadedPhotos) {
+    private List<OfferPhoto> orderPhotos(List<String> photoOrder, List<OfferPhoto> existingPhotos,
+                                         List<OfferPhoto> uploadedPhotos) {
         if (photoOrder == null || photoOrder.isEmpty()) {
             List<OfferPhoto> fallbackOrder = new ArrayList<>(existingPhotos);
             fallbackOrder.addAll(uploadedPhotos);
