@@ -2,10 +2,12 @@ package pl.gesieniec.gsmseller.receipt;
 
 import jakarta.validation.Valid;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,7 +37,11 @@ public class ReceiptController {
     public Page<ReceiptEntity> listReceipts(
         Principal principal,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "25") int size
+        @RequestParam(defaultValue = "25") int size,
+        @RequestParam(required = false) String imei,
+        @RequestParam(required = false) String invoiceNumber,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
     ) {
 
         if (principal == null) {
@@ -44,9 +50,12 @@ public class ReceiptController {
 
         String username = principal.getName();
 
-        log.info("📄 [GET RECEIPTS LIST] user={} page={} size={}", username, page, size);
+        log.info(
+            "📄 [GET RECEIPTS LIST] user={} page={} size={} imei={} invoiceNumber={} dateFrom={} dateTo={}",
+            username, page, size, imei, invoiceNumber, dateFrom, dateTo
+        );
 
-        return receiptService.getReceipts(username, page, size);
+        return receiptService.getReceipts(username, page, size, imei, invoiceNumber, dateFrom, dateTo);
     }
 
 

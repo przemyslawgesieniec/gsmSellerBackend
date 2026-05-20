@@ -44,16 +44,28 @@ public class ReceiptService {
     private final ApplicationEventPublisher eventPublisher;
     private final UserService userService;
 
-    public Page<ReceiptEntity> getReceipts(String username, int page, int size) {
+    public Page<ReceiptEntity> getReceipts(
+        String username,
+        int page,
+        int size,
+        String imei,
+        String invoiceNumber,
+        LocalDate dateFrom,
+        LocalDate dateTo
+    ) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createDate"));
 
         String userRole = userService.getUserByUsername(username).map(User::getRole).orElse("NON_ADMIN");
+        String createdBy = userRole.equals("ROLE_ADMIN") ? null : username;
 
-        if(userRole.equals("ROLE_ADMIN")){
-            return receiptRepository.findAll(pageable);
-        }
-        return receiptRepository.findByCreatedByOrderByCreateDateDesc(username, pageable);
+        return receiptRepository.findAll(
+            ReceiptSpecifications.createdBy(createdBy)
+                .and(ReceiptSpecifications.hasPhoneImeiLike(imei))
+                .and(ReceiptSpecifications.hasNumberLike(invoiceNumber))
+                .and(ReceiptSpecifications.sellDateBetween(dateFrom, dateTo)),
+            pageable
+        );
     }
 
 
@@ -261,6 +273,5 @@ public class ReceiptService {
         );
     }
 }
-
 
 

@@ -8,6 +8,7 @@
     <!-- Materialize CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
 
     <link href="css/style.css" rel="stylesheet">
 </head>
@@ -21,6 +22,31 @@
 <div class="container">
     <h4 class="blue-text text-darken-2">Lista wystawionych faktur</h4>
     <p class="grey-text">Poniżej znajduje się lista wszystkich faktur wygenerowanych przez system.</p>
+
+    <div class="card-panel">
+        <div class="row" style="margin-bottom: 0;">
+            <div class="input-field col s12 m4">
+                <i class="material-icons prefix">receipt</i>
+                <input type="text" id="invoiceNumberFilter" placeholder="np. 001/5/2026">
+                <label for="invoiceNumberFilter">Numer faktury</label>
+            </div>
+            <div class="input-field col s12 m4">
+                <i class="material-icons prefix">fingerprint</i>
+                <input type="text" id="receiptImeiFilter" placeholder="pełny lub fragment IMEI">
+                <label for="receiptImeiFilter">IMEI</label>
+            </div>
+            <div class="input-field col s12 m4">
+                <i class="material-icons prefix">event</i>
+                <input type="text" id="receiptDateRange" class="datepicker" placeholder="Wybierz zakres dat sprzedaży" readonly>
+                <label for="receiptDateRange" class="active">Data sprzedaży</label>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 0;">
+            <div class="col s12 right-align">
+                <button class="btn waves-effect waves-light grey" id="clearReceiptFiltersBtn">Wyczyść</button>
+            </div>
+        </div>
+    </div>
 
     <ul id="receiptList" class="collapsible popout"></ul>
 
@@ -46,6 +72,8 @@
 
 <!-- Materialize JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pl.js"></script>
 
 <!-- Nasz skrypt -->
 <script src="js/auth.js"></script>

@@ -1,7 +1,9 @@
     let currentPage = 0;
     const pageSize = 10;
+    let dateRangePicker = null;
 
     document.addEventListener("DOMContentLoaded", () => {
+        initFilters();
         loadReceipts();
 
         document.getElementById("loadMoreBtn").addEventListener("click", () => {
@@ -10,15 +12,77 @@
         });
     });
 
+    function initFilters() {
+        dateRangePicker = flatpickr("#receiptDateRange", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            locale: flatpickr.l10ns.pl,
+            monthSelectorType: "dropdown",
+            onClose: function(selectedDates) {
+                if (selectedDates.length === 2 || selectedDates.length === 0) {
+                    resetAndLoadReceipts();
+                }
+            }
+        });
+
+        ["invoiceNumberFilter", "receiptImeiFilter"].forEach(id => {
+            document.getElementById(id)?.addEventListener("input", debounce(resetAndLoadReceipts, 300));
+        });
+
+        document.getElementById("clearReceiptFiltersBtn")?.addEventListener("click", () => {
+            document.getElementById("invoiceNumberFilter").value = "";
+            document.getElementById("receiptImeiFilter").value = "";
+            if (dateRangePicker) dateRangePicker.clear();
+            M.updateTextFields();
+            resetAndLoadReceipts();
+        });
+    }
+
+    function resetAndLoadReceipts() {
+        currentPage = 0;
+        loadReceipts();
+    }
+
     function loadReceipts() {
-        fetch(`/api/v1/receipt/list?page=${currentPage}&size=${pageSize}`)
+        fetch(buildReceiptsUrl())
             .then(resp => resp.json())
             .then(data => renderReceipts(data))
-            .catch(err => console.error("Błąd pobierania faktur", err));
+            .catch(err => {
+                console.error("Błąd pobierania faktur", err);
+                M.toast({html: "Błąd pobierania faktur", classes: "red"});
+            });
+    }
+
+    function buildReceiptsUrl() {
+        const params = new URLSearchParams({
+            page: currentPage,
+            size: pageSize
+        });
+
+        const invoiceNumber = document.getElementById("invoiceNumberFilter")?.value.trim();
+        const imei = document.getElementById("receiptImeiFilter")?.value.trim();
+
+        if (invoiceNumber) params.append("invoiceNumber", invoiceNumber);
+        if (imei) params.append("imei", imei);
+
+        if (dateRangePicker && dateRangePicker.selectedDates.length === 2) {
+            params.append("dateFrom", formatDateOnly(dateRangePicker.selectedDates[0]));
+            params.append("dateTo", formatDateOnly(dateRangePicker.selectedDates[1]));
+        }
+
+        return `/api/v1/receipt/list?${params.toString()}`;
     }
 
     function renderReceipts(pageData) {
         const list = document.getElementById("receiptList");
+
+        if (currentPage === 0) {
+            list.innerHTML = "";
+        }
+
+        if (!pageData.content.length && currentPage === 0) {
+            list.innerHTML = '<li class="center-align grey-text" style="padding: 20px;">Brak faktur spełniających kryteria</li>';
+        }
 
         pageData.content.forEach(receipt => {
 
@@ -26,14 +90,16 @@
             const statusBadge = receipt.status === "WYCOFANA"
                 ? `<span class="new badge red" data-badge-caption="WYCOFANA"></span>`
                 : "";
+            const sellDate = receipt.dateAndPlace?.sellDate;
+            const sellDateLabel = sellDate ? formatDateOnlyString(sellDate) : "brak";
 
             const header = `
                 <div class="collapsible-header"
                      style="display:flex; justify-content:space-between; align-items:center;">
                     <span>
-                        <strong>${receipt.number}</strong>
+                        <strong>${escapeHtml(receipt.number)}</strong>
                         ${statusBadge}<br>
-                        <small>${formatDate(receipt.createDate)}</small>
+                        <small>Sprzedaż: ${sellDateLabel} | Wystawiono: ${formatDate(receipt.createDate)}</small>
                     </span>
                 
                     <button class="btn small blue"
@@ -62,10 +128,10 @@
 
                 return `
                     <li class="collection-item">
-                        <div><strong>${item.name}</strong></div>
+                        <div><strong>${escapeHtml(item.name)}</strong></div>
 
                         <div class="grey-text">
-                            Typ: ${item.itemType} <br>
+                            Typ: ${escapeHtml(item.itemType)} <br>
                             Netto: ${item.nettAmount.toFixed(2)} zł <br>
                             VAT: ${vatLabel} <br>
                             Brutto: <strong>${item.grossAmount.toFixed(2)} zł</strong>
@@ -98,6 +164,7 @@
         });
 
         M.Collapsible.init(document.querySelectorAll('.collapsible'));
+        updateLoadMoreButton(pageData);
     }
 
     function downloadPdf(id) {
@@ -116,6 +183,46 @@
     function formatDate(dateStr) {
         const d = new Date(dateStr);
         return d.toLocaleString("pl-PL");
+    }
+
+    function formatDateOnlyString(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString("pl-PL");
+    }
+
+    function formatDateOnly(date) {
+        const d = new Date(date);
+        let month = String(d.getMonth() + 1);
+        let day = String(d.getDate());
+        const year = d.getFullYear();
+
+        if (month.length < 2) month = "0" + month;
+        if (day.length < 2) day = "0" + day;
+
+        return [year, month, day].join("-");
+    }
+
+    function updateLoadMoreButton(pageData) {
+        const loadMoreBtn = document.getElementById("loadMoreBtn");
+        if (!loadMoreBtn) return;
+        loadMoreBtn.style.display = pageData.last ? "none" : "inline-block";
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, arguments), wait);
+        };
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     function downloadServiceInvoice(id) {
@@ -184,5 +291,3 @@
                 });
             }
         });
-
-
