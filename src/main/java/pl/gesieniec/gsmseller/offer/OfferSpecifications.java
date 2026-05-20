@@ -2,13 +2,20 @@ package pl.gesieniec.gsmseller.offer;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import pl.gesieniec.gsmseller.phone.model.PhoneModels;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OfferSpecifications {
+
+    private static final String OTHER_BRANDS_FILTER = "__OTHER__";
 
     public static Specification<Offer> orderByModelDisplayPriority() {
         return (root, query, cb) -> {
@@ -32,12 +39,26 @@ public class OfferSpecifications {
             }
             Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
             Join<PhoneStock, PhoneModels> phoneModelJoin = phoneStockJoin.join("phoneModel", JoinType.LEFT);
-            String pattern = "%" + brand.toLowerCase() + "%";
-            return cb.or(
-                cb.like(cb.lower(root.get("brand")), pattern),
-                cb.like(cb.lower(phoneStockJoin.get("model")), pattern),
-                cb.like(cb.lower(phoneModelJoin.get("brand")), pattern)
+
+            List<Expression<String>> brandFields = List.of(
+                root.get("brand"),
+                phoneStockJoin.get("name"),
+                phoneStockJoin.get("model"),
+                phoneModelJoin.get("brand"),
+                phoneModelJoin.get("model")
             );
+
+            String normalizedBrand = brand.trim().toLowerCase();
+            if (OTHER_BRANDS_FILTER.equalsIgnoreCase(normalizedBrand)) {
+                return cb.not(cb.or(
+                    matchesBrandGroup(cb, brandFields, "apple"),
+                    matchesBrandGroup(cb, brandFields, "samsung"),
+                    matchesBrandGroup(cb, brandFields, "xiaomi"),
+                    matchesBrandGroup(cb, brandFields, "redmi")
+                ));
+            }
+
+            return matchesBrandGroup(cb, brandFields, normalizedBrand);
         };
     }
 
@@ -64,12 +85,23 @@ public class OfferSpecifications {
 
             Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
             Join<PhoneStock, PhoneModels> phoneModelJoin = phoneStockJoin.join("phoneModel", JoinType.LEFT);
-            String pattern = "%" + model.toLowerCase() + "%";
+            String modelValue = model.trim().toLowerCase();
+            String pattern = "%" + modelValue + "%";
+            String normalizedPattern = "%" + normalize(modelValue) + "%";
+            Expression<String> phoneModelDisplayName = cb.concat(
+                cb.concat(cb.coalesce(phoneModelJoin.get("brand"), ""), " "),
+                cb.coalesce(phoneModelJoin.get("model"), "")
+            );
 
             return cb.or(
-                cb.like(cb.lower(root.get("model")), pattern),
+                cb.like(cb.lower(phoneStockJoin.get("name")), pattern),
                 cb.like(cb.lower(phoneStockJoin.get("model")), pattern),
-                cb.like(cb.lower(phoneModelJoin.get("model")), pattern)
+                cb.like(cb.lower(phoneModelJoin.get("model")), pattern),
+                cb.like(cb.lower(phoneModelDisplayName), pattern),
+                cb.like(normalizedExpression(cb, phoneStockJoin.get("name")), normalizedPattern),
+                cb.like(normalizedExpression(cb, phoneStockJoin.get("model")), normalizedPattern),
+                cb.like(normalizedExpression(cb, phoneModelJoin.get("model")), normalizedPattern),
+                cb.like(normalizedExpression(cb, phoneModelDisplayName), normalizedPattern)
             );
         };
     }
@@ -147,5 +179,42 @@ public class OfferSpecifications {
 
     private static boolean isCountQuery(Class<?> resultType) {
         return resultType == Long.class || resultType == long.class;
+    }
+
+    private static Predicate matchesBrandGroup(CriteriaBuilder cb, List<Expression<String>> fields, String brand) {
+        String normalizedBrand = brand.trim().toLowerCase();
+        List<Predicate> predicates = new ArrayList<>();
+
+        if ("apple".equals(normalizedBrand)) {
+            predicates.add(matchesAnyField(cb, fields, "apple"));
+            predicates.add(matchesAnyField(cb, fields, "iphone"));
+            return cb.or(predicates.toArray(Predicate[]::new));
+        }
+
+        if ("xiaomi".equals(normalizedBrand)) {
+            return cb.and(
+                matchesAnyField(cb, fields, "xiaomi"),
+                cb.not(matchesAnyField(cb, fields, "redmi"))
+            );
+        }
+
+        return matchesAnyField(cb, fields, normalizedBrand);
+    }
+
+    private static Predicate matchesAnyField(CriteriaBuilder cb, List<Expression<String>> fields, String value) {
+        String pattern = "%" + value.trim().toLowerCase() + "%";
+        return cb.or(fields.stream()
+            .map(field -> cb.like(cb.lower(cb.coalesce(field, "")), pattern))
+            .toArray(Predicate[]::new));
+    }
+
+    private static Expression<String> normalizedExpression(CriteriaBuilder cb, Expression<String> expression) {
+        Expression<String> lower = cb.lower(cb.coalesce(expression, ""));
+        Expression<String> withoutSpaces = cb.function("replace", String.class, lower, cb.literal(" "), cb.literal(""));
+        return cb.function("replace", String.class, withoutSpaces, cb.literal("-"), cb.literal(""));
+    }
+
+    private static String normalize(String value) {
+        return value.replace(" ", "").replace("-", "");
     }
 }
