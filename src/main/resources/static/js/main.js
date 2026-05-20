@@ -11,12 +11,14 @@ let assignSimCardTypeSelect = null;
 let assignVariantRequestId = 0;
 let stockStatusSelect = null;
 let stockLocationSelect = null;
+let stockBrandSelect = null;
+let stockModelSelect = null;
 let isRestoringStockListState = false;
+let stockModelOptionsByBrand = {};
 
 const listContainer = document.getElementById("phone-list");
 const stockFilterFieldIds = [
     "filterName",
-    "filterModel",
     "filterColor",
     "filterImei",
     "filterPriceMin",
@@ -277,6 +279,7 @@ async function loadAssignPhoneModelOptions(selectedValue = "", selectedLabel = "
 function getFilters() {
     return {
         name: document.getElementById("filterName").value.trim(),
+        brand: document.getElementById("filterBrand").value.trim(),
         model: document.getElementById("filterModel").value.trim(),
         color: document.getElementById("filterColor").value.trim(),
         imei: document.getElementById("filterImei").value.trim(),
@@ -305,7 +308,6 @@ function restoreStockListStateFromUrl() {
         const params = new URLSearchParams(window.location.search);
         const filterParamMap = {
             filterName: "name",
-            filterModel: "model",
             filterColor: "color",
             filterImei: "imei",
             filterPriceMin: "priceMin",
@@ -316,6 +318,15 @@ function restoreStockListStateFromUrl() {
             const el = document.getElementById(id);
             if (el) el.value = params.get(param) || "";
         });
+
+        let brand = params.get("brand") || "";
+        const model = params.get("model") || "";
+        if (!brand && model) {
+            brand = findBrandForModel(model);
+        }
+
+        setTomSelectValue("#filterBrand", brand);
+        updateStockModelOptions(brand, model);
 
         const hasOffer = document.getElementById("filterHasOffer");
         const afterService = document.getElementById("filterAfterService");
@@ -348,6 +359,7 @@ function syncStockListStateToUrl(page = currentPage) {
 
     url.searchParams.set("page", String(normalizeStockPageIndex(page) + 1));
     setOrDeleteStockSearchParam(url.searchParams, "name", filters.name);
+    setOrDeleteStockSearchParam(url.searchParams, "brand", filters.brand);
     setOrDeleteStockSearchParam(url.searchParams, "model", filters.model);
     setOrDeleteStockSearchParam(url.searchParams, "color", filters.color);
     setOrDeleteStockSearchParam(url.searchParams, "imei", filters.imei);
@@ -367,6 +379,95 @@ function setOrDeleteStockSearchParam(params, key, value) {
     } else {
         params.delete(key);
     }
+}
+
+function initStockModelFilterSelects() {
+    stockBrandSelect = initSimpleSelect('#filterBrand');
+    stockModelSelect = initSimpleSelect('#filterModel');
+
+    if (stockBrandSelect) {
+        stockBrandSelect.on('change', brand => {
+            updateStockModelOptions(brand, "");
+            if (!isRestoringStockListState) liveReload();
+        });
+    }
+
+    if (stockModelSelect) {
+        stockModelSelect.on('change', () => {
+            if (!isRestoringStockListState) liveReload();
+        });
+    }
+}
+
+async function loadStockModelFilterOptions() {
+    try {
+        const response = await fetch("/api/v1/phone-models/filter-options");
+        if (!response.ok) throw new Error("Nie udało się pobrać modeli");
+
+        stockModelOptionsByBrand = await response.json();
+        updateStockBrandOptions();
+        updateStockModelOptions(stockBrandSelect?.getValue() || "", stockModelSelect?.getValue() || "");
+    } catch (e) {
+        console.warn("Nie udało się pobrać marek i modeli telefonów", e);
+        M.toast({ html: "Nie udało się pobrać marek i modeli", classes: "red" });
+    }
+}
+
+function updateStockBrandOptions() {
+    if (!stockBrandSelect) return;
+
+    const selectedBrand = stockBrandSelect.getValue();
+    stockBrandSelect.clearOptions();
+    stockBrandSelect.addOption({ value: "", text: "Dowolna" });
+
+    Object.keys(stockModelOptionsByBrand)
+        .sort((a, b) => a.localeCompare(b, "pl", { sensitivity: "base" }))
+        .forEach(brand => stockBrandSelect.addOption({ value: brand, text: brand }));
+
+    stockBrandSelect.refreshOptions(false);
+    if (selectedBrand && stockBrandSelect.options[selectedBrand]) {
+        stockBrandSelect.setValue(selectedBrand, true);
+    }
+}
+
+function updateStockModelOptions(brand, selectedModel = "") {
+    if (!stockModelSelect) return;
+
+    const models = brand ? (stockModelOptionsByBrand[brand] || []) : [];
+
+    stockModelSelect.clear(true);
+    stockModelSelect.clearOptions();
+
+    if (!brand) {
+        stockModelSelect.addOption({ value: "", text: "Wybierz markę" });
+        stockModelSelect.disable();
+        stockModelSelect.refreshOptions(false);
+        return;
+    }
+
+    stockModelSelect.enable();
+    stockModelSelect.addOption({ value: "", text: "Dowolny" });
+    models
+        .slice()
+        .sort((a, b) => a.localeCompare(b, "pl", { sensitivity: "base", numeric: true }))
+        .forEach(model => stockModelSelect.addOption({ value: model, text: model }));
+
+    if (selectedModel && !stockModelSelect.options[selectedModel]) {
+        stockModelSelect.addOption({ value: selectedModel, text: selectedModel });
+    }
+
+    stockModelSelect.refreshOptions(false);
+    stockModelSelect.setValue(selectedModel || "", true);
+}
+
+function findBrandForModel(model) {
+    if (!model) return "";
+
+    const normalizedModel = model.trim().toLowerCase();
+    const match = Object.entries(stockModelOptionsByBrand)
+        .find(([, models]) => models.some(option => option.toLowerCase() === normalizedModel));
+
+    return match ? match[0] : "";
 }
 
 async function loadStock(page = 0) {
@@ -1058,7 +1159,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     [
         "filterStatus",
-        "filterLocation"
+        "filterLocation",
+        "filterBrand",
+        "filterModel"
     ].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -1071,6 +1174,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     stockStatusSelect = initSimpleSelect('#filterStatus');
     stockLocationSelect = initSimpleSelect('#filterLocation');
+    initStockModelFilterSelects();
     assignPhoneModelSelect = initPhoneModelSelect('#assignPhoneModelSelect');
     assignPhoneModelSelect?.on('change', value => {
         loadAssignModelVariants(value, currentAssignModelCard());
@@ -1087,6 +1191,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
     }
 
+    await loadStockModelFilterOptions();
     await loadLocationsFilter();
     loadStock(restoreStockListStateFromUrl());
 });
@@ -1259,9 +1364,14 @@ document.getElementById("resetFilters").addEventListener("click", () => {
 
     const statusSelect = TomSelect.getInstance('#filterStatus');
     const locationSelect = TomSelect.getInstance('#filterLocation');
+    const brandSelect = TomSelect.getInstance('#filterBrand');
+    const modelSelect = TomSelect.getInstance('#filterModel');
 
     statusSelect?.clear(true);
     locationSelect?.clear(true);
+    brandSelect?.clear(true);
+    updateStockModelOptions("", "");
+    modelSelect?.clear(true);
 
     renderFilterChips();
     loadStock(0);
@@ -1271,6 +1381,7 @@ document.getElementById("resetFilters").addEventListener("click", () => {
 // tłumaczenia etykiet
 const filterLabels = {
     name: "Nazwa",
+    brand: "Marka",
     model: "Model",
     color: "Kolor",
     imei: "IMEI",
@@ -1350,6 +1461,7 @@ function renderFilterChips() {
     // jawne mapowanie key → inputId
     const filterInputMap = {
         name: "filterName",
+        brand: "filterBrand",
         model: "filterModel",
         color: "filterColor",
         imei: "filterImei",

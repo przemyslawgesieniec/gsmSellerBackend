@@ -36,15 +36,9 @@
       <div class="card-panel filter-panel z-depth-1">
 
         <div class="row">
-          <!-- 4 pierwsze pola: 2 w rzędzie na desktopie -->
           <div class="input-field col s12 m6">
             <input id="filterName" type="text">
             <label for="filterName">Nazwa</label>
-          </div>
-
-          <div class="input-field col s12 m6">
-            <input id="filterModel" type="text">
-            <label for="filterModel">Model</label>
           </div>
 
           <div class="input-field col s12 m6">
@@ -85,6 +79,20 @@
             <select id="filterLocation">
               <option value="" selected>Dowolna</option>
               <option value="__NO_LOCATION__">Brak lokalizacji</option>
+            </select>
+          </div>
+
+          <div class="input-field col s12">
+            <label for="filterBrand" class="active">Marka</label>
+            <select id="filterBrand">
+              <option value="" selected>Dowolna</option>
+            </select>
+          </div>
+
+          <div class="input-field col s12">
+            <label for="filterModel" class="active">Model</label>
+            <select id="filterModel" disabled>
+              <option value="" selected>Wybierz markę</option>
             </select>
           </div>
 

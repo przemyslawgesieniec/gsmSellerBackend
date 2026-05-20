@@ -21,8 +21,30 @@ public class PhoneStockSpecifications {
     }
 
     public static Specification<PhoneStock> hasModel(String model) {
-        return (root, query, cb) ->
-            model == null ? null : cb.like(cb.lower(root.get("model")), "%" + model.toLowerCase() + "%");
+        return (root, query, cb) -> {
+            if (model == null || model.isBlank()) {
+                return null;
+            }
+
+            String pattern = "%" + model.trim().toLowerCase() + "%";
+            return cb.or(
+                cb.like(cb.lower(root.get("model")), pattern),
+                cb.like(cb.lower(root.join("phoneModel", JoinType.LEFT).get("model")), pattern)
+            );
+        };
+    }
+
+    public static Specification<PhoneStock> hasPhoneModelBrand(String brand) {
+        return (root, query, cb) -> {
+            if (brand == null || brand.isBlank()) {
+                return null;
+            }
+
+            return cb.equal(
+                cb.lower(root.join("phoneModel", JoinType.LEFT).get("brand")),
+                brand.trim().toLowerCase()
+            );
+        };
     }
 
     public static Specification<PhoneStock> hasImeiLike(String imei) {

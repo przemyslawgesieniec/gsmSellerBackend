@@ -1,5 +1,7 @@
 package pl.gesieniec.gsmseller.phone.model;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,11 @@ public class PhoneModelsController {
         @PageableDefault(sort = "model", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         return service.getModels(search, pageable);
+    }
+
+    @GetMapping("/filter-options")
+    public Map<String, List<String>> getFilterOptions() {
+        return service.getFilterOptionsByBrand();
     }
 
     @GetMapping("/{technicalId}")

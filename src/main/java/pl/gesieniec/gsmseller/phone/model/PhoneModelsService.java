@@ -1,9 +1,13 @@
 package pl.gesieniec.gsmseller.phone.model;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,6 +44,25 @@ public class PhoneModelsService {
         };
 
         return repository.findAll(spec, pageable).map(mapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, List<String>> getFilterOptionsByBrand() {
+        return repository.findAll(Sort.by("brand").ascending().and(Sort.by("model").ascending()))
+            .stream()
+            .filter(model -> model.getBrand() != null && !model.getBrand().isBlank())
+            .filter(model -> model.getModel() != null && !model.getModel().isBlank())
+            .collect(Collectors.groupingBy(
+                model -> model.getBrand().trim(),
+                java.util.TreeMap::new,
+                Collectors.mapping(
+                    model -> model.getModel().trim(),
+                    Collectors.collectingAndThen(
+                        Collectors.toCollection(java.util.TreeSet::new),
+                        java.util.ArrayList::new
+                    )
+                )
+            ));
     }
 
     @Transactional(readOnly = true)
