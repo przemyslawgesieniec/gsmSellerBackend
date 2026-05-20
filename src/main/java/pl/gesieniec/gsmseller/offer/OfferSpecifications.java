@@ -31,10 +31,12 @@ public class OfferSpecifications {
                 return null;
             }
             Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
+            Join<PhoneStock, PhoneModels> phoneModelJoin = phoneStockJoin.join("phoneModel", JoinType.LEFT);
             String pattern = "%" + brand.toLowerCase() + "%";
             return cb.or(
                 cb.like(cb.lower(root.get("brand")), pattern),
-                cb.like(cb.lower(phoneStockJoin.get("model")), pattern)
+                cb.like(cb.lower(phoneStockJoin.get("model")), pattern),
+                cb.like(cb.lower(phoneModelJoin.get("brand")), pattern)
             );
         };
     }
@@ -50,6 +52,24 @@ public class OfferSpecifications {
                 cb.like(cb.lower(root.get("brand")), pattern),
                 cb.like(cb.lower(phoneStockJoin.get("name")), pattern),
                 cb.like(cb.lower(phoneStockJoin.get("model")), pattern)
+            );
+        };
+    }
+
+    public static Specification<Offer> hasModel(String model) {
+        return (root, query, cb) -> {
+            if (model == null || model.isBlank() || "all".equalsIgnoreCase(model)) {
+                return null;
+            }
+
+            Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
+            Join<PhoneStock, PhoneModels> phoneModelJoin = phoneStockJoin.join("phoneModel", JoinType.LEFT);
+            String pattern = "%" + model.toLowerCase() + "%";
+
+            return cb.or(
+                cb.like(cb.lower(root.get("model")), pattern),
+                cb.like(cb.lower(phoneStockJoin.get("model")), pattern),
+                cb.like(cb.lower(phoneModelJoin.get("model")), pattern)
             );
         };
     }

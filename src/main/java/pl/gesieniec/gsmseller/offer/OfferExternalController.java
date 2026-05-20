@@ -16,7 +16,9 @@ import pl.gesieniec.gsmseller.offer.model.PublicPhoneOffer;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import pl.gesieniec.gsmseller.phone.model.PhoneModelsService;
 
 @Slf4j
 @RestController
@@ -27,6 +29,7 @@ public class OfferExternalController {
 
     private final OfferService offerService;
     private final CloudflareImagesService cloudflareImagesService;
+    private final PhoneModelsService phoneModelsService;
 
     @GetMapping("/photos/{id}")
     public ResponseEntity<Void> getPhoto(@PathVariable UUID id) {
@@ -72,6 +75,7 @@ public class OfferExternalController {
     ) {
         Specification<Offer> spec = Specification.allOf(
             OfferSpecifications.hasBrand(brand),
+            OfferSpecifications.hasModel(model),
             OfferSpecifications.hasName(name),
             OfferSpecifications.hasStatus(status),
             OfferSpecifications.hasLocation(location),
@@ -86,6 +90,11 @@ public class OfferExternalController {
             pageable.getPageSize()
         );
         return offerService.getPublicOffers(spec, priorityPageable);
+    }
+
+    @GetMapping("/filter-options")
+    public Map<String, List<String>> getFilterOptions() {
+        return phoneModelsService.getFilterOptionsByBrand();
     }
 
     @GetMapping("/{technicalId}")
