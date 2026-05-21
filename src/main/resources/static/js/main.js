@@ -344,13 +344,21 @@ function restoreStockListStateFromUrl() {
 }
 
 function setTomSelectValue(selector, value) {
-    const select = TomSelect.getInstance(selector);
+    const select = getTomSelectInstance(selector);
     if (!select) return;
 
     if (value && !select.options[value]) {
         select.addOption({ value, text: value });
     }
     select.setValue(value, true);
+}
+
+function getTomSelectInstance(selectorOrElement) {
+    const element = typeof selectorOrElement === "string"
+        ? document.querySelector(selectorOrElement)
+        : selectorOrElement;
+
+    return element?.tomselect || null;
 }
 
 function syncStockListStateToUrl(page = currentPage) {
@@ -1166,7 +1174,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener("change", () => {
-            if (!TomSelect.getInstance(`#${id}`)) {
+            if (!getTomSelectInstance(el)) {
                 liveReload();
             }
         });
@@ -1362,10 +1370,10 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     });
     M.updateTextFields();
 
-    const statusSelect = TomSelect.getInstance('#filterStatus');
-    const locationSelect = TomSelect.getInstance('#filterLocation');
-    const brandSelect = TomSelect.getInstance('#filterBrand');
-    const modelSelect = TomSelect.getInstance('#filterModel');
+    const statusSelect = getTomSelectInstance('#filterStatus');
+    const locationSelect = getTomSelectInstance('#filterLocation');
+    const brandSelect = getTomSelectInstance('#filterBrand');
+    const modelSelect = getTomSelectInstance('#filterModel');
 
     statusSelect?.clear(true);
     locationSelect?.clear(true);
@@ -1436,7 +1444,7 @@ function renderChips(filters) {
                 if (el.type === "checkbox") {
                     el.checked = false;
                 } else if (el.tagName === "SELECT") {
-                    TomSelect.getInstance(`#${inputId}`)?.clear(true);
+                    getTomSelectInstance(el)?.clear(true);
                 } else {
                     el.value = "";
                 }
@@ -1506,7 +1514,7 @@ function renderFilterChips() {
                 if (el.type === "checkbox") {
                     el.checked = false;
                 } else if (el.tagName === "SELECT") {
-                    TomSelect.getInstance(`#${inputId}`)?.clear(true);
+                    getTomSelectInstance(el)?.clear(true);
                 } else {
                     el.value = "";
                 }
