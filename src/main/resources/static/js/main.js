@@ -15,6 +15,7 @@ let stockBrandSelect = null;
 let stockModelSelect = null;
 let isRestoringStockListState = false;
 let stockModelOptionsByBrand = {};
+const stockListStateStorageKey = "gsm-seller.stock-list-state.v1";
 
 const listContainer = document.getElementById("phone-list");
 const stockFilterFieldIds = [
@@ -302,25 +303,105 @@ function normalizeStockUrlPage(page) {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
-function restoreStockListStateFromUrl() {
+function emptyStockFilters() {
+    return {
+        name: "",
+        brand: "",
+        model: "",
+        color: "",
+        imei: "",
+        priceMin: "",
+        priceMax: "",
+        status: "",
+        locationName: "",
+        hasOffer: false,
+        afterService: null
+    };
+}
+
+function normalizeStockFilters(filters = {}) {
+    return {
+        ...emptyStockFilters(),
+        ...filters,
+        hasOffer: filters.hasOffer === true || filters.hasOffer === "true",
+        afterService: filters.afterService === true || filters.afterService === "true" ? true : null
+    };
+}
+
+function getStockListStateFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const stateKeys = [
+        "page",
+        "name",
+        "brand",
+        "model",
+        "color",
+        "imei",
+        "priceMin",
+        "priceMax",
+        "status",
+        "locationName",
+        "hasOffer",
+        "afterService"
+    ];
+
+    if (!stateKeys.some(key => params.has(key))) {
+        return null;
+    }
+
+    return {
+        page: normalizeStockUrlPage(params.get("page")) - 1,
+        filters: normalizeStockFilters({
+            name: params.get("name") || "",
+            brand: params.get("brand") || "",
+            model: params.get("model") || "",
+            color: params.get("color") || "",
+            imei: params.get("imei") || "",
+            priceMin: params.get("priceMin") || "",
+            priceMax: params.get("priceMax") || "",
+            status: params.get("status") || "",
+            locationName: params.get("locationName") || "",
+            hasOffer: params.get("hasOffer") === "true",
+            afterService: params.get("afterService") === "true"
+        })
+    };
+}
+
+function getStoredStockListState() {
+    try {
+        const rawState = sessionStorage.getItem(stockListStateStorageKey);
+        if (!rawState) return null;
+
+        const state = JSON.parse(rawState);
+        return {
+            page: normalizeStockPageIndex(state.page),
+            filters: normalizeStockFilters(state.filters)
+        };
+    } catch (e) {
+        sessionStorage.removeItem(stockListStateStorageKey);
+        return null;
+    }
+}
+
+function applyStockListState(state) {
+    const filters = normalizeStockFilters(state?.filters);
+    const fieldParamMap = {
+        filterName: "name",
+        filterColor: "color",
+        filterImei: "imei",
+        filterPriceMin: "priceMin",
+        filterPriceMax: "priceMax"
+    };
+
     isRestoringStockListState = true;
     try {
-        const params = new URLSearchParams(window.location.search);
-        const filterParamMap = {
-            filterName: "name",
-            filterColor: "color",
-            filterImei: "imei",
-            filterPriceMin: "priceMin",
-            filterPriceMax: "priceMax"
-        };
-
-        Object.entries(filterParamMap).forEach(([id, param]) => {
+        Object.entries(fieldParamMap).forEach(([id, key]) => {
             const el = document.getElementById(id);
-            if (el) el.value = params.get(param) || "";
+            if (el) el.value = filters[key] || "";
         });
 
-        let brand = params.get("brand") || "";
-        const model = params.get("model") || "";
+        let brand = filters.brand || "";
+        const model = filters.model || "";
         if (!brand && model) {
             brand = findBrandForModel(model);
         }
@@ -330,22 +411,38 @@ function restoreStockListStateFromUrl() {
 
         const hasOffer = document.getElementById("filterHasOffer");
         const afterService = document.getElementById("filterAfterService");
-        if (hasOffer) hasOffer.checked = params.get("hasOffer") === "true";
-        if (afterService) afterService.checked = params.get("afterService") === "true";
+        if (hasOffer) hasOffer.checked = Boolean(filters.hasOffer);
+        if (afterService) afterService.checked = filters.afterService === true;
 
-        setTomSelectValue("#filterStatus", params.get("status") || "");
-        setTomSelectValue("#filterLocation", params.get("locationName") || "");
+        setTomSelectValue("#filterStatus", filters.status || "");
+        setTomSelectValue("#filterLocation", filters.locationName || "");
 
         M.updateTextFields();
-        return normalizeStockUrlPage(params.get("page")) - 1;
     } finally {
         isRestoringStockListState = false;
     }
 }
 
+function restoreStockListState() {
+    const state = getStockListStateFromUrl() || getStoredStockListState() || {
+        page: 0,
+        filters: emptyStockFilters()
+    };
+
+    applyStockListState(state);
+    persistStockListState(state.page, state.filters);
+    return normalizeStockPageIndex(state.page);
+}
+
 function setTomSelectValue(selector, value) {
+    const element = typeof selector === "string"
+        ? document.querySelector(selector)
+        : selector;
     const select = getTomSelectInstance(selector);
-    if (!select) return;
+    if (!select) {
+        if (element) element.value = value || "";
+        return;
+    }
 
     if (value && !select.options[value]) {
         select.addOption({ value, text: value });
@@ -361,9 +458,9 @@ function getTomSelectInstance(selectorOrElement) {
     return element?.tomselect || null;
 }
 
-function syncStockListStateToUrl(page = currentPage) {
+function syncStockListStateToUrl(page = currentPage, filters = getFilters()) {
     const url = new URL(window.location.href);
-    const filters = getFilters();
+    filters = normalizeStockFilters(filters);
 
     url.searchParams.set("page", String(normalizeStockPageIndex(page) + 1));
     setOrDeleteStockSearchParam(url.searchParams, "name", filters.name);
@@ -379,6 +476,28 @@ function syncStockListStateToUrl(page = currentPage) {
     setOrDeleteStockSearchParam(url.searchParams, "afterService", filters.afterService ? "true" : "");
 
     window.history.replaceState({}, "", url);
+}
+
+function persistStockListState(page = currentPage, filters = getFilters()) {
+    const state = {
+        page: normalizeStockPageIndex(page),
+        filters: normalizeStockFilters(filters)
+    };
+
+    try {
+        sessionStorage.setItem(stockListStateStorageKey, JSON.stringify(state));
+    } catch (e) {
+        // Brak dostępu do sessionStorage nie powinien blokować pracy listy.
+    }
+
+    syncStockListStateToUrl(state.page, state.filters);
+    return state;
+}
+
+function refreshStockListPreservingState() {
+    const state = persistStockListState(currentPage, getFilters());
+    applyStockListState(state);
+    return loadStock(state.page, state.filters);
 }
 
 function setOrDeleteStockSearchParam(params, key, value) {
@@ -478,18 +597,18 @@ function findBrandForModel(model) {
     return match ? match[0] : "";
 }
 
-async function loadStock(page = 0) {
+async function loadStock(page = 0, stateFilters = null) {
     page = normalizeStockPageIndex(page);
+    const filters = normalizeStockFilters(stateFilters || getFilters());
     currentPage = page;
-    syncStockListStateToUrl(page);
-    const filters = getFilters();
+    persistStockListState(page, filters);
 
     try {
         renderFilterChips();
 
         const data = await fetchPhonesPage(page, filters);
         if (data.content.length === 0 && page > 0) {
-            loadStock(page - 1);
+            loadStock(page - 1, filters);
             return;
         }
 
@@ -1058,7 +1177,7 @@ async function sellPhone(technicalId) {
 
         const updatedCart = await response.json();
         cartState = updatedCart;
-        loadStock(currentPage);
+        refreshStockListPreservingState();
 
         // 🔢 aktualizacja liczby w koszyku – dostosuj do swojego modelu Cart
         // Zakładam np. że masz: cart.items albo cart.phones
@@ -1201,7 +1320,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     await loadStockModelFilterOptions();
     await loadLocationsFilter();
-    loadStock(restoreStockListStateFromUrl());
+    loadStock(restoreStockListState());
 });
 
 function editPhone(technicalId) {
@@ -1351,7 +1470,7 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
         );
         modal.close();
 
-        loadStock(currentPage);
+        refreshStockListPreservingState();
 
     } catch (error) {
         console.error("Błąd podczas zapisu:", error);
@@ -1550,7 +1669,7 @@ document.getElementById("confirmAcceptYes").addEventListener("click", async () =
         M.Modal.getInstance(document.getElementById("acceptConfirmModal")).close();
 
         // Odśwież listę
-        loadStock(currentPage);
+        refreshStockListPreservingState();
 
     } catch (error) {
         console.error(error);
@@ -1619,7 +1738,7 @@ function liveReload() {
     if (isRestoringStockListState) return;
 
     currentPage = 0;
-    syncStockListStateToUrl(0);
+    persistStockListState(0, getFilters());
     debouncedStockReload();
 }
 
@@ -1650,7 +1769,7 @@ document.getElementById("confirmDeletePhoneBtn")
                     classes: "green"
                 });
 
-                loadStock(currentPage);
+                refreshStockListPreservingState();
             })
             .catch(err => {
                 M.toast({
@@ -1785,7 +1904,7 @@ document.getElementById("saveAssignModelBtn")
 
             M.toast({ html: "Model z bazy został ustawiony", classes: "green" });
             M.Modal.getInstance(document.getElementById("assignModelModal")).close();
-            loadStock(currentPage);
+            refreshStockListPreservingState();
         } catch (e) {
             M.toast({ html: "Błąd ustawiania modelu", classes: "red" });
         }
@@ -1820,7 +1939,7 @@ function removePhoneFromLocation(technicalId) {
         .then(res => {
             if (!res.ok) throw new Error("Błąd usuwania z lokalizacji");
             M.toast({ html: "Telefon usunięty z lokalizacji", classes: "green" });
-            return loadStock(currentPage);
+            return refreshStockListPreservingState();
         })
         .catch(err => {
             M.toast({ html: err.message });
@@ -1834,7 +1953,7 @@ function restorePhone(technicalId) {
         .then(res => {
             if (!res.ok) throw new Error("Błąd przywracania telefonu");
             M.toast({ html: "Telefon został przywrócony", classes: "green" });
-            return loadStock(currentPage);
+            return refreshStockListPreservingState();
         })
         .catch(err => {
             M.toast({ html: err.message, classes: "red" });
@@ -1873,7 +1992,7 @@ document.getElementById("confirmHandoverBtn")
             );
             modal.close();
 
-            loadStock(currentPage); // refresh listy
+            refreshStockListPreservingState();
 
         } catch (err) {
             console.error(err);
@@ -1904,7 +2023,7 @@ document.getElementById("confirmReservationBtn")
 
             if (response.ok) {
                 M.toast({ html: "Zarezerwowano pomyślnie", classes: "green" });
-                loadStock(currentPage);
+                refreshStockListPreservingState();
             } else {
                 const err = await response.text();
                 M.toast({ html: `Błąd: ${err}`, classes: "red" });
@@ -1945,7 +2064,7 @@ async function cancelReservation(technicalId) {
         });
         if (response.ok) {
             M.toast({ html: "Rezerwacja została usunięta", classes: "green" });
-            loadStock(currentPage);
+            refreshStockListPreservingState();
         } else {
             const err = await response.text();
             M.toast({ html: `Błąd: ${err}`, classes: "red" });
