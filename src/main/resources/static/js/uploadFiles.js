@@ -1,5 +1,14 @@
 let manualMode = false;
 
+const DEFAULT_VARIANT_SELECT_IDS = {
+    ram: "manualRamSelect",
+    memory: "manualMemorySelect",
+    color: "manualColorSelect",
+    simCardType: "manualSimCardTypeSelect"
+};
+
+const MODEL_VARIANT_FIELDS = ["ram", "memory", "color", "simCardType"];
+
 function isModelIdentityMode() {
     return document.getElementById("identitySourceToggle")?.checked === true;
 }
@@ -24,6 +33,40 @@ function getDefaultPhoneModelOption() {
 
 function getDefaultPhoneModelName() {
     return stockNameFromPhoneModel(getDefaultPhoneModelOption());
+}
+
+function getDefaultVariantSelect(field) {
+    const id = DEFAULT_VARIANT_SELECT_IDS[field];
+    return id ? document.getElementById(id) : null;
+}
+
+function getDefaultVariantValue(field) {
+    const select = getDefaultVariantSelect(field);
+    return select?.tomselect?.getValue() || "";
+}
+
+function getDefaultVariantValues() {
+    return MODEL_VARIANT_FIELDS.reduce((values, field) => {
+        values[field] = getDefaultVariantValue(field);
+        return values;
+    }, {});
+}
+
+function getPhoneVariantOptions(phoneModel, field) {
+    if (!phoneModel) return [];
+    if (field === "color") return splitModelOptions(phoneModel.colors);
+    return splitModelOptions(phoneModel[field]);
+}
+
+function applyDefaultVariants(phone) {
+    const defaults = getDefaultVariantValues();
+    return {
+        ...phone,
+        ram: defaults.ram || phone.ram,
+        memory: defaults.memory || phone.memory,
+        color: defaults.color || phone.color,
+        simCardType: defaults.simCardType || phone.simCardType
+    };
 }
 
 function splitModelOptions(value) {
@@ -125,7 +168,9 @@ function initPhoneModelSelect(select, selectedValue = null) {
         }
         if (selectEl.id === "manualPhoneModelSelect") {
             syncNameFromDefaultModel();
-            syncDefaultModelToBlocks();
+            updateDefaultVariantSelectsForModel()
+                .then(syncDefaultModelToBlocks)
+                .catch(() => syncDefaultModelToBlocks());
         }
     });
 
@@ -145,6 +190,53 @@ function selectedDefaultPhoneModel() {
         : "";
 }
 
+function initDefaultVariantSelects() {
+    MODEL_VARIANT_FIELDS.forEach(field => {
+        const select = getDefaultVariantSelect(field);
+        const ts = initVariantSelect(select, select?.dataset.placeholder || "Wybierz");
+
+        ts?.on("change", () => {
+            syncDefaultVariantsToBlocks();
+        });
+    });
+}
+
+function clearDefaultVariantSelects() {
+    MODEL_VARIANT_FIELDS.forEach(field => {
+        const select = getDefaultVariantSelect(field);
+        const ts = select?.tomselect;
+        if (!ts) return;
+        ts.clear(true);
+        ts.clearOptions();
+        ts.refreshOptions(false);
+    });
+}
+
+async function updateDefaultVariantSelectsForModel() {
+    if (!isModelIdentityMode()) {
+        clearDefaultVariantSelects();
+        return;
+    }
+
+    const phoneModel = await getPhoneModelData(document.getElementById("manualPhoneModelSelect"));
+    if (!phoneModel) {
+        clearDefaultVariantSelects();
+        syncDefaultVariantsToBlocks();
+        return;
+    }
+
+    MODEL_VARIANT_FIELDS.forEach(field => {
+        const select = getDefaultVariantSelect(field);
+        setVariantOptions(
+            select,
+            getPhoneVariantOptions(phoneModel, field),
+            select?.tomselect?.getValue() || ""
+        );
+    });
+
+    syncDefaultVariantsToBlocks();
+}
+
 function syncNameFromDefaultModel() {
     if (!isModelIdentityMode()) return;
 
@@ -162,20 +254,33 @@ function updateIdentitySourceState() {
     const nameInput = document.getElementById("manualName");
     const nameWrapper = document.getElementById("manualNameWrapper");
     const modelWrapper = document.getElementById("manualPhoneModelWrapper");
+    const variantWrapper = document.getElementById("manualVariantWrapper");
     const modelSelect = document.getElementById("manualPhoneModelSelect")?.tomselect;
 
     nameInput.readOnly = modelMode;
     nameWrapper.classList.toggle("hide", modelMode);
     modelWrapper.classList.toggle("hide", !modelMode);
+    variantWrapper?.classList.toggle("hide", !modelMode);
 
     if (modelMode) {
         modelSelect?.enable();
         syncNameFromDefaultModel();
+        updateDefaultVariantSelectsForModel().catch(() => {});
     } else {
         modelSelect?.clear(true);
         modelSelect?.disable();
+        clearDefaultVariantSelects();
         nameInput.readOnly = false;
     }
+
+    MODEL_VARIANT_FIELDS.forEach(field => {
+        const ts = getDefaultVariantSelect(field)?.tomselect;
+        if (modelMode) {
+            ts?.enable();
+        } else {
+            ts?.disable();
+        }
+    });
 
     document.querySelectorAll(".scan-item").forEach(block => {
         const row = block.querySelector(".phone-model-row");
@@ -203,11 +308,21 @@ function updateIdentitySourceState() {
 function syncDefaultModelToBlocks() {
     if (!isModelIdentityMode()) return;
     const selected = selectedDefaultPhoneModel();
+    const defaults = getDefaultVariantValues();
 
     document.querySelectorAll(".scan-item .phone-model-select").forEach(select => {
         if (!select.tomselect || !selected) return;
         select.tomselect.setValue(selected, true);
-        updateVariantSelectsForBlock(select.closest(".scan-item"));
+        updateVariantSelectsForBlock(select.closest(".scan-item"), defaults);
+    });
+}
+
+function syncDefaultVariantsToBlocks() {
+    if (!isModelIdentityMode()) return;
+    const defaults = getDefaultVariantValues();
+
+    document.querySelectorAll(".scan-item").forEach(block => {
+        updateVariantSelectsForBlock(block, defaults);
     });
 }
 
@@ -245,20 +360,21 @@ function setVariantOptions(select, options, currentValue) {
     if (!select) return;
 
     const ts = initVariantSelect(select, select.dataset.placeholder || "Wybierz");
-    const uniqueOptions = [...new Set(options)];
+    const uniqueOptions = [...new Set(options.filter(Boolean))];
     const matchedValue = findMatchingOption(uniqueOptions, currentValue);
+    const valueToSelect = matchedValue || (uniqueOptions.length === 1 ? uniqueOptions[0] : "");
 
     ts.clear(true);
     ts.clearOptions();
     uniqueOptions.forEach(option => ts.addOption({ value: option, text: option }));
     ts.refreshOptions(false);
 
-    if (matchedValue) {
-        ts.setValue(matchedValue, true);
+    if (valueToSelect) {
+        ts.setValue(valueToSelect, true);
     }
 }
 
-async function updateVariantSelectsForBlock(block) {
+async function updateVariantSelectsForBlock(block, preferredValues = {}) {
     const modelSelect = block.querySelector(".phone-model-select");
     const phoneModel = await getPhoneModelData(modelSelect);
     if (!phoneModel) return;
@@ -270,23 +386,23 @@ async function updateVariantSelectsForBlock(block) {
 
     setVariantOptions(
         memorySelect,
-        splitModelOptions(phoneModel.memory),
-        memorySelect?.tomselect?.getValue() || memorySelect?.dataset.currentValue || ""
+        getPhoneVariantOptions(phoneModel, "memory"),
+        preferredValues.memory || memorySelect?.tomselect?.getValue() || memorySelect?.dataset.currentValue || ""
     );
     setVariantOptions(
         ramSelect,
-        splitModelOptions(phoneModel.ram),
-        ramSelect?.tomselect?.getValue() || ramSelect?.dataset.currentValue || ""
+        getPhoneVariantOptions(phoneModel, "ram"),
+        preferredValues.ram || ramSelect?.tomselect?.getValue() || ramSelect?.dataset.currentValue || ""
     );
     setVariantOptions(
         colorSelect,
-        splitModelOptions(phoneModel.colors),
-        colorSelect?.tomselect?.getValue() || colorSelect?.dataset.currentValue || ""
+        getPhoneVariantOptions(phoneModel, "color"),
+        preferredValues.color || colorSelect?.tomselect?.getValue() || colorSelect?.dataset.currentValue || ""
     );
     setVariantOptions(
         simCardTypeSelect,
-        splitModelOptions(phoneModel.simCardType),
-        simCardTypeSelect?.tomselect?.getValue() || simCardTypeSelect?.dataset.currentValue || ""
+        getPhoneVariantOptions(phoneModel, "simCardType"),
+        preferredValues.simCardType || simCardTypeSelect?.tomselect?.getValue() || simCardTypeSelect?.dataset.currentValue || ""
     );
 }
 
@@ -356,6 +472,7 @@ function renderManualContainer() {
 function addManualPhone() {
     const wrapper = document.getElementById("manualPhones");
     const index = wrapper.children.length + 1;
+    const defaultVariants = getDefaultVariantValues();
 
     const block = document.createElement("div");
     block.className = "scan-item z-depth-1";
@@ -407,6 +524,7 @@ function addManualPhone() {
             <div class="input-field col s12 m3">
                 <select data-field="ram"
                         class="ram-select"
+                        data-current-value="${defaultVariants.ram || ""}"
                         data-placeholder="Wybierz RAM"></select>
                 <label class="active">RAM</label>
             </div>
@@ -414,6 +532,7 @@ function addManualPhone() {
             <div class="input-field col s12 m3">
                 <select data-field="memory"
                         class="memory-select"
+                        data-current-value="${defaultVariants.memory || ""}"
                         data-placeholder="Wybierz pamięć"></select>
                 <label class="active">Pamięć</label>
             </div>
@@ -421,6 +540,7 @@ function addManualPhone() {
             <div class="input-field col s12 m3">
                 <select data-field="color"
                         class="color-select"
+                        data-current-value="${defaultVariants.color || ""}"
                         data-placeholder="Wybierz kolor"></select>
                 <label class="active">Kolor</label>
             </div>
@@ -428,6 +548,7 @@ function addManualPhone() {
             <div class="input-field col s12 m3">
                 <select data-field="simCardType"
                         class="sim-card-type-select"
+                        data-current-value="${defaultVariants.simCardType || ""}"
                         data-placeholder="Wybierz SIM"></select>
                 <label class="active">SIM</label>
             </div>
@@ -519,6 +640,7 @@ function addManualPhone() {
     initVariantSelects(block);
     updateIdentitySourceState();
     syncDefaultModelToBlocks();
+    syncDefaultVariantsToBlocks();
 
     block.querySelector(".remove-phone-btn")
         .addEventListener("click", () => {
@@ -680,6 +802,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // === WYSYŁANIE ===
     addBtn.addEventListener("click", async () => {
         if (!validateIdentitySource()) {
+            return;
+        }
+
+        try {
+            await updateDefaultVariantSelectsForModel();
+        } catch (err) {
+            console.error(err);
+            M.toast({ html: "Nie udało się pobrać parametrów modelu", classes: "red" });
             return;
         }
 
@@ -861,7 +991,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let html = `<h5 class="blue-text text-darken-2">Wynik skanowania</h5>`;
 
-        phones.forEach((p, i) => {
+        phones.forEach((scannedPhone, i) => {
+            const p = applyDefaultVariants(scannedPhone);
 
             html += `
         <div class="scan-item z-depth-1" data-phone-index="${i}" style="padding: 16px; border-radius: 8px; margin-top: 20px;">
@@ -1053,6 +1184,7 @@ document.addEventListener("DOMContentLoaded", () => {
         initVariantSelects(container);
         updateIdentitySourceState();
         syncDefaultModelToBlocks();
+        syncDefaultVariantsToBlocks();
 
 
         M.updateTextFields();
@@ -1255,11 +1387,13 @@ let purchaseTypeSelect;
 
 document.addEventListener("DOMContentLoaded", () => {
     initPhoneModelSelect(document.getElementById("manualPhoneModelSelect"));
+    initDefaultVariantSelects();
     updateIdentitySourceState();
 
     document.getElementById("identitySourceToggle")?.addEventListener("change", () => {
         updateIdentitySourceState();
         syncDefaultModelToBlocks();
+        syncDefaultVariantsToBlocks();
     });
 
     if (document.getElementById("manualPurchaseType")) {
