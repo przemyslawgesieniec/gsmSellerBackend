@@ -12,6 +12,7 @@ import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class OfferSpecifications {
 
@@ -103,6 +104,18 @@ public class OfferSpecifications {
                 cb.like(normalizedExpression(cb, phoneModelJoin.get("model")), normalizedPattern),
                 cb.like(normalizedExpression(cb, phoneModelDisplayName), normalizedPattern)
             );
+        };
+    }
+
+    public static Specification<Offer> hasPhoneModelTechnicalId(UUID phoneModelTechnicalId) {
+        return (root, query, cb) -> {
+            if (phoneModelTechnicalId == null) {
+                return null;
+            }
+
+            Join<Offer, PhoneStock> phoneStockJoin = root.join("phoneStock", JoinType.INNER);
+            Join<PhoneStock, PhoneModels> phoneModelJoin = phoneStockJoin.join("phoneModel", JoinType.INNER);
+            return cb.equal(phoneModelJoin.get("technicalId"), phoneModelTechnicalId);
         };
     }
 

@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.gesieniec.gsmseller.offer.model.PublicPhoneOffer;
+import pl.gesieniec.gsmseller.phone.model.PhoneModelFilterOption;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -65,6 +66,7 @@ public class OfferExternalController {
     public Page<PublicPhoneOffer> getOffers(
         @RequestParam(required = false) String brand,
         @RequestParam(required = false) String model,
+        @RequestParam(required = false) UUID phoneModelTechnicalId,
         @RequestParam(required = false) String name,
         @RequestParam(required = false) String status,
         @RequestParam(required = false) String location,
@@ -76,6 +78,7 @@ public class OfferExternalController {
         Specification<Offer> spec = Specification.allOf(
             OfferSpecifications.hasBrand(brand),
             OfferSpecifications.hasModel(model),
+            OfferSpecifications.hasPhoneModelTechnicalId(phoneModelTechnicalId),
             OfferSpecifications.hasName(name),
             OfferSpecifications.hasStatus(status),
             OfferSpecifications.hasLocation(location),
@@ -93,8 +96,8 @@ public class OfferExternalController {
     }
 
     @GetMapping("/filter-options")
-    public Map<String, List<String>> getFilterOptions() {
-        return phoneModelsService.getFilterOptionsByBrand();
+    public Map<String, List<PhoneModelFilterOption>> getFilterOptions() {
+        return phoneModelsService.getExternalFilterOptionsByBrand();
     }
 
     @GetMapping("/{technicalId}")

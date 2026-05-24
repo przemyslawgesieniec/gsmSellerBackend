@@ -3,6 +3,7 @@ package pl.gesieniec.gsmseller.phone.model;
 import java.util.UUID;
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -61,6 +62,30 @@ public class PhoneModelsService {
                         Collectors.toCollection(java.util.TreeSet::new),
                         java.util.ArrayList::new
                     )
+                )
+            ));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, List<PhoneModelFilterOption>> getExternalFilterOptionsByBrand() {
+        return repository.findAll(Sort.by("brand").ascending().and(Sort.by("model").ascending()))
+            .stream()
+            .filter(model -> model.getBrand() != null && !model.getBrand().isBlank())
+            .filter(model -> model.getModel() != null && !model.getModel().isBlank())
+            .sorted(Comparator
+                .comparing(PhoneModels::getBrand, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(PhoneModels::getModel, String.CASE_INSENSITIVE_ORDER))
+            .collect(Collectors.groupingBy(
+                model -> model.getBrand().trim(),
+                java.util.TreeMap::new,
+                Collectors.mapping(
+                    model -> new PhoneModelFilterOption(
+                        model.getTechnicalId(),
+                        model.getBrand().trim(),
+                        model.getModel().trim(),
+                        model.getDisplayName()
+                    ),
+                    Collectors.toList()
                 )
             ));
     }
