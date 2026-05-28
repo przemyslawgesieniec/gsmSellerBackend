@@ -14,6 +14,7 @@ let stockLocationSelect = null;
 let stockBrandSelect = null;
 let stockModelSelect = null;
 let isRestoringStockListState = false;
+let stockBrandOptions = [];
 let stockModelOptionsByBrand = {};
 const stockListStateStorageKey = "gsm-seller.stock-list-state.v1";
 
@@ -33,6 +34,14 @@ const stockBooleanFilterIds = [
 function formatPhoneModelOption(item) {
     const spec = [item.memory, item.ram, item.colors, item.simCardType].filter(Boolean).join(" / ");
     return `${item.displayName || `${item.brand || ""} ${item.model || ""}`.trim()}${spec ? ` (${spec})` : ""}`;
+}
+
+function formatStockModelFilterOption(item) {
+    return formatPhoneModelOption(item);
+}
+
+function formatStockModelFilterControlValue(item) {
+    return item.displayName || item.model || "";
 }
 
 function splitModelOptions(value) {
@@ -400,8 +409,8 @@ function applyStockListState(state) {
             if (el) el.value = filters[key] || "";
         });
 
-        let brand = filters.brand || "";
-        const model = filters.model || "";
+        let brand = resolveStockBrandValue(filters.brand || "");
+        const model = resolveStockModelValue(filters.model || "", brand);
         if (!brand && model) {
             brand = findBrandForModel(model);
         }
@@ -531,7 +540,9 @@ async function loadStockModelFilterOptions() {
         const response = await fetch("/api/v1/phone-models/filter-options");
         if (!response.ok) throw new Error("Nie udało się pobrać modeli");
 
-        stockModelOptionsByBrand = await response.json();
+        const data = await response.json();
+        stockBrandOptions = data.brands || [];
+        stockModelOptionsByBrand = data.modelsByBrand || {};
         updateStockBrandOptions();
         updateStockModelOptions(stockBrandSelect?.getValue() || "", stockModelSelect?.getValue() || "");
     } catch (e) {
@@ -543,13 +554,14 @@ async function loadStockModelFilterOptions() {
 function updateStockBrandOptions() {
     if (!stockBrandSelect) return;
 
-    const selectedBrand = stockBrandSelect.getValue();
+    const selectedBrand = resolveStockBrandValue(stockBrandSelect.getValue());
     stockBrandSelect.clearOptions();
     stockBrandSelect.addOption({ value: "", text: "Dowolna" });
 
-    Object.keys(stockModelOptionsByBrand)
-        .sort((a, b) => a.localeCompare(b, "pl", { sensitivity: "base" }))
-        .forEach(brand => stockBrandSelect.addOption({ value: brand, text: brand }));
+    stockBrandOptions
+        .slice()
+        .sort((a, b) => (a.name || "").localeCompare(b.name || "", "pl", { sensitivity: "base" }))
+        .forEach(brand => stockBrandSelect.addOption({ value: brand.technicalId, text: brand.name }));
 
     stockBrandSelect.refreshOptions(false);
     if (selectedBrand && stockBrandSelect.options[selectedBrand]) {
@@ -560,6 +572,8 @@ function updateStockBrandOptions() {
 function updateStockModelOptions(brand, selectedModel = "") {
     if (!stockModelSelect) return;
 
+    brand = resolveStockBrandValue(brand);
+    selectedModel = resolveStockModelValue(selectedModel, brand);
     const models = brand ? (stockModelOptionsByBrand[brand] || []) : [];
 
     stockModelSelect.clear(true);
@@ -576,8 +590,11 @@ function updateStockModelOptions(brand, selectedModel = "") {
     stockModelSelect.addOption({ value: "", text: "Dowolny" });
     models
         .slice()
-        .sort((a, b) => a.localeCompare(b, "pl", { sensitivity: "base", numeric: true }))
-        .forEach(model => stockModelSelect.addOption({ value: model, text: model }));
+        .sort((a, b) => (a.displayName || a.model || "").localeCompare(b.displayName || b.model || "", "pl", { sensitivity: "base", numeric: true }))
+        .forEach(model => stockModelSelect.addOption({
+            value: model.technicalId,
+            text: formatStockModelFilterControlValue(model)
+        }));
 
     if (selectedModel && !stockModelSelect.options[selectedModel]) {
         stockModelSelect.addOption({ value: selectedModel, text: selectedModel });
@@ -587,14 +604,89 @@ function updateStockModelOptions(brand, selectedModel = "") {
     stockModelSelect.setValue(selectedModel || "", true);
 }
 
+function resolveStockBrandValue(value) {
+    if (!value) return "";
+
+    const normalizedValue = String(value).trim().toLowerCase();
+    const match = stockBrandOptions.find(brand =>
+        String(brand.technicalId) === String(value)
+        || (brand.name || "").trim().toLowerCase() === normalizedValue
+    );
+
+    return match?.technicalId || value;
+}
+
+function resolveStockModelValue(value, brand = "") {
+    if (!value) return "";
+
+    const normalizedValue = String(value).trim().toLowerCase();
+    const groups = brand
+        ? [stockModelOptionsByBrand[brand] || []]
+        : Object.values(stockModelOptionsByBrand);
+    const match = groups
+        .flat()
+        .find(model =>
+            String(model.technicalId) === String(value)
+            || (model.model || "").trim().toLowerCase() === normalizedValue
+            || (model.displayName || "").trim().toLowerCase() === normalizedValue
+        );
+
+    return match?.technicalId || value;
+}
+
+function findStockBrandOption(value) {
+    if (!value) return null;
+
+    const normalizedValue = String(value).trim().toLowerCase();
+    return stockBrandOptions.find(brand =>
+        String(brand.technicalId) === String(value)
+        || (brand.name || "").trim().toLowerCase() === normalizedValue
+    ) || null;
+}
+
+function findStockModelOption(value) {
+    if (!value) return null;
+
+    const normalizedValue = String(value).trim().toLowerCase();
+    return Object.values(stockModelOptionsByBrand)
+        .flat()
+        .find(model =>
+            String(model.technicalId) === String(value)
+            || (model.model || "").trim().toLowerCase() === normalizedValue
+            || (model.displayName || "").trim().toLowerCase() === normalizedValue
+        ) || null;
+}
+
 function findBrandForModel(model) {
     if (!model) return "";
 
     const normalizedModel = model.trim().toLowerCase();
     const match = Object.entries(stockModelOptionsByBrand)
-        .find(([, models]) => models.some(option => option.toLowerCase() === normalizedModel));
+        .find(([, models]) => models.some(option =>
+            String(option.technicalId) === String(model)
+            || (option.model || "").trim().toLowerCase() === normalizedModel
+            || (option.displayName || "").trim().toLowerCase() === normalizedModel
+        ));
 
     return match ? match[0] : "";
+}
+
+function getStockFilterDisplayValue(key, value) {
+    if (key === "brand") {
+        return findStockBrandOption(value)?.name || value;
+    }
+    if (key === "model") {
+        const model = findStockModelOption(value);
+        return model ? formatStockModelFilterOption(model) : value;
+    }
+    if (key === "locationName" && value === "__NO_LOCATION__") {
+        return "Nie przyjęty";
+    }
+    if (key === "hasOffer" || key === "afterService") {
+        return "TAK";
+    }
+
+    return value;
 }
 
 async function loadStock(page = 0, stateFilters = null) {
@@ -1534,11 +1626,7 @@ function renderChips(filters) {
         if (!val) return;
 
         // 👇 mapowanie technicznej wartości na nazwę dla UI
-        let displayValue = val;
-
-        if (key === "locationName" && val === "__NO_LOCATION__") {
-            displayValue = "Brak lokalizacji";
-        }
+        let displayValue = getStockFilterDisplayValue(key, val);
 
         const chip = document.createElement("div");
         chip.className = "chip";
@@ -1567,6 +1655,10 @@ function renderChips(filters) {
                 } else {
                     el.value = "";
                 }
+            }
+
+            if (filterKey === "brand") {
+                updateStockModelOptions("", "");
             }
 
             M.updateTextFields();
@@ -1603,20 +1695,7 @@ function renderFilterChips() {
     Object.entries(filters).forEach(([key, value]) => {
         if (!value) return;
 
-        let displayValue = value;
-
-        // 📍 specjalny przypadek: brak lokalizacji
-        if (key === "locationName" && value === "__NO_LOCATION__") {
-            displayValue = "Nie przyjęty";
-        }
-        
-        if (key === "hasOffer") {
-            displayValue = "TAK";
-        }
-
-        if (key === "afterService") {
-            displayValue = "TAK";
-        }
+        let displayValue = getStockFilterDisplayValue(key, value);
 
         const chip = document.createElement("div");
         chip.className = "chip";
@@ -1637,6 +1716,10 @@ function renderFilterChips() {
                 } else {
                     el.value = "";
                 }
+            }
+
+            if (key === "brand") {
+                updateStockModelOptions("", "");
             }
 
             M.updateTextFields();

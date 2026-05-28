@@ -42,8 +42,8 @@ public class PhoneStockController {
     @GetMapping
     public Page<PhoneStockDto> getPhones(
         @RequestParam(required = false) String name,
-        @RequestParam(required = false) String brand,
-        @RequestParam(required = false) String model,
+        @RequestParam(required = false) UUID brand,
+        @RequestParam(required = false) UUID model,
         @RequestParam(required = false) String imei,
         @RequestParam(required = false) String color,
         @RequestParam(required = false) Status status,

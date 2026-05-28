@@ -3,6 +3,8 @@ package pl.gesieniec.gsmseller.phone.stock;
 import jakarta.persistence.criteria.JoinType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
@@ -20,30 +22,34 @@ public class PhoneStockSpecifications {
         };
     }
 
-    public static Specification<PhoneStock> hasModel(String model) {
+    public static Specification<PhoneStock> hasPhoneModelTechnicalId(UUID modelTechnicalId) {
         return (root, query, cb) -> {
-            if (model == null || model.isBlank()) {
-                return null;
-            }
-
-            String pattern = "%" + model.trim().toLowerCase() + "%";
-            return cb.or(
-                cb.like(cb.lower(root.get("model")), pattern),
-                cb.like(cb.lower(root.join("phoneModel", JoinType.LEFT).get("model")), pattern)
-            );
-        };
-    }
-
-    public static Specification<PhoneStock> hasPhoneModelBrand(String brand) {
-        return (root, query, cb) -> {
-            if (brand == null || brand.isBlank()) {
+            if (modelTechnicalId == null) {
                 return null;
             }
 
             return cb.equal(
-                cb.lower(root.join("phoneModel", JoinType.LEFT).get("brand")),
-                brand.trim().toLowerCase()
+                root.join("phoneModel", JoinType.LEFT).get("technicalId"),
+                modelTechnicalId
             );
+        };
+    }
+
+    public static Specification<PhoneStock> hasPhoneModelBrandIn(UUID brandTechnicalId, Collection<String> brands) {
+        return (root, query, cb) -> {
+            if (brandTechnicalId == null) {
+                return null;
+            }
+            if (brands == null || brands.isEmpty()) {
+                return cb.disjunction();
+            }
+
+            var normalizedBrands = brands.stream()
+                .filter(brand -> brand != null && !brand.isBlank())
+                .map(brand -> brand.trim().toLowerCase())
+                .toList();
+
+            return cb.lower(root.join("phoneModel", JoinType.LEFT).get("brand")).in(normalizedBrands);
         };
     }
 

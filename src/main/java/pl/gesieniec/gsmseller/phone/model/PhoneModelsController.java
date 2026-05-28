@@ -1,7 +1,5 @@
 package pl.gesieniec.gsmseller.phone.model;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,7 +33,7 @@ public class PhoneModelsController {
     }
 
     @GetMapping("/filter-options")
-    public Map<String, List<String>> getFilterOptions() {
+    public PhoneModelFilterOptionsDto getFilterOptions() {
         return service.getFilterOptionsByBrand();
     }
 

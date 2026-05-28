@@ -26,6 +26,7 @@ import pl.gesieniec.gsmseller.reservation.ReservationExpiredEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationCancelledEvent;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.phone.model.PhoneModels;
+import pl.gesieniec.gsmseller.phone.model.PhoneModelsService;
 import pl.gesieniec.gsmseller.phone.model.PhoneModelsRepository;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.event.PhoneRemovedEvent;
@@ -64,8 +65,8 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
 
     public Page<PhoneStockDto> getPhones(String name,
-                                         String brand,
-                                         String model,
+                                         UUID brand,
+                                         UUID model,
                                          String color,
                                          String imei,
                                          Status status,
@@ -76,10 +77,12 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
                                          Boolean afterService,
                                          int page,
                                          int size) {
+        List<String> brandNames = findBrandNamesByTechnicalId(brand);
+
         Specification<PhoneStock> spec = Specification
             .where(PhoneStockSpecifications.hasName(name))
-            .and(PhoneStockSpecifications.hasPhoneModelBrand(brand))
-            .and(PhoneStockSpecifications.hasModel(model))
+            .and(PhoneStockSpecifications.hasPhoneModelBrandIn(brand, brandNames))
+            .and(PhoneStockSpecifications.hasPhoneModelTechnicalId(model))
             .and(PhoneStockSpecifications.hasImeiLike(imei))
             .and(PhoneStockSpecifications.hasColor(color))
             .and(PhoneStockSpecifications.hasStatus(status))
@@ -94,6 +97,21 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
 
         return repository.findAll(spec, pageable)
             .map(phoneStockMapper::toDto);
+    }
+
+    private List<String> findBrandNamesByTechnicalId(UUID brandTechnicalId) {
+        if (brandTechnicalId == null) {
+            return List.of();
+        }
+
+        return phoneModelsRepository.findAll(Sort.by("brand").ascending())
+            .stream()
+            .map(PhoneModels::getBrand)
+            .filter(phoneBrand -> phoneBrand != null && !phoneBrand.isBlank())
+            .filter(phoneBrand -> PhoneModelsService.brandTechnicalId(phoneBrand).equals(brandTechnicalId))
+            .map(String::trim)
+            .distinct()
+            .toList();
     }
 
     @Transactional

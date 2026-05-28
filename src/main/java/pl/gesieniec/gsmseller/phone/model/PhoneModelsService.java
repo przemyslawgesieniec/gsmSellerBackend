@@ -1,9 +1,12 @@
 package pl.gesieniec.gsmseller.phone.model;
 
-import java.util.UUID;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -48,22 +51,40 @@ public class PhoneModelsService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, List<String>> getFilterOptionsByBrand() {
-        return repository.findAll(Sort.by("brand").ascending().and(Sort.by("model").ascending()))
+    public PhoneModelFilterOptionsDto getFilterOptionsByBrand() {
+        Map<UUID, List<PhoneModelFilterOption>> modelsByBrand = repository.findAll(Sort.by("brand").ascending().and(Sort.by("model").ascending()))
             .stream()
             .filter(model -> model.getBrand() != null && !model.getBrand().isBlank())
             .filter(model -> model.getModel() != null && !model.getModel().isBlank())
+            .sorted(Comparator
+                .comparing(PhoneModels::getBrand, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(PhoneModels::getModel, String.CASE_INSENSITIVE_ORDER))
             .collect(Collectors.groupingBy(
-                model -> model.getBrand().trim(),
-                java.util.TreeMap::new,
+                model -> brandTechnicalId(model.getBrand()),
+                LinkedHashMap::new,
                 Collectors.mapping(
-                    model -> model.getModel().trim(),
-                    Collectors.collectingAndThen(
-                        Collectors.toCollection(java.util.TreeSet::new),
-                        java.util.ArrayList::new
-                    )
+                    model -> new PhoneModelFilterOption(
+                        model.getTechnicalId(),
+                        brandTechnicalId(model.getBrand()),
+                        model.getBrand().trim(),
+                        model.getModel().trim(),
+                        model.getDisplayName(),
+                        model.getMemory(),
+                        model.getRam(),
+                        model.getColors(),
+                        model.getSimCardType()
+                    ),
+                    Collectors.toList()
                 )
             ));
+
+        List<PhoneBrandFilterOption> brands = modelsByBrand.values().stream()
+            .map(List::getFirst)
+            .map(model -> new PhoneBrandFilterOption(model.brandTechnicalId(), model.brand()))
+            .sorted(Comparator.comparing(PhoneBrandFilterOption::name, String.CASE_INSENSITIVE_ORDER))
+            .toList();
+
+        return new PhoneModelFilterOptionsDto(brands, modelsByBrand);
     }
 
     @Transactional(readOnly = true)
@@ -81,9 +102,14 @@ public class PhoneModelsService {
                 Collectors.mapping(
                     model -> new PhoneModelFilterOption(
                         model.getTechnicalId(),
+                        brandTechnicalId(model.getBrand()),
                         model.getBrand().trim(),
                         model.getModel().trim(),
-                        model.getDisplayName()
+                        model.getDisplayName(),
+                        model.getMemory(),
+                        model.getRam(),
+                        model.getColors(),
+                        model.getSimCardType()
                     ),
                     Collectors.toList()
                 )
@@ -95,6 +121,13 @@ public class PhoneModelsService {
         return repository.findByTechnicalId(technicalId)
             .map(mapper::toDto)
             .orElseThrow(() -> new EntityNotFoundException("Phone model not found: " + technicalId));
+    }
+
+    public static UUID brandTechnicalId(String brand) {
+        String normalizedBrand = brand == null
+            ? ""
+            : brand.trim().toLowerCase(Locale.ROOT);
+        return UUID.nameUUIDFromBytes(("phone-brand:" + normalizedBrand).getBytes(StandardCharsets.UTF_8));
     }
 
     @Transactional
