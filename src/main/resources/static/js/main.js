@@ -16,6 +16,8 @@ let stockModelSelect = null;
 let isRestoringStockListState = false;
 let stockBrandOptions = [];
 let stockModelOptionsByBrand = {};
+let stockLoadRequestId = 0;
+let stockLoadAbortController = null;
 const stockListStateStorageKey = "gsm-seller.stock-list-state.v1";
 
 const listContainer = document.getElementById("phone-list");
@@ -692,13 +694,22 @@ function getStockFilterDisplayValue(key, value) {
 async function loadStock(page = 0, stateFilters = null) {
     page = normalizeStockPageIndex(page);
     const filters = normalizeStockFilters(stateFilters || getFilters());
+    const requestId = ++stockLoadRequestId;
+
+    abortCurrentStockLoad();
+
+    const abortController = new AbortController();
+    stockLoadAbortController = abortController;
+
     currentPage = page;
     persistStockListState(page, filters);
 
     try {
         renderFilterChips();
 
-        const data = await fetchPhonesPage(page, filters);
+        const data = await fetchPhonesPage(page, filters, abortController.signal);
+        if (requestId !== stockLoadRequestId) return;
+
         if (data.content.length === 0 && page > 0) {
             loadStock(page - 1, filters);
             return;
@@ -739,35 +750,47 @@ async function loadStock(page = 0, stateFilters = null) {
         startReservationTimers(phones);
         loadPagination(data.number, data.totalPages);
     } catch (error) {
+        if (error.name === "AbortError") return;
+        if (requestId !== stockLoadRequestId) return;
+
         console.error("Błąd podczas pobierania danych:", error);
+        M.toast({html: 'Błąd ładowania danych z serwera', classes: 'red'});
+    } finally {
+        if (stockLoadAbortController === abortController) {
+            stockLoadAbortController = null;
+        }
     }
+
+    if (requestId !== stockLoadRequestId) return;
     renderChips(filters);
 }
 
-async function fetchPhonesPage(page = 0, filters = {}) {
-    try {
-        const params = new URLSearchParams();
+async function fetchPhonesPage(page = 0, filters = {}, signal = null) {
+    const params = new URLSearchParams();
 
-        params.append("page", page);
-        params.append("size", pageSize);
+    params.append("page", page);
+    params.append("size", pageSize);
 
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== null && value !== "") {
-                params.append(key, value);
-            }
-        });
-
-        const response = await fetch(`/api/v1/phones?${params.toString()}`);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value !== null && value !== "") {
+            params.append(key, value);
         }
+    });
 
-        return await response.json();
-    } catch (error) {
-        console.error("Błąd podczas pobierania telefonów:", error);
-        M.toast({html: 'Błąd ładowania danych z serwera', classes: 'red'});
+    const response = await fetch(`/api/v1/phones?${params.toString()}`, { signal });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
+    return await response.json();
+}
+
+function abortCurrentStockLoad() {
+    if (!stockLoadAbortController) return;
+
+    stockLoadAbortController.abort();
+    stockLoadAbortController = null;
 }
 
 function loadPagination(currentPage, totalPages) {
@@ -1820,6 +1843,8 @@ const debouncedStockReload = debounce(() => loadStock(0), 300);
 function liveReload() {
     if (isRestoringStockListState) return;
 
+    stockLoadRequestId++;
+    abortCurrentStockLoad();
     currentPage = 0;
     persistStockListState(0, getFilters());
     debouncedStockReload();
