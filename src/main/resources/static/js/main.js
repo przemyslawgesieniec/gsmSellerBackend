@@ -13,9 +13,11 @@ let stockStatusSelect = null;
 let stockLocationSelect = null;
 let stockBrandSelect = null;
 let stockModelSelect = null;
+let stockMemorySelect = null;
 let isRestoringStockListState = false;
 let stockBrandOptions = [];
 let stockModelOptionsByBrand = {};
+let stockMemoryOptions = [];
 let stockLoadRequestId = 0;
 let stockLoadAbortController = null;
 const stockListStateStorageKey = "gsm-seller.stock-list-state.v1";
@@ -293,6 +295,7 @@ function getFilters() {
         name: document.getElementById("filterName").value.trim(),
         brand: document.getElementById("filterBrand").value.trim(),
         model: document.getElementById("filterModel").value.trim(),
+        memory: document.getElementById("filterMemory").value.trim(),
         color: document.getElementById("filterColor").value.trim(),
         imei: document.getElementById("filterImei").value.trim(),
         priceMin: document.getElementById("filterPriceMin").value.trim(),
@@ -319,6 +322,7 @@ function emptyStockFilters() {
         name: "",
         brand: "",
         model: "",
+        memory: "",
         color: "",
         imei: "",
         priceMin: "",
@@ -346,6 +350,7 @@ function getStockListStateFromUrl() {
         "name",
         "brand",
         "model",
+        "memory",
         "color",
         "imei",
         "priceMin",
@@ -366,6 +371,7 @@ function getStockListStateFromUrl() {
             name: params.get("name") || "",
             brand: params.get("brand") || "",
             model: params.get("model") || "",
+            memory: params.get("memory") || "",
             color: params.get("color") || "",
             imei: params.get("imei") || "",
             priceMin: params.get("priceMin") || "",
@@ -419,6 +425,7 @@ function applyStockListState(state) {
 
         setTomSelectValue("#filterBrand", brand);
         updateStockModelOptions(brand, model);
+        setTomSelectValue("#filterMemory", filters.memory || "");
 
         const hasOffer = document.getElementById("filterHasOffer");
         const afterService = document.getElementById("filterAfterService");
@@ -477,6 +484,7 @@ function syncStockListStateToUrl(page = currentPage, filters = getFilters()) {
     setOrDeleteStockSearchParam(url.searchParams, "name", filters.name);
     setOrDeleteStockSearchParam(url.searchParams, "brand", filters.brand);
     setOrDeleteStockSearchParam(url.searchParams, "model", filters.model);
+    setOrDeleteStockSearchParam(url.searchParams, "memory", filters.memory);
     setOrDeleteStockSearchParam(url.searchParams, "color", filters.color);
     setOrDeleteStockSearchParam(url.searchParams, "imei", filters.imei);
     setOrDeleteStockSearchParam(url.searchParams, "priceMin", filters.priceMin);
@@ -522,6 +530,7 @@ function setOrDeleteStockSearchParam(params, key, value) {
 function initStockModelFilterSelects() {
     stockBrandSelect = initSimpleSelect('#filterBrand');
     stockModelSelect = initSimpleSelect('#filterModel');
+    stockMemorySelect = initSimpleSelect('#filterMemory');
 
     if (stockBrandSelect) {
         stockBrandSelect.on('change', brand => {
@@ -535,6 +544,12 @@ function initStockModelFilterSelects() {
             if (!isRestoringStockListState) liveReload();
         });
     }
+
+    if (stockMemorySelect) {
+        stockMemorySelect.on('change', () => {
+            if (!isRestoringStockListState) liveReload();
+        });
+    }
 }
 
 async function loadStockModelFilterOptions() {
@@ -545,12 +560,67 @@ async function loadStockModelFilterOptions() {
         const data = await response.json();
         stockBrandOptions = data.brands || [];
         stockModelOptionsByBrand = data.modelsByBrand || {};
+        stockMemoryOptions = buildStockMemoryOptions(stockModelOptionsByBrand);
         updateStockBrandOptions();
         updateStockModelOptions(stockBrandSelect?.getValue() || "", stockModelSelect?.getValue() || "");
+        updateStockMemoryOptions(stockMemorySelect?.getValue() || "");
     } catch (e) {
         console.warn("Nie udało się pobrać marek i modeli telefonów", e);
         M.toast({ html: "Nie udało się pobrać marek i modeli", classes: "red" });
     }
+}
+
+function buildStockMemoryOptions(modelsByBrand) {
+    const optionsByNormalizedValue = new Map();
+
+    Object.values(modelsByBrand)
+        .flat()
+        .flatMap(model => splitModelOptions(model.memory))
+        .forEach(memory => {
+            const normalizedMemory = normalizeStockMemoryValue(memory);
+            if (normalizedMemory && !optionsByNormalizedValue.has(normalizedMemory)) {
+                optionsByNormalizedValue.set(normalizedMemory, memory);
+            }
+        });
+
+    return [...optionsByNormalizedValue.values()]
+        .sort(compareStockMemoryOptions);
+}
+
+function normalizeStockMemoryValue(value) {
+    return String(value || "").trim().toLowerCase().replace(/\s+/g, "");
+}
+
+function compareStockMemoryOptions(a, b) {
+    const aNumber = Number.parseInt(String(a).replace(/\D/g, ""), 10);
+    const bNumber = Number.parseInt(String(b).replace(/\D/g, ""), 10);
+
+    if (Number.isInteger(aNumber) && Number.isInteger(bNumber) && aNumber !== bNumber) {
+        return aNumber - bNumber;
+    }
+
+    return String(a).localeCompare(String(b), "pl", { sensitivity: "base", numeric: true });
+}
+
+function updateStockMemoryOptions(selectedMemory = "") {
+    if (!stockMemorySelect) return;
+
+    const resolvedMemory = resolveStockMemoryValue(selectedMemory);
+    stockMemorySelect.clear(true);
+    stockMemorySelect.clearOptions();
+    stockMemorySelect.addOption({ value: "", text: "Dowolna" });
+
+    stockMemoryOptions.forEach(memory => stockMemorySelect.addOption({
+        value: memory,
+        text: memory
+    }));
+
+    if (resolvedMemory && !stockMemorySelect.options[resolvedMemory]) {
+        stockMemorySelect.addOption({ value: resolvedMemory, text: resolvedMemory });
+    }
+
+    stockMemorySelect.refreshOptions(false);
+    stockMemorySelect.setValue(resolvedMemory || "", true);
 }
 
 function updateStockBrandOptions() {
@@ -634,6 +704,13 @@ function resolveStockModelValue(value, brand = "") {
         );
 
     return match?.technicalId || value;
+}
+
+function resolveStockMemoryValue(value) {
+    if (!value) return "";
+
+    const normalizedValue = normalizeStockMemoryValue(value);
+    return stockMemoryOptions.find(memory => normalizeStockMemoryValue(memory) === normalizedValue) || value;
 }
 
 function findStockBrandOption(value) {
@@ -1403,7 +1480,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         "filterStatus",
         "filterLocation",
         "filterBrand",
-        "filterModel"
+        "filterModel",
+        "filterMemory"
     ].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -1608,12 +1686,14 @@ document.getElementById("resetFilters").addEventListener("click", () => {
     const locationSelect = getTomSelectInstance('#filterLocation');
     const brandSelect = getTomSelectInstance('#filterBrand');
     const modelSelect = getTomSelectInstance('#filterModel');
+    const memorySelect = getTomSelectInstance('#filterMemory');
 
     statusSelect?.clear(true);
     locationSelect?.clear(true);
     brandSelect?.clear(true);
     updateStockModelOptions("", "");
     modelSelect?.clear(true);
+    memorySelect?.clear(true);
 
     renderFilterChips();
     loadStock(0);
@@ -1625,6 +1705,7 @@ const filterLabels = {
     name: "Nazwa",
     brand: "Marka",
     model: "Model",
+    memory: "Pamięć",
     color: "Kolor",
     imei: "IMEI",
     priceMin: "Cena od",
@@ -1705,6 +1786,7 @@ function renderFilterChips() {
         name: "filterName",
         brand: "filterBrand",
         model: "filterModel",
+        memory: "filterMemory",
         color: "filterColor",
         imei: "filterImei",
         priceMin: "filterPriceMin",

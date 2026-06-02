@@ -67,6 +67,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     public Page<PhoneStockDto> getPhones(String name,
                                          UUID brand,
                                          UUID model,
+                                         String memory,
                                          String color,
                                          String imei,
                                          Status status,
@@ -83,6 +84,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
             .where(PhoneStockSpecifications.hasName(name))
             .and(PhoneStockSpecifications.hasPhoneModelBrandIn(brand, brandNames))
             .and(PhoneStockSpecifications.hasPhoneModelTechnicalId(model))
+            .and(PhoneStockSpecifications.hasMemory(memory))
             .and(PhoneStockSpecifications.hasImeiLike(imei))
             .and(PhoneStockSpecifications.hasColor(color))
             .and(PhoneStockSpecifications.hasStatus(status))

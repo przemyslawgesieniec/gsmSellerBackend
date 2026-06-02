@@ -44,6 +44,7 @@ public class PhoneStockController {
         @RequestParam(required = false) String name,
         @RequestParam(required = false) UUID brand,
         @RequestParam(required = false) UUID model,
+        @RequestParam(required = false) String memory,
         @RequestParam(required = false) String imei,
         @RequestParam(required = false) String color,
         @RequestParam(required = false) Status status,
@@ -55,7 +56,7 @@ public class PhoneStockController {
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "50") int size
     ) {
-        return service.getPhones(name, brand, model, color, imei, status, locationName, priceMin, priceMax, hasOffer, afterService, page, size);
+        return service.getPhones(name, brand, model, memory, color, imei, status, locationName, priceMin, priceMax, hasOffer, afterService, page, size);
     }
 
 

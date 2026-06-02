@@ -35,6 +35,25 @@ public class PhoneStockSpecifications {
         };
     }
 
+    public static Specification<PhoneStock> hasMemory(String memory) {
+        return (root, query, cb) -> {
+            if (memory == null || memory.isBlank()) {
+                return null;
+            }
+
+            String normalizedMemory = memory.trim().toLowerCase().replaceAll("\\s+", "");
+            var phoneMemory = cb.function(
+                "replace",
+                String.class,
+                cb.lower(root.get("memory")),
+                cb.literal(" "),
+                cb.literal("")
+            );
+
+            return cb.equal(phoneMemory, normalizedMemory);
+        };
+    }
+
     public static Specification<PhoneStock> hasPhoneModelBrandIn(UUID brandTechnicalId, Collection<String> brands) {
         return (root, query, cb) -> {
             if (brandTechnicalId == null) {
