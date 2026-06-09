@@ -483,8 +483,8 @@ function createCard(repair) {
                 <br>
                 <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
             </span>
-            ${clientSection}
             ${servicePointSection}
+            ${clientSection}
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
             <p><b>Kolor:</b> ${repair.color || '-'} </p>
             <div class="divider" style="margin: 5px 0;"></div>
@@ -605,8 +605,8 @@ function createMobileCard(repair) {
                     <br>
                     <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
                 </span>
-                ${clientSection}
                 ${servicePointSection}
+                ${clientSection}
                 <div class="row" style="margin-bottom: 0;">
                     <div class="col s6">
                         <p><b>IMEI:</b> ${repair.imei || '-'}</p>

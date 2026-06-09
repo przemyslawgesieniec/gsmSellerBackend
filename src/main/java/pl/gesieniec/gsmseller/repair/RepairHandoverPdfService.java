@@ -22,6 +22,7 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -175,7 +176,7 @@ public class RepairHandoverPdfService {
 
     private void rightTopCorner(Canvas canvas, Repair repair) {
         // Data
-        canvas.add(new Paragraph("Data: " + repair.getCreateDateTime().format(DATE_FORMATTER))
+        canvas.add(new Paragraph("Data: " + LocalDate.now().format(DATE_FORMATTER))
             .setTextAlignment(TextAlignment.RIGHT)
             .setFontSize(9));
 
