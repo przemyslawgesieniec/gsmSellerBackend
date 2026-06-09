@@ -69,4 +69,5 @@ public class RepairDto {
     private String damageDescription;
     private String repairOrderDescription;
     private String pinPassword;
+    private List<RepairNoteDto> notes;
 }

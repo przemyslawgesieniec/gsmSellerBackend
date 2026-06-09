@@ -73,6 +73,10 @@ public class Repair {
     private LocalDateTime createDateTime;
     private LocalDateTime handoverDate;
 
+    @OneToMany(mappedBy = "repair", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt DESC")
+    private List<RepairNote> notes = new ArrayList<>();
+
     private BigDecimal purchasePrice;
     private BigDecimal repairPrice;
     private String location;

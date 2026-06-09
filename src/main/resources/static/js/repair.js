@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('saveRepairBtn').addEventListener('click', saveRepair);
+    document.getElementById('btnAddRepairNote').addEventListener('click', addRepairNote);
     
     const filterSelect = document.getElementById('filterLocationSelect');
     if (filterSelect) {
@@ -978,6 +979,8 @@ async function openRepairDetails(technicalId) {
     document.getElementById('repairPrice').value = repair.repairPrice || '';
     document.getElementById('repairPurchasePrice').value = repair.purchasePrice || '';
 
+    renderRepairNotes(repair.notes, repair.technicalId);
+
     // Visibility of price fields
     if (repair.status === 'NAPRAWIONY' || repair.status === 'NIE_DO_NAPRAWY') {
         document.getElementById('repairFinalPriceWrapper').style.display = 'block';
@@ -1002,6 +1005,118 @@ async function openRepairDetails(technicalId) {
 
     const modal = M.Modal.getInstance(document.getElementById('repairModal'));
     modal.open();
+}
+
+async function addRepairNote() {
+    const technicalId = document.getElementById('repairTechnicalId').value;
+    const content = document.getElementById('newRepairNoteContent').value.trim();
+
+    if (!content) {
+        M.toast({html: 'Wpisz treść notatki', classes: 'orange'});
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: content
+        });
+
+        if (!response.ok) throw new Error('Błąd dodawania notatki');
+
+        const newNote = await response.json();
+        M.toast({html: 'Notatka dodana', classes: 'green'});
+        document.getElementById('newRepairNoteContent').value = '';
+        M.textareaAutoResize(document.getElementById('newRepairNoteContent'));
+        
+        // Odśwież listę notatek (pobieramy całą naprawę, żeby mieć aktualną listę w repairsData)
+        await refreshRepairData(technicalId);
+        const repair = repairsData.find(r => r.technicalId === technicalId);
+        renderRepairNotes(repair.notes, technicalId);
+    } catch (error) {
+        console.error(error);
+        M.toast({html: 'Błąd podczas dodawania notatki', classes: 'red'});
+    }
+}
+
+async function deleteRepairNote(technicalId, noteId) {
+    if (!confirm('Czy na pewno chcesz usunąć tę notatkę?')) return;
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}/notes/${noteId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Błąd usuwania notatki');
+        }
+
+        M.toast({html: 'Notatka usunięta', classes: 'green'});
+        await refreshRepairData(technicalId);
+        const repair = repairsData.find(r => r.technicalId === technicalId);
+        renderRepairNotes(repair.notes, technicalId);
+    } catch (error) {
+        console.error(error);
+        M.toast({html: error.message, classes: 'red'});
+    }
+}
+
+async function refreshRepairData(technicalId) {
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}`);
+        if (!response.ok) throw new Error('Błąd odświeżania danych naprawy');
+        const updatedRepair = await response.json();
+        const index = repairsData.findIndex(r => r.technicalId === technicalId);
+        if (index !== -1) {
+            repairsData[index] = updatedRepair;
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function renderRepairNotes(notes, technicalId) {
+    const container = document.getElementById('repairNotesList');
+    container.innerHTML = '';
+
+    if (!notes || notes.length === 0) {
+        container.innerHTML = '<p class="grey-text center-align">Brak notatek</p>';
+        return;
+    }
+
+    notes.forEach(note => {
+        const noteEl = document.createElement('div');
+        noteEl.style.marginBottom = '15px';
+        noteEl.style.padding = '10px';
+        noteEl.style.borderRadius = '8px';
+        noteEl.style.backgroundColor = '#fff';
+        noteEl.style.borderLeft = '4px solid #7b1fa2';
+        noteEl.style.position = 'relative';
+        noteEl.className = 'z-depth-1';
+
+        const date = new Date(note.createdAt).toLocaleString();
+        
+        const isAuthor = CURRENT_USER && CURRENT_USER.username === note.authorName;
+
+        noteEl.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span class="purple-text text-darken-2" style="font-weight: bold;">
+                    <i class="material-icons tiny">person</i> ${note.authorName}
+                </span>
+                <span class="grey-text" style="font-size: 0.8rem;">${date}</span>
+            </div>
+            <div style="white-space: pre-wrap; color: #333;">${note.content}</div>
+            ${isAuthor ? `
+                <a href="#!" class="red-text" style="position: absolute; bottom: 5px; right: 10px; font-size: 0.8rem; display: flex; align-items: center;" 
+                   onclick="event.stopPropagation(); deleteRepairNote('${technicalId}', ${note.id})">
+                    <i class="material-icons tiny">delete</i> usuń
+                </a>
+            ` : ''}
+        `;
+        container.appendChild(noteEl);
+    });
 }
 
 async function saveRepair() {
@@ -1094,6 +1209,8 @@ async function saveRepair() {
 
 function resetForm() {
     document.getElementById('repairForm').reset();
+    document.getElementById('newRepairNoteContent').value = '';
+    document.getElementById('repairNotesList').innerHTML = '<p class="grey-text center-align">Brak notatek</p>';
     document.getElementById('rmaDisplay').style.display = 'none';
     document.getElementById('repairRma').value = '';
     document.getElementById('repairTechnicalId').value = '';
@@ -1122,7 +1239,7 @@ function resetForm() {
 
 function toggleFields(disabled) {
     const form = document.getElementById('repairForm');
-    const elements = form.querySelectorAll('input, textarea, select, button:not(.btn-flat)');
+    const elements = form.querySelectorAll('input, textarea:not(#newRepairNoteContent), select, button:not(.btn-flat):not(#btnAddRepairNote)');
     elements.forEach(el => {
         // Nie blokujemy ukrytych pól technicznych
         if (el.type !== 'hidden') {

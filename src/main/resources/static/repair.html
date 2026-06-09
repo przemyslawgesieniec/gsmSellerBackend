@@ -442,6 +442,27 @@
               <label for="repairPurchasePrice">Cena zakupu / przyjęcia</label>
             </div>
         </div>
+
+        <!-- Sekcja 4: Notatki (wewnętrzne) -->
+        <div class="col s12">
+          <div class="section-title purple-text text-darken-2">Sekcja 4 - Notatki wewnętrzne (niewidoczne dla klienta)</div>
+          <div class="row card-panel grey lighten-5" style="box-shadow: none; border: 1px solid #ddd;">
+            <div id="repairNotesList" class="col s12" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto;">
+              <!-- Tu trafią notatki -->
+              <p class="grey-text center-align">Brak notatek</p>
+            </div>
+            <div class="input-field col s12">
+              <i class="material-icons prefix">comment</i>
+              <textarea id="newRepairNoteContent" class="materialize-textarea"></textarea>
+              <label for="newRepairNoteContent">Dodaj nową notatkę...</label>
+            </div>
+            <div class="col s12 right-align">
+              <button type="button" class="btn purple darken-2 waves-effect waves-light" id="btnAddRepairNote">
+                <i class="material-icons left">add</i>Dodaj notatkę
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </form>
   </div>
