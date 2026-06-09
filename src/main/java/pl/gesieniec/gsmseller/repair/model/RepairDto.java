@@ -19,6 +19,8 @@ public class RepairDto {
     private String clientName;
     private String clientSurname;
     private String clientPhoneNumber;
+    private UUID servicePointTechnicalId;
+    private String servicePointName;
 
     private String manufacturer;
     private String model;

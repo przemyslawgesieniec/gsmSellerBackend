@@ -74,9 +74,14 @@ public class RepairController {
     }
 
     @PatchMapping("/{technicalId}/status")
-    public RepairDto updateStatus(@PathVariable UUID technicalId, @RequestParam RepairStatus status) {
+    public RepairDto updateStatus(
+        @PathVariable UUID technicalId,
+        @RequestParam RepairStatus status,
+        @RequestParam(required = false) UUID servicePointTechnicalId,
+        @RequestParam(required = false) String servicePointName
+    ) {
         log.info("Zmiana statusu naprawy {} na {}", technicalId, status);
-        return service.updateStatus(technicalId, status);
+        return service.updateStatus(technicalId, status, servicePointTechnicalId, servicePointName);
     }
 
     @PatchMapping("/{technicalId}/unarchive")

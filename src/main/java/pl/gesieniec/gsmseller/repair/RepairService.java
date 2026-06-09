@@ -22,6 +22,8 @@ import pl.gesieniec.gsmseller.repair.client.RepairClientRepository;
 import pl.gesieniec.gsmseller.repair.model.RepairDto;
 import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 import pl.gesieniec.gsmseller.repair.model.RestoreToShopRequest;
+import pl.gesieniec.gsmseller.repair.servicepoint.RepairServicePoint;
+import pl.gesieniec.gsmseller.repair.servicepoint.RepairServicePointService;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 
@@ -37,6 +39,7 @@ public class RepairService {
     private final PhoneStockRepository phoneStockRepository;
     private final LocationRepository locationRepository;
     private final RepairClientRepository clientRepository;
+    private final RepairServicePointService servicePointService;
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
@@ -151,6 +154,13 @@ public class RepairService {
             location,
             dto.getRepairDescription()
         );
+        if (dto.getServicePointTechnicalId() != null
+            || (dto.getServicePointName() != null && !dto.getServicePointName().isBlank())) {
+            repair.assignServicePoint(servicePointService.resolve(
+                dto.getServicePointTechnicalId(),
+                dto.getServicePointName()
+            ));
+        }
         Repair saved = repository.save(repair);
         return mapper.toDto(saved);
     }
@@ -238,6 +248,14 @@ public class RepairService {
             dto.getRepairDescription()
         );
 
+        if (dto.getServicePointTechnicalId() != null
+            || (dto.getServicePointName() != null && !dto.getServicePointName().isBlank())) {
+            repair.assignServicePoint(servicePointService.resolve(
+                dto.getServicePointTechnicalId(),
+                dto.getServicePointName()
+            ));
+        }
+
         if (dto.getStatus() != null) {
             repair.updateStatus(dto.getStatus());
         }
@@ -246,9 +264,22 @@ public class RepairService {
     }
 
     @Transactional
-    public RepairDto updateStatus(UUID technicalId, RepairStatus status) {
+    public RepairDto updateStatus(
+        UUID technicalId,
+        RepairStatus status,
+        UUID servicePointTechnicalId,
+        String servicePointName
+    ) {
         Repair repair = repository.findByTechnicalId(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
+
+        if (status == RepairStatus.W_NAPRAWIE) {
+            RepairServicePoint servicePoint = servicePointService.resolve(
+                servicePointTechnicalId,
+                servicePointName
+            );
+            repair.assignServicePoint(servicePoint);
+        }
 
         repair.updateStatus(status);
         return mapper.toDto(repair);

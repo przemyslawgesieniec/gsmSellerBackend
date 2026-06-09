@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('saveRepairBtn').style.display = 'inline-block';
     });
     document.getElementById('confirmRestoreBtn').addEventListener('click', confirmRestore);
+    document.getElementById('confirmServicePointBtn').addEventListener('click', confirmServicePointSelection);
     document.getElementById('btnConfirmFinalizeStatus').addEventListener('click', handleFinalizeStatus);
     document.getElementById('finalStatusSelect').addEventListener('change', (e) => {
         const status = e.target.value;
@@ -86,6 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     initClientAutocomplete();
     initClientToggles();
+    initServicePointPicker('repair');
+    initServicePointPicker('status');
 
     loadCurrentUser().then(() => {
         if (IS_ADMIN) {
@@ -117,6 +120,116 @@ function initAllSelects() {
     tsRepairLocation = initSimpleSelect('#repairLocation');
     tsRestoreLocation = initSimpleSelect('#restoreLocation');
     tsFinalStatus = initSimpleSelect('#finalStatusSelect');
+}
+
+const servicePointSuggestions = {
+    repair: {},
+    status: {}
+};
+
+function getServicePointElements(context) {
+    const prefix = context === 'repair' ? 'repair' : 'status';
+    const buttonSuffix = context === 'repair' ? 'RepairServicePoint' : 'StatusServicePoint';
+    return {
+        search: document.getElementById(`${prefix}ServicePointSearch`),
+        technicalId: document.getElementById(`${prefix}ServicePointTechnicalId`),
+        searchSection: document.getElementById(`${prefix}ServicePointSearchSection`),
+        newFields: document.getElementById(`${prefix}NewServicePointFields`),
+        newName: document.getElementById(`${prefix}NewServicePointName`),
+        selectedInfo: document.getElementById(`${prefix}SelectedServicePointInfo`),
+        selectedDisplay: document.getElementById(`${prefix}SelectedServicePointDisplay`),
+        addButton: document.getElementById(`btnAddNew${buttonSuffix}`),
+        cancelButton: document.getElementById(`cancelNew${buttonSuffix}`),
+        clearButton: document.getElementById(`clear${buttonSuffix}`)
+    };
+}
+
+function initServicePointPicker(context) {
+    const elements = getServicePointElements(context);
+    M.Autocomplete.init(elements.search, {
+        data: {},
+        onAutocomplete: value => {
+            const point = servicePointSuggestions[context][value];
+            if (point) selectServicePoint(context, point);
+        },
+        minLength: 1
+    });
+
+    elements.search.addEventListener('input', debounce(async event => {
+        elements.technicalId.value = '';
+        const query = event.target.value.trim();
+        if (!query) return;
+
+        try {
+            const response = await fetch(
+                `/api/v1/repair-service-points?query=${encodeURIComponent(query)}`
+            );
+            if (!response.ok) throw new Error('Błąd pobierania punktów serwisowych');
+
+            const points = await response.json();
+            const autocompleteData = {};
+            servicePointSuggestions[context] = {};
+            points.forEach(point => {
+                autocompleteData[point.name] = null;
+                servicePointSuggestions[context][point.name] = point;
+            });
+
+            const autocomplete = M.Autocomplete.getInstance(elements.search);
+            autocomplete.updateData(autocompleteData);
+            autocomplete.open();
+        } catch (error) {
+            console.error(error);
+        }
+    }, 300));
+
+    elements.addButton.addEventListener('click', () => {
+        elements.newName.value = elements.search.value.trim();
+        elements.searchSection.style.display = 'none';
+        elements.newFields.style.display = 'block';
+        elements.selectedInfo.style.display = 'none';
+        elements.technicalId.value = '';
+        M.updateTextFields();
+        elements.newName.focus();
+    });
+
+    elements.cancelButton.addEventListener('click', () => {
+        resetServicePointPicker(context);
+    });
+
+    elements.clearButton.addEventListener('click', () => {
+        resetServicePointPicker(context);
+    });
+}
+
+function selectServicePoint(context, point) {
+    const elements = getServicePointElements(context);
+    elements.technicalId.value = point.technicalId;
+    elements.selectedDisplay.innerText = point.name;
+    elements.search.value = '';
+    elements.newName.value = '';
+    elements.searchSection.style.display = 'none';
+    elements.newFields.style.display = 'none';
+    elements.selectedInfo.style.display = 'block';
+}
+
+function resetServicePointPicker(context) {
+    const elements = getServicePointElements(context);
+    elements.search.value = '';
+    elements.technicalId.value = '';
+    elements.newName.value = '';
+    elements.searchSection.style.display = 'block';
+    elements.newFields.style.display = 'none';
+    elements.selectedInfo.style.display = 'none';
+    M.updateTextFields();
+}
+
+function getServicePointSelection(context) {
+    const elements = getServicePointElements(context);
+    if (elements.technicalId.value) {
+        return {servicePointTechnicalId: elements.technicalId.value};
+    }
+    const newName = elements.newName.value.trim();
+    return newName ? {servicePointName: newName} : {};
 }
 
 function initClientAutocomplete() {
@@ -344,6 +457,13 @@ function createCard(repair) {
         clientSection = `<p class="blue-text text-darken-2"><b>Naprawa własna</b></p>`;
     }
 
+    const servicePointSection = repair.servicePointName ? `
+        <p class="service-point-label">
+            <i class="material-icons">build</i>
+            <b>Serwis:</b> ${repair.servicePointName}
+        </p>
+    ` : '';
+
     div.innerHTML = `
         <div class="card-content">
             <div style="position: absolute; top: 10px; right: 10px; text-align: right;">
@@ -363,6 +483,7 @@ function createCard(repair) {
                 <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
             </span>
             ${clientSection}
+            ${servicePointSection}
             <p><b>IMEI:</b> ${repair.imei || '-'}</p>
             <p><b>Kolor:</b> ${repair.color || '-'} </p>
             <div class="divider" style="margin: 5px 0;"></div>
@@ -457,6 +578,13 @@ function createMobileCard(repair) {
         clientSection = `<p class="blue-text text-darken-2"><b>Naprawa własna</b></p>`;
     }
 
+    const servicePointSection = repair.servicePointName ? `
+        <p class="service-point-label">
+            <i class="material-icons">build</i>
+            <b>Serwis:</b> ${repair.servicePointName}
+        </p>
+    ` : '';
+
     div.innerHTML = `
         <div class="card z-depth-1 status-${repair.status} ${overdueClass}" onclick="openRepairDetails('${repair.technicalId}')">
             <div class="card-content">
@@ -477,6 +605,7 @@ function createMobileCard(repair) {
                     <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
                 </span>
                 ${clientSection}
+                ${servicePointSection}
                 <div class="row" style="margin-bottom: 0;">
                     <div class="col s6">
                         <p><b>IMEI:</b> ${repair.imei || '-'}</p>
@@ -610,6 +739,19 @@ window.drop = async function(ev) {
         M.Modal.getInstance(document.getElementById('statusSelectionModal')).open();
         return;
     }
+
+    if (newStatus === 'W_NAPRAWIE') {
+        document.getElementById('servicePointSelectionRepairId').value = id;
+        resetServicePointPicker('status');
+        if (repair.servicePointTechnicalId) {
+            selectServicePoint('status', {
+                technicalId: repair.servicePointTechnicalId,
+                name: repair.servicePointName
+            });
+        }
+        M.Modal.getInstance(document.getElementById('servicePointSelectionModal')).open();
+        return;
+    }
     
     // Dla innych statusów wymagamy potwierdzenia
     const statusNames = {
@@ -632,22 +774,45 @@ window.drop = async function(ev) {
     M.Modal.getInstance(document.getElementById('confirmStatusChangeModal')).open();
 }
 
-async function updateRepairStatus(id, newStatus) {
+async function confirmServicePointSelection() {
+    const id = document.getElementById('servicePointSelectionRepairId').value;
+    const servicePoint = getServicePointSelection('status');
+    if (!servicePoint.servicePointTechnicalId && !servicePoint.servicePointName) {
+        M.toast({html: 'Wybierz lub wpisz punkt serwisowy', classes: 'orange'});
+        return;
+    }
+
+    const success = await updateRepairStatus(id, 'W_NAPRAWIE', servicePoint);
+    if (success) {
+        M.Modal.getInstance(document.getElementById('servicePointSelectionModal')).close();
+    }
+}
+
+async function updateRepairStatus(id, newStatus, servicePoint = {}) {
     const repair = repairsData.find(r => r.technicalId === id);
     if (repair && repair.status !== newStatus) {
         try {
-            const response = await fetch(`/api/v1/repairs/${id}/status?status=${newStatus}`, {
+            const params = new URLSearchParams({status: newStatus});
+            if (servicePoint.servicePointTechnicalId) {
+                params.set('servicePointTechnicalId', servicePoint.servicePointTechnicalId);
+            }
+            if (servicePoint.servicePointName) {
+                params.set('servicePointName', servicePoint.servicePointName);
+            }
+            const response = await fetch(`/api/v1/repairs/${id}/status?${params}`, {
                 method: 'PATCH'
             });
             if (!response.ok) throw new Error('Błąd zmiany statusu');
             
             M.toast({html: 'Status zaktualizowany', classes: 'green'});
             loadRepairs();
+            return true;
         } catch (error) {
             console.error(error);
             M.toast({html: 'Błąd podczas zmiany statusu', classes: 'red'});
         }
     }
+    return false;
 }
 
 async function handleFinalizeStatus() {
@@ -785,6 +950,12 @@ async function openRepairDetails(technicalId) {
     if (tsRepairLocation) {
         tsRepairLocation.setValue(repair.location || '');
     }
+    if (repair.servicePointTechnicalId) {
+        selectServicePoint('repair', {
+            technicalId: repair.servicePointTechnicalId,
+            name: repair.servicePointName
+        });
+    }
 
     // Naprawa
     document.getElementById('repairProblemDescription').value = repair.problemDescription || repair.damageDescription || '';
@@ -874,6 +1045,7 @@ async function saveRepair() {
         phoneTechnicalId: document.getElementById('phoneTechnicalId').value || null,
         location: IS_ADMIN ? document.getElementById('repairLocation').value : (existingRepair ? existingRepair.location : null)
     };
+    Object.assign(repairDto, getServicePointSelection('repair'));
 
     if (!repairDto.model) {
         M.toast({html: 'Model urządzenia jest wymagany', classes: 'orange'});
@@ -942,6 +1114,7 @@ function resetForm() {
     if (tsRepairDeviceType) {
         tsRepairDeviceType.setValue('TELEFON');
     }
+    resetServicePointPicker('repair');
 
     // Resetuj anonimowego klienta
     document.getElementById('clientAnonymous').checked = false;
@@ -964,6 +1137,16 @@ function toggleFields(disabled) {
     if (tsRepairLocation) {
         disabled ? tsRepairLocation.disable() : tsRepairLocation.enable();
     }
+
+    const servicePointElements = getServicePointElements('repair');
+    [
+        servicePointElements.addButton,
+        servicePointElements.cancelButton,
+        servicePointElements.clearButton
+    ].forEach(element => {
+        element.style.pointerEvents = disabled ? 'none' : 'auto';
+        element.style.opacity = disabled ? '0.5' : '1';
+    });
     
     // Specyficzna obsługa dla chipa usuwania klienta
     const clearClient = document.getElementById('clearSelectedClient');

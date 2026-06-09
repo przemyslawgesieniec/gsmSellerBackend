@@ -143,6 +143,16 @@
       border-bottom: 1px solid #2196f3;
       padding-bottom: 5px;
     }
+    .service-point-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px !important;
+      color: #6a1b9a;
+    }
+    .service-point-label .material-icons {
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
@@ -347,6 +357,34 @@
           <textarea id="repairRemarks" class="materialize-textarea"></textarea>
           <label for="repairRemarks">Uwagi</label>
         </div>
+        <div class="col s12 m6">
+          <label>Punkt serwisowy (informacja wewnętrzna)</label>
+          <div id="repairServicePointSearchSection">
+            <div class="input-field" style="margin-bottom: 0;">
+              <i class="material-icons prefix">search</i>
+              <input type="text" id="repairServicePointSearch" class="autocomplete">
+              <label for="repairServicePointSearch">Wyszukaj punkt serwisowy</label>
+              <input type="hidden" id="repairServicePointTechnicalId">
+            </div>
+            <p class="grey-text" style="margin-top: 0;">
+              Wybierz punkt z listy lub
+              <a href="#!" id="btnAddNewRepairServicePoint">dodaj nowy punkt serwisowy</a>
+            </p>
+          </div>
+          <div id="repairNewServicePointFields" style="display: none;">
+            <div class="input-field">
+              <input id="repairNewServicePointName" type="text">
+              <label for="repairNewServicePointName">Nazwa nowego punktu serwisowego *</label>
+            </div>
+            <button type="button" class="btn-small grey" id="cancelNewRepairServicePoint">Wróć do wyszukiwania</button>
+          </div>
+          <div id="repairSelectedServicePointInfo" style="display: none;">
+            <div class="chip purple white-text">
+              <span id="repairSelectedServicePointDisplay"></span>
+              <i class="close material-icons" id="clearRepairServicePoint">close</i>
+            </div>
+          </div>
+        </div>
 
         <div class="col s12 m4">
           <p>
@@ -445,6 +483,49 @@
   <div class="modal-footer">
     <button class="btn-flat modal-close waves-effect waves-red">Anuluj</button>
     <button class="btn green darken-2 waves-effect waves-light" id="confirmRestoreBtn">Zatwierdź</button>
+  </div>
+</div>
+
+<!-- Modal: Wybór punktu serwisowego -->
+<div id="servicePointSelectionModal" class="modal">
+  <div class="modal-content">
+    <h5>Przekaż do naprawy</h5>
+    <p>Wybierz punkt serwisowy, do którego trafia urządzenie.</p>
+    <input type="hidden" id="servicePointSelectionRepairId">
+    <div class="row">
+      <div class="col s12">
+        <label>Punkt serwisowy *</label>
+        <div id="statusServicePointSearchSection">
+          <div class="input-field" style="margin-bottom: 0;">
+            <i class="material-icons prefix">search</i>
+            <input type="text" id="statusServicePointSearch" class="autocomplete">
+            <label for="statusServicePointSearch">Wyszukaj punkt serwisowy</label>
+            <input type="hidden" id="statusServicePointTechnicalId">
+          </div>
+          <p class="grey-text" style="margin-top: 0;">
+            Wybierz punkt z listy lub
+            <a href="#!" id="btnAddNewStatusServicePoint">dodaj nowy punkt serwisowy</a>
+          </p>
+        </div>
+        <div id="statusNewServicePointFields" style="display: none;">
+          <div class="input-field">
+            <input id="statusNewServicePointName" type="text">
+            <label for="statusNewServicePointName">Nazwa nowego punktu serwisowego *</label>
+          </div>
+          <button type="button" class="btn-small grey" id="cancelNewStatusServicePoint">Wróć do wyszukiwania</button>
+        </div>
+        <div id="statusSelectedServicePointInfo" style="display: none;">
+          <div class="chip purple white-text">
+            <span id="statusSelectedServicePointDisplay"></span>
+            <i class="close material-icons" id="clearStatusServicePoint">close</i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-flat modal-close waves-effect waves-red">Anuluj</button>
+    <button class="btn orange darken-2 waves-effect waves-light" id="confirmServicePointBtn">Przekaż do naprawy</button>
   </div>
 </div>
 

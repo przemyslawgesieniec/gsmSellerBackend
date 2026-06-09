@@ -10,8 +10,11 @@ public interface RepairMapper {
     @Mapping(target = "clientName", source = "client.name")
     @Mapping(target = "clientSurname", source = "client.surname")
     @Mapping(target = "clientPhoneNumber", source = "client.phoneNumber")
+    @Mapping(target = "servicePointTechnicalId", source = "servicePoint.technicalId")
+    @Mapping(target = "servicePointName", source = "servicePoint.name")
     RepairDto toDto(Repair repair);
 
     @Mapping(target = "client", ignore = true)
+    @Mapping(target = "servicePoint", ignore = true)
     Repair toEntity(RepairDto dto);
 }

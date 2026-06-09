@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import pl.gesieniec.gsmseller.repair.client.RepairClient;
 import pl.gesieniec.gsmseller.repair.model.RepairStatus;
+import pl.gesieniec.gsmseller.repair.servicepoint.RepairServicePoint;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -28,6 +29,10 @@ public class Repair {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")
     private RepairClient client;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_point_id")
+    private RepairServicePoint servicePoint;
 
     private String manufacturer;
     private String model;
@@ -131,6 +136,10 @@ public class Repair {
 
     public void updateStatus(RepairStatus newStatus) {
         this.status = newStatus;
+    }
+
+    public void assignServicePoint(RepairServicePoint servicePoint) {
+        this.servicePoint = servicePoint;
     }
 
     public boolean isArchived() {
