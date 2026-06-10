@@ -226,11 +226,23 @@ function resetServicePointPicker(context) {
 
 function getServicePointSelection(context) {
     const elements = getServicePointElements(context);
-    if (elements.technicalId.value) {
-        return {servicePointTechnicalId: elements.technicalId.value};
+    if (elements.selectedInfo.style.display === 'block') {
+        return {
+            servicePointTechnicalId: elements.technicalId.value || null,
+            servicePointName: elements.selectedDisplay.innerText || null
+        };
     }
     const newName = elements.newName.value.trim();
-    return newName ? {servicePointName: newName} : {};
+    if (elements.newFields.style.display === 'block') {
+        return {
+            servicePointTechnicalId: null,
+            servicePointName: newName || null
+        };
+    }
+    return {
+        servicePointTechnicalId: null,
+        servicePointName: null
+    };
 }
 
 function initClientAutocomplete() {
@@ -791,7 +803,7 @@ async function confirmServicePointSelection() {
 
 async function updateRepairStatus(id, newStatus, servicePoint = {}) {
     const repair = repairsData.find(r => r.technicalId === id);
-    if (repair && repair.status !== newStatus) {
+    if (repair && (repair.status !== newStatus || (newStatus === 'W_NAPRAWIE' && (servicePoint.servicePointTechnicalId || servicePoint.servicePointName)))) {
         try {
             const params = new URLSearchParams({status: newStatus});
             if (servicePoint.servicePointTechnicalId) {

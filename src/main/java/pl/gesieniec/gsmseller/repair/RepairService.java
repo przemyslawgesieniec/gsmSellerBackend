@@ -254,6 +254,8 @@ public class RepairService {
                 dto.getServicePointTechnicalId(),
                 dto.getServicePointName()
             ));
+        } else if (dto.getServicePointTechnicalId() == null && dto.getServicePointName() == null) {
+            repair.assignServicePoint(null);
         }
 
         if (dto.getStatus() != null) {
@@ -274,11 +276,13 @@ public class RepairService {
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
 
         if (status == RepairStatus.W_NAPRAWIE) {
-            RepairServicePoint servicePoint = servicePointService.resolve(
-                servicePointTechnicalId,
-                servicePointName
-            );
-            repair.assignServicePoint(servicePoint);
+            if (servicePointTechnicalId != null || (servicePointName != null && !servicePointName.isBlank())) {
+                RepairServicePoint servicePoint = servicePointService.resolve(
+                    servicePointTechnicalId,
+                    servicePointName
+                );
+                repair.assignServicePoint(servicePoint);
+            }
         }
 
         repair.updateStatus(status);

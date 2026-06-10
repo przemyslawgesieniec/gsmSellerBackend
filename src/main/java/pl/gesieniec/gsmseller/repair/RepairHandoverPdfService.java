@@ -22,12 +22,11 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
-import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.location.LocationRepository;
 import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 
@@ -176,7 +175,7 @@ public class RepairHandoverPdfService {
 
     private void rightTopCorner(Canvas canvas, Repair repair) {
         // Data
-        canvas.add(new Paragraph("Data: " + LocalDate.now().format(DATE_FORMATTER))
+        canvas.add(new Paragraph("Data: " + LocalDateTime.now().format(DATE_FORMATTER))
             .setTextAlignment(TextAlignment.RIGHT)
             .setFontSize(9));
 

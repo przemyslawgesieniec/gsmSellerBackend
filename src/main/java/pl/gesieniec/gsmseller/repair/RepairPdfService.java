@@ -10,7 +10,6 @@ import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -23,7 +22,7 @@ import com.itextpdf.layout.properties.UnitValue;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -183,7 +182,7 @@ public class RepairPdfService {
 
     private void rightTopCorner(Canvas canvas, Repair repair) {
         // Data
-        canvas.add(new Paragraph("Data: " + LocalDate.now().format(DATE_FORMATTER))
+        canvas.add(new Paragraph("Data: " + LocalDateTime.now().format(DATE_FORMATTER))
             .setTextAlignment(TextAlignment.RIGHT)
             .setFontSize(9));
 
