@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Klienci - Serwis</title>
+
+  <!-- Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Nasze style -->
+  <link href="css/style.css" rel="stylesheet">
+  <style>
+    .search-container {
+      margin-top: 20px;
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+    .client-table-container {
+      margin-top: 20px;
+    }
+    .pagination-container {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .fab-fixed {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
+
+<div class="container wide-layout">
+  <h4 class="center-align">Klienci Serwisowi</h4>
+
+  <!-- Filtry -->
+  <div class="card search-container">
+    <div class="row" style="margin-bottom: 0;">
+      <div class="input-field col s12 m4">
+        <i class="material-icons prefix">person</i>
+        <input type="text" id="filterName">
+        <label for="filterName">Imię</label>
+      </div>
+      <div class="input-field col s12 m4">
+        <i class="material-icons prefix">person_outline</i>
+        <input type="text" id="filterSurname">
+        <label for="filterSurname">Nazwisko</label>
+      </div>
+      <div class="input-field col s12 m4">
+        <i class="material-icons prefix">phone</i>
+        <input type="text" id="filterPhone">
+        <label for="filterPhone">Numer telefonu</label>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom: 0;">
+      <div class="col s12 right-align">
+        <button class="btn waves-effect waves-light grey" id="btnClearFilters">
+          Wyczyść
+        </button>
+        <button class="btn waves-effect waves-light blue" id="btnSearch">
+          <i class="material-icons left">search</i>Szukaj
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela klientów -->
+  <div class="client-table-container">
+    <table class="highlight responsive-table">
+      <thead>
+        <tr>
+          <th>Imię</th>
+          <th>Nazwisko</th>
+          <th>Telefon</th>
+          <th class="right-align">Akcje</th>
+        </tr>
+      </thead>
+      <tbody id="clientsTableBody">
+        <tr>
+          <td colspan="4" class="center-align">Ładowanie...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginacja -->
+  <div class="pagination-container" id="pagination"></div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab-fixed">
+  <a class="btn-floating btn-large waves-effect waves-light red modal-trigger" href="#clientModal" id="btnAddClient">
+    <i class="material-icons">add</i>
+  </a>
+</div>
+
+<!-- Modal: Dodawanie/Edycja klienta -->
+<div id="clientModal" class="modal">
+  <div class="modal-content">
+    <h5 id="modalTitle">Dodaj nowego klienta</h5>
+    <form id="clientForm">
+      <input type="hidden" id="clientTechnicalId">
+      <div class="row">
+        <div class="input-field col s12 m6">
+          <input id="modalClientName" type="text" required>
+          <label for="modalClientName">Imię *</label>
+        </div>
+        <div class="input-field col s12 m6">
+          <input id="modalClientSurname" type="text" required>
+          <label for="modalClientSurname">Nazwisko *</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-field col s12">
+          <input id="modalClientPhone" type="text" required>
+          <label for="modalClientPhone">Numer telefonu *</label>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-flat modal-close waves-effect waves-red">Anuluj</button>
+    <button class="btn blue darken-2 waves-effect waves-light" id="btnSaveClient">Zapisz</button>
+  </div>
+</div>
+
+<!-- Modal: Potwierdzenie usunięcia -->
+<div id="deleteConfirmModal" class="modal">
+  <div class="modal-content">
+    <h5>Potwierdź usunięcie</h5>
+    <p>Czy na pewno chcesz usunąć klienta <b id="deleteClientInfo"></b>? Tej operacji nie można cofnąć.</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-flat modal-close waves-effect">Anuluj</button>
+    <button class="btn red darken-2 waves-effect waves-light" id="btnConfirmDelete">Usuń</button>
+  </div>
+</div>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/clients.js"></script>
+
+</body>
+</html>

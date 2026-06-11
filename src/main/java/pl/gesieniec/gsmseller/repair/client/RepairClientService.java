@@ -47,4 +47,21 @@ public class RepairClientService {
         RepairClient saved = repository.save(client);
         return mapper.toDto(saved);
     }
+
+    @Transactional
+    public RepairClientDto updateClient(java.util.UUID technicalId, RepairClientDto dto) {
+        log.info("Aktualizacja klienta o technicalId: {}", technicalId);
+        RepairClient client = repository.findByTechnicalId(technicalId)
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono klienta o id: " + technicalId));
+        client.update(dto.getName(), dto.getSurname(), dto.getPhoneNumber());
+        return mapper.toDto(client);
+    }
+
+    @Transactional
+    public void deleteClient(java.util.UUID technicalId) {
+        log.info("Usuwanie klienta o technicalId: {}", technicalId);
+        RepairClient client = repository.findByTechnicalId(technicalId)
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono klienta o id: " + technicalId));
+        repository.delete(client);
+    }
 }

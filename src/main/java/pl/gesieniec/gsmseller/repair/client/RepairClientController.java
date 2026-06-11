@@ -36,4 +36,14 @@ public class RepairClientController {
     public RepairClientDto createClient(@RequestBody RepairClientDto dto) {
         return service.createClient(dto);
     }
+
+    @PutMapping("/{technicalId}")
+    public RepairClientDto updateClient(@PathVariable java.util.UUID technicalId, @RequestBody RepairClientDto dto) {
+        return service.updateClient(technicalId, dto);
+    }
+
+    @DeleteMapping("/{technicalId}")
+    public void deleteClient(@PathVariable java.util.UUID technicalId) {
+        service.deleteClient(technicalId);
+    }
 }
