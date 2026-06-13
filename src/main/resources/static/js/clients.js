@@ -70,11 +70,16 @@ function renderTable(clients) {
 
     clients.forEach(client => {
         const tr = document.createElement('tr');
+        const repairsQuery = `${client.name} ${client.surname} (${client.phoneNumber})`;
+        const repairsUrl = `serviceHistory.html?query=${encodeURIComponent(repairsQuery)}`;
         tr.innerHTML = `
             <td>${client.name}</td>
             <td>${client.surname}</td>
             <td>${client.phoneNumber}</td>
             <td class="right-align">
+                <a class="btn-small green waves-effect waves-light" href="${repairsUrl}" title="Pokaż naprawy klienta" aria-label="Pokaż naprawy klienta">
+                    <i class="material-icons">build</i>
+                </a>
                 <button class="btn-small blue waves-effect waves-light" onclick="openEditModal('${client.technicalId}', '${client.name}', '${client.surname}', '${client.phoneNumber}')">
                     <i class="material-icons">edit</i>
                 </button>
