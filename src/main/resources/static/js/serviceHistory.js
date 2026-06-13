@@ -145,8 +145,10 @@ async function loadHistory() {
     const query = document.getElementById('historySearch').value;
     const location = document.getElementById('locationFilter').value;
     const inHouseRepair = document.getElementById('inHouseRepairFilter')?.checked;
-    
-    let url = `/api/v1/repairs/history?page=${currentPage}&size=${pageSize}&sort=handoverDate,DESC`;
+
+    // Spring interprets parametry paginacji jako 1-based, a stan widoku pozostaje 0-based.
+    const requestPage = currentPage + 1;
+    let url = `/api/v1/repairs/history?page=${requestPage}&size=${pageSize}&sort=handoverDate,DESC`;
 
     if (query) url += `&query=${encodeURIComponent(query)}`;
     if (location) url += `&location=${encodeURIComponent(location)}`;
