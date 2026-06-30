@@ -7,6 +7,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -85,6 +86,7 @@ public class PhoneStockController {
     }
 
     @PostMapping("/{technicalId}/accept")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> acceptPhoneAtLocation(@PathVariable UUID technicalId, Principal principal) {
         service.acceptPhone(technicalId, principal.getName());
         return ResponseEntity.ok().build();
@@ -107,6 +109,7 @@ public class PhoneStockController {
     }
 
     @PostMapping("/{technicalId}/remove-from-location")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> removePhoneFromLocation(
         @PathVariable UUID technicalId
     ) {
