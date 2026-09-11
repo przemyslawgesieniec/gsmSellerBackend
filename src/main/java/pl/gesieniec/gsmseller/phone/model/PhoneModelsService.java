@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import pl.gesieniec.gsmseller.common.EntityNotFoundException;
 import pl.gesieniec.gsmseller.offer.OfferService;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStockRepository;
+import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +53,7 @@ public class PhoneModelsService {
 
     @Transactional(readOnly = true)
     public PhoneModelFilterOptionsDto getFilterOptionsByBrand() {
-        Map<UUID, List<PhoneModelFilterOption>> modelsByBrand = repository.findAll(Sort.by("brand").ascending().and(Sort.by("model").ascending()))
+        Map<UUID, List<PhoneModelFilterOption>> modelsByBrand = findAvailablePhoneModels()
             .stream()
             .filter(model -> model.getBrand() != null && !model.getBrand().isBlank())
             .filter(model -> model.getModel() != null && !model.getModel().isBlank())
@@ -89,7 +90,7 @@ public class PhoneModelsService {
 
     @Transactional(readOnly = true)
     public Map<String, List<PhoneModelFilterOption>> getExternalFilterOptionsByBrand() {
-        return repository.findAll(Sort.by("brand").ascending().and(Sort.by("model").ascending()))
+        return findAvailablePhoneModels()
             .stream()
             .filter(model -> model.getBrand() != null && !model.getBrand().isBlank())
             .filter(model -> model.getModel() != null && !model.getModel().isBlank())
@@ -114,6 +115,10 @@ public class PhoneModelsService {
                     Collectors.toList()
                 )
             ));
+    }
+
+    private List<PhoneModels> findAvailablePhoneModels() {
+        return phoneStockRepository.findDistinctPhoneModelsByStatus(Status.DOSTĘPNY);
     }
 
     @Transactional(readOnly = true)

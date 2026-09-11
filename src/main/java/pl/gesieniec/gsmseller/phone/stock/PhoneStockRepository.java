@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import pl.gesieniec.gsmseller.phone.model.PhoneModels;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
 
 @Repository
@@ -22,6 +23,14 @@ public interface PhoneStockRepository extends
     Optional<PhoneStock> findByTechnicalId(UUID technicalId);
 
     boolean existsByPhoneModelTechnicalId(UUID technicalId);
+
+    @Query("""
+        select distinct p.phoneModel
+        from PhoneStock p
+        where p.status = :status
+          and p.phoneModel is not null
+    """)
+    List<PhoneModels> findDistinctPhoneModelsByStatus(@Param("status") Status status);
 
     long countByStatusIn(List<Status> statuses);
 
