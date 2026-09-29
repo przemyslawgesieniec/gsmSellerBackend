@@ -53,7 +53,7 @@ public class PhoneModelsService {
 
     @Transactional(readOnly = true)
     public PhoneModelFilterOptionsDto getFilterOptionsByBrand() {
-        Map<UUID, List<PhoneModelFilterOption>> modelsByBrand = findAvailablePhoneModels()
+        Map<UUID, List<PhoneModelFilterOption>> modelsByBrand = repository.findAll(Sort.by("brand").ascending().and(Sort.by("model").ascending()))
             .stream()
             .filter(model -> model.getBrand() != null && !model.getBrand().isBlank())
             .filter(model -> model.getModel() != null && !model.getModel().isBlank())
