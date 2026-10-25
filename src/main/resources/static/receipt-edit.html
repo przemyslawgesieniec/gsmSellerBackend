@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popraw fakturę | Magazyn GSM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<div id="navbar"></div>
+<script src="js/loadNavbar.js"></script>
+
+<main class="container section">
+    <div class="page-heading">
+        <h4 class="blue-text text-darken-2">Popraw fakturę <span id="receiptNumber"></span></h4>
+        <a href="receipts.html" class="btn-flat blue-text">Wróć do listy faktur</a>
+    </div>
+    <p id="editStatus" role="status" aria-live="polite">Ładowanie faktury…</p>
+    <form id="receiptEditForm" class="hide">
+        <fieldset id="editFields" class="receipt-edit-fields">
+            <div class="card-panel">
+                <div class="row">
+                    <div class="input-field col s12 m6">
+                        <input id="generateDate" type="date" required>
+                        <label for="generateDate" class="active">Data wystawienia</label>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <input id="sellDate" type="date" required>
+                        <label for="sellDate" class="active">Data sprzedaży</label>
+                    </div>
+                </div>
+                <p>Podaj kwoty sprzedaży netto. VAT i kwota brutto zostaną przeliczone automatycznie.</p>
+                <div id="editItems"></div>
+                <div class="section right-align" aria-live="polite">
+                    Netto: <span id="totalNet">0,00</span> zł<br>
+                    VAT: <span id="totalVat">0,00</span> zł<br>
+                    <strong>Brutto: <span id="totalGross">0,00</span> zł</strong>
+                </div>
+            </div>
+            <p>„Pobierz i zapisz” aktualizuje fakturę w systemie i pobiera PDF.
+                „Pobierz bez zapisywania” pobiera PDF z wprowadzonymi zmianami bez zapisu w systemie.</p>
+            <div class="receipt-edit-actions">
+                <button type="submit" name="action" value="save" class="btn green waves-effect waves-light">Pobierz i zapisz</button>
+                <button type="submit" name="action" value="download" class="btn blue darken-2 waves-effect waves-light">Pobierz bez zapisywania</button>
+            </div>
+        </fieldset>
+    </form>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/receipt-edit.js"></script>
+</body>
+</html>

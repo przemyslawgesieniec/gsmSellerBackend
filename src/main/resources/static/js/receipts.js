@@ -2,7 +2,8 @@
     const pageSize = 10;
     let dateRangePicker = null;
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+        await loadCurrentUser();
         initFilters();
         loadReceipts();
 
@@ -99,7 +100,7 @@
                     <span>
                         <strong>${escapeHtml(receipt.number)}</strong>
                         ${statusBadge}<br>
-                        <small>Sprzedaż: ${sellDateLabel} | Wystawiono: ${formatDate(receipt.createDate)}</small>
+                        <small>Sprzedaż: ${sellDateLabel} | Wystawiono: ${receipt.dateAndPlace?.generateDate ? formatDateOnlyString(receipt.dateAndPlace.generateDate) : formatDate(receipt.createDate)}</small>
                     </span>
                 
                     <button class="btn small blue"
@@ -111,7 +112,7 @@
 
             //  RENDEROWANIE POZYCJI FAKTURY ZGODNIE Z JSON
             const VAT_MAP = {
-                VAT_EXEMPT: "ZW"
+                VAT_EXEMPT: "ZW", VAT_0: "0%", VAT_5: "5%", VAT_8: "8%", VAT_23: "23%"
             };
 
             const body = `
@@ -141,7 +142,7 @@
             }).join("")}
         </ul>
 
-       <div style="margin-top:15px; display:flex; gap:10px;">
+       <div class="receipt-edit-actions" style="margin-top:15px;">
             <button class="btn green"
                 onclick="downloadServiceInvoice('${receipt.technicalId}')">
                 Pobierz fakturę serwisową
@@ -152,6 +153,8 @@
                     onclick="confirmCancelReceipt('${receipt.technicalId}')">
                     Anuluj sprzedaż
                 </button>
+                ${IS_ADMIN ? `<a class="btn blue darken-2"
+                    href="receipt-edit.html?id=${encodeURIComponent(receipt.technicalId)}">Popraw fakturę</a>` : ""}
             ` : ""}
         </div>
 

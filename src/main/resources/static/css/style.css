@@ -1039,3 +1039,31 @@ table td {
     -webkit-appearance: auto !important;
     -moz-appearance: auto !important;
 }
+
+
+.receipt-edit-fields {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+.receipt-edit-item {
+    border-bottom: 1px solid #eeeeee;
+    padding-bottom: 12px;
+}
+
+.receipt-edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 600px) {
+    .receipt-edit-actions .btn {
+        width: 100%;
+        height: auto;
+        min-height: 36px;
+        white-space: normal;
+    }
+}

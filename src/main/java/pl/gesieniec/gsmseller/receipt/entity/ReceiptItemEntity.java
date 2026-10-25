@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import pl.gesieniec.gsmseller.common.ItemType;
 import pl.gesieniec.gsmseller.receipt.model.VatRate;
+import pl.gesieniec.gsmseller.receipt.model.Item;
 
 @ToString
 @Entity
@@ -42,4 +43,11 @@ public class ReceiptItemEntity {
     private ItemType itemType;
 
     private String sellingInfo;
+
+    public void updateAmounts(Item item) {
+        this.nettAmount = item.getNettAmount();
+        this.vatRate = item.getVatRate();
+        this.vatAmount = item.getVatAmount();
+        this.grossAmount = item.getGrossAmount();
+    }
 }

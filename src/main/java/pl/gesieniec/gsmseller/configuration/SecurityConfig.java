@@ -43,6 +43,7 @@ public class SecurityConfig {
                     "/api/v1/external/**",
                     "/h2-console/**"
                 ).permitAll()
+                .requestMatchers("/receipt-edit.html", "/api/v1/receipt/*/edit").hasAuthority("ROLE_ADMIN")
                 .anyRequest().authenticated()
             )
 
