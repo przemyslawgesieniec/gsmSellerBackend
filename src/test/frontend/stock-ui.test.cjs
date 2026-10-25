@@ -215,3 +215,28 @@ test('opening the full cart does not lose the already-in-cart guard', async t =>
         return document.getElementById('sellBtntest-0').disabled;
     }), true);
 });
+
+test('refresh keeps scroll position and preserves menus outside the stock list', async t => {
+    const page = await fixture(t);
+    const result = await page.evaluate(async () => {
+        document.getElementById('navbar').innerHTML = `
+            <a id="test-nav-trigger" class="dropdown-trigger" data-target="test-nav-menu">Menu</a>
+            <ul id="test-nav-menu" class="dropdown-content"><li><a>Navigation</a></li></ul>`;
+        const trigger = document.getElementById('test-nav-trigger');
+        const menu = M.Dropdown.init(trigger, { hover: true });
+        await loadStock();
+        document.querySelectorAll('#phone-list .card')[10].scrollIntoView();
+        const scrollBefore = window.scrollY;
+        testPhones[0].sellingPrice = 200;
+        await refreshStockListPreservingState();
+        return { sameMenu: menu === M.Dropdown.getInstance(trigger),
+            hover: M.Dropdown.getInstance(trigger).options.hover,
+            scrollBefore, scrollAfter: window.scrollY,
+            price: document.querySelector('#phone-list .sellingPrice').textContent };
+    });
+    assert.equal(result.sameMenu, true);
+    assert.equal(result.hover, true);
+    assert.ok(result.scrollBefore > 0);
+    assert.equal(result.scrollAfter, result.scrollBefore);
+    assert.equal(result.price, '200 zł');
+});

@@ -968,7 +968,6 @@ function loadPagination(currentPage, totalPages) {
 
 // Renderowanie kafli
 const sellButtonIdPrefix = "sellBtn";
-const editButtonIdPrefix = "editBtn";
 
 const PURCHASE_TYPE_LABELS = {
     CASH: "Gotówka",
@@ -999,8 +998,7 @@ function disposeStockCards() {
 
 function renderPhones(phones) {
     disposeStockCards();
-    listContainer.innerHTML = "";
-    phones.forEach((phone) => {
+    const cards = phones.map((phone) => {
         const statusClass = phone.status ? phone.status.toUpperCase() : "";
         const inCart = isPhoneInCart(phone.technicalId);
         const addingToCart = pendingCartAdds.has(phone.technicalId);
@@ -1243,16 +1241,9 @@ function renderPhones(phones) {
       </div>
     `;
 
-        const sellButtonId = sellButtonIdPrefix + phone.technicalId;
-        listContainer.innerHTML += card;
+        return card;
     });
-
-    M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
-        closeOnClick: false,
-        constrainWidth: false,
-        coverTrigger: false
-    });
-
+    listContainer.innerHTML = cards.join("");
 }
 
 function getDisplayPrice(phone) {
@@ -1337,7 +1328,7 @@ function initStockModals() {
 }
 
 function initDropdowns() {
-    const elems = document.querySelectorAll('.dropdown-trigger');
+    const elems = listContainer.querySelectorAll('.dropdown-trigger');
     M.Dropdown.init(elems, {
         constrainWidth: false,
         coverTrigger: false,

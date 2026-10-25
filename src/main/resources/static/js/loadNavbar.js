@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // 2️⃣ init Materialize
         M.Sidenav.init(document.querySelectorAll('.sidenav'));
-        M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+        M.Dropdown.init(document.querySelectorAll('#navbar .dropdown-trigger'), {
             hover: true,
             constrainWidth: false,
             coverTrigger: false,
