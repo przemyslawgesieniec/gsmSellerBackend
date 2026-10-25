@@ -211,12 +211,12 @@ public class PhoneStock {
     }
 
     public void restore() {
-        if (this.status != Status.USUNIĘTY) {
-            throw new IllegalStateException("Only deleted phones can be restored");
+        if (this.status != Status.USUNIĘTY && this.status != Status.ODDANY) {
+            throw new IllegalStateException("Only deleted or handed-over phones can be restored");
         }
 
-        if (this.location != null) {
-            this.status = Status.DOSTĘPNY;
+        if (this.status == Status.ODDANY || this.location != null) {
+            returnPhone();
         } else {
             this.status = Status.WPROWADZONY;
         }

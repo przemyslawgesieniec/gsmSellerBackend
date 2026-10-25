@@ -101,6 +101,7 @@ public class PhoneStockController {
     }
 
     @PostMapping("/{technicalId}/restore")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> restorePhone(
         @PathVariable UUID technicalId
     ) {

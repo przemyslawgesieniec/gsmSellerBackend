@@ -1184,10 +1184,10 @@ function renderPhones(phones) {
                 </a>
               </li>
 
-              ${IS_ADMIN && phone.status === 'USUNIĘTY' ? `
+              ${IS_ADMIN && ['USUNIĘTY', 'ODDANY'].includes(phone.status) ? `
               <li>
                 <a href="#!" data-action="restore" data-id="${phone.technicalId}">
-                  Przywróć
+                  ${phone.status === 'ODDANY' ? 'Przywróć do dostępnych' : 'Przywróć'}
                 </a>
               </li>
               ` : ''}
