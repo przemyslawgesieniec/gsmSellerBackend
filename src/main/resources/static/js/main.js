@@ -1289,8 +1289,13 @@ function startReservationTimers(phones) {
     });
 }
 
+function initStockModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (!M.Modal.getInstance(modal)) M.Modal.init(modal);
+    });
+}
+
 function initDropdowns() {
-    M.Modal.init(document.querySelectorAll('.modal'));
     const elems = document.querySelectorAll('.dropdown-trigger');
     M.Dropdown.init(elems, {
         constrainWidth: false,
@@ -1435,7 +1440,7 @@ function createCartButton() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-    // Inicjalizacja modali
+    initStockModals();
     const dropArea = document.getElementById('dropArea');
     const fileInput = document.getElementById('fileInput');
 

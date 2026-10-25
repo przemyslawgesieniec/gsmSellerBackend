@@ -315,7 +315,9 @@ function updateCartTotal() {
 // ===========================
 
 document.addEventListener("DOMContentLoaded", () => {
-    M.Modal.init(document.querySelectorAll('.modal'));
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (!M.Modal.getInstance(modal)) M.Modal.init(modal);
+    });
 
     const cartBtn = document.getElementById("cartBtn");
     if (cartBtn) {

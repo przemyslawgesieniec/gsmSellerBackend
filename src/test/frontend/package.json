@@ -1,0 +1,6 @@
+{
+  "name": "gsm-seller-ui-tests",
+  "private": true,
+  "scripts": { "test": "node --test *.test.cjs" },
+  "devDependencies": { "playwright": "1.60.0" }
+}

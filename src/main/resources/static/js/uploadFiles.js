@@ -767,7 +767,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let selectedFiles = [];
 
     const modals = document.querySelectorAll(".modal");
-    M.Modal.init(modals);
+    modals.forEach(modal => {
+        if (!M.Modal.getInstance(modal)) M.Modal.init(modal);
+    });
 
     dropArea.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", e => addFiles(e.target.files));
