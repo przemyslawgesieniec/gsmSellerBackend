@@ -1436,35 +1436,6 @@ function createCartButton() {
 
 document.addEventListener("DOMContentLoaded", async function () {
     initStockModals();
-    const dropArea = document.getElementById('dropArea');
-    const fileInput = document.getElementById('fileInput');
-
-    // Kliknięcie na dropArea otwiera wybór plików
-    dropArea.addEventListener('click', () => fileInput.click());
-
-    // Obsługa przeciągania plików
-    dropArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropArea.classList.add('dragover');
-    });
-
-    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
-    dropArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropArea.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        handleFiles(files);
-    });
-
-    // Obsługa wybranych plików z dialogu
-    fileInput.addEventListener('change', () => handleFiles(fileInput.files));
-
-    function handleFiles(files) {
-        console.log("Wybrane pliki:", files);
-        M.toast({html: `${files.length} plików wybranych`, classes: 'green'});
-        // Tutaj później będzie logika przesyłania do backendu
-    }
-
     createCartButton();
     [
         ...stockFilterFieldIds,

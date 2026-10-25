@@ -1,4 +1,5 @@
 let manualMode = false;
+let savingPhones = false;
 
 const DEFAULT_VARIANT_SELECT_IDS = {
     ram: "manualRamSelect",
@@ -677,8 +678,10 @@ function renumberManualPhones() {
         }
     });
 }
-function sendFinalPhones() {
-    const phoneBlocks = document.querySelectorAll(".scan-item");
+async function sendFinalPhones() {
+    if (savingPhones) return;
+    const phoneBlocks = document.querySelectorAll("#scanResultsContainer .scan-item");
+    if (!phoneBlocks.length) return;
     const resultList = [];
     let missingPhoneModel = false;
     let missingName = false;
@@ -741,26 +744,49 @@ function sendFinalPhones() {
         return;
     }
 
-    console.log("Wysyłane dane:", JSON.stringify(resultList, null, 2));
-
-    fetch("/api/v1/phones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resultList)
-    })
-        .then(res => {
-            if (!res.ok) throw new Error("Błąd");
-            localStorage.setItem("phonesSaved", "true");
-            location.reload();
-        })
-        .catch(err => {
-            console.error(err);
-            M.toast({ html: "Błąd zapisu", classes: "red" });
+    const saveButton = document.getElementById("savePhonesBtn");
+    savingPhones = true;
+    if (saveButton) saveButton.disabled = true;
+    try {
+        const response = await fetch("/api/v1/phones", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resultList)
         });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    } catch (err) {
+        console.error(err);
+        M.toast({ html: "Błąd zapisu", classes: "red" });
+        return;
+    } finally {
+        savingPhones = false;
+        if (saveButton) saveButton.disabled = false;
+    }
+
+    resetSavedPhoneInputs();
+    M.toast({ html: "Telefony zapisane!", classes: "green" });
+    if (typeof refreshStockListPreservingState === "function") {
+        await refreshStockListPreservingState();
+    }
+}
+
+function resetSavedPhoneInputs() {
+    ["scanResultsContainer", "addBulkModal"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) M.Modal.getInstance(el)?.close();
+    });
+    const container = document.getElementById("scanResultsContainer");
+    container.querySelectorAll("select").forEach(select => select.tomselect?.destroy());
+    container.replaceChildren();
+    manualMode = false;
+    const toggle = document.getElementById("manualToggle");
+    if (toggle) toggle.checked = false;
+    document.getElementById("dropArea").style.display = "block";
+    document.dispatchEvent(new Event("phones-saved"));
 }
 
 
-document.addEventListener("DOMContentLoaded", () => {
+function initPhoneUpload() {
     const dropArea = document.getElementById("dropArea");
     const fileInput = document.getElementById("fileInput");
     const addBtn = document.getElementById("addBulkBtn");
@@ -791,15 +817,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateDropArea() {
-        if (selectedFiles.length === 0) {
-            dropArea.innerHTML = `<p>Przeciągnij zdjęcia tutaj lub kliknij, aby wybrać z dysku</p>`;
-        } else {
-            dropArea.innerHTML = `
-                <p><strong>${selectedFiles.length}</strong> plików wybranych</p>
-                <p>Kliknij, aby dodać więcej</p>
-            `;
-        }
+        // Keep the file input connected, together with its existing handlers.
+        const message = dropArea.querySelector("p");
+        if (message) message.textContent = selectedFiles.length === 0
+            ? "Przeciągnij zdjęcia tutaj lub kliknij, aby wybrać z dysku"
+            : `${selectedFiles.length} plików wybranych. Kliknij, aby dodać więcej`;
     }
+
+    document.addEventListener("phones-saved", () => {
+        selectedFiles = [];
+        fileInput.value = "";
+        updateDropArea();
+    });
 
     // === WYSYŁANIE ===
     addBtn.addEventListener("click", async () => {
@@ -1207,8 +1236,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .addEventListener("click", sendFinalPhones);
 
     }
-});
-
+}
+document.addEventListener("DOMContentLoaded", initPhoneUpload);
 
 function compressImage(file, options = {}) {
     const {

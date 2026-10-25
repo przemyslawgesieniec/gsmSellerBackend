@@ -8,25 +8,28 @@ let browser;
 before(async () => { browser = await chromium.launch({ headless: true }); });
 after(async () => { await browser?.close(); });
 
-async function fixture(t) {
+async function fixture(t, pageName = 'index.html') {
     const context = await browser.newContext({
         viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true
     });
     t.after(() => context.close());
     const page = await context.newPage();
-    const html = fs.readFileSync(path.join(staticRoot, 'index.html'), 'utf8')
+    page.setDefaultTimeout(10000);
+    const html = fs.readFileSync(path.join(staticRoot, pageName), 'utf8')
         .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<link\b[^>]*>/gi, '');
     await page.route('http://gsm.test/**', route => route.fulfill({ contentType: 'text/html', body: html }));
-    await page.goto('http://gsm.test/index.html');
+    await page.goto(`http://gsm.test/${pageName}`);
     for (const file of ['css/materialize.css', 'css/style.css']) {
         await page.addStyleTag({ path: path.join(staticRoot, file) });
     }
     await page.addScriptTag({ path: path.join(staticRoot, 'js/materialize.js') });
     await page.evaluate(() => { window.IS_ADMIN = false; window.cartState = { items: [] }; });
-    await page.addScriptTag({ path: path.join(staticRoot, 'js/main.js') });
+    if (pageName === 'index.html') {
+        await page.addScriptTag({ path: path.join(staticRoot, 'js/main.js') });
+    }
     await page.evaluate(() => {
-        initStockModals();
+        if (typeof initStockModals === "function") initStockModals();
         window.testPhones = Array.from({ length: 20 }, (_, i) => ({
             technicalId: `test-${i}`, name: 'Test phone', model: 'Test',
             status: 'DOSTĘPNY', locationName: 'Shop', purchaseType: 'VAT_23',
@@ -239,4 +242,93 @@ test('refresh keeps scroll position and preserves menus outside the stock list',
     assert.ok(result.scrollBefore > 0);
     assert.equal(result.scrollAfter, result.scrollBefore);
     assert.equal(result.price, '200 zł');
+});
+
+async function prepareBulkSave(page) {
+    await page.addScriptTag({ path: path.join(staticRoot, 'js/uploadFiles.js') });
+    await page.evaluate(() => {
+        initPhoneUpload();
+        const identityToggle = document.getElementById('identitySourceToggle');
+        if (identityToggle) identityToggle.checked = false;
+        document.getElementById('manualName').value = 'Test phone';
+        document.getElementById('scanResultsContainer').innerHTML = `
+            <div class="scan-item"><input data-field="name" value="Saved phone"></div>
+            <button id="savePhonesBtn">Zapisz</button>`;
+        document.getElementById('savePhonesBtn').addEventListener('click', sendFinalPhones);
+        const files = new DataTransfer();
+        files.items.add(new File(['test'], 'photo.jpg', { type: 'image/jpeg' }));
+        const input = document.getElementById('fileInput');
+        input.files = files.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        window.documentMarker = 'same document';
+    });
+}
+
+for (const pageName of ['index.html', 'addPhones.html']) {
+    test(`bulk save clears the submitted form without reloading ${pageName}`, async t => {
+        const page = await fixture(t, pageName);
+        await prepareBulkSave(page);
+        let navigations = 0;
+        page.on('request', request => { if (request.isNavigationRequest()) navigations++; });
+        const result = await page.evaluate(async () => {
+            const originalFetch = window.fetch;
+            let saves = 0;
+            let finish;
+            window.fetch = (url, options) => url === '/api/v1/phones' && options.method === 'POST'
+                ? (saves++, new Promise(resolve => { finish = resolve; })) : originalFetch(url, options);
+            const request = sendFinalPhones();
+            const disabledDuringSave = document.getElementById('savePhonesBtn').disabled;
+            await sendFinalPhones();
+            finish({ ok: true });
+            await request;
+            await sendFinalPhones(); // An empty submitted form must not submit again.
+            return { saves, disabledDuringSave,
+                marker: window.documentMarker,
+                savedBlocks: document.querySelectorAll('.scan-item').length,
+                fileInputConnected: document.getElementById('fileInput')?.isConnected,
+                files: document.getElementById('fileInput')?.files.length,
+                cards: document.querySelectorAll('#phone-list .card').length };
+        });
+        assert.equal(navigations, 0);
+        assert.equal(result.saves, 1);
+        assert.equal(result.disabledDuringSave, true);
+        assert.equal(result.marker, 'same document');
+        assert.equal(result.savedBlocks, 0);
+        assert.equal(result.fileInputConnected, true);
+        assert.equal(result.files, 0);
+        assert.equal(result.cards, pageName === 'index.html' ? 20 : 0);
+    });
+}
+
+test('failed bulk save preserves entered values and selected files for retry', async t => {
+    const page = await fixture(t, 'addPhones.html');
+    await prepareBulkSave(page);
+    const result = await page.evaluate(async () => {
+        let saves = 0;
+        window.fetch = async () => { saves++; return { ok: false, status: 500 }; };
+        await sendFinalPhones();
+        const preserved = { name: document.querySelector('[data-field="name"]').value,
+            files: document.getElementById('fileInput').files.length,
+            disabled: document.getElementById('savePhonesBtn').disabled };
+        await sendFinalPhones();
+        return { ...preserved, saves };
+    });
+    assert.deepEqual(result, { name: 'Saved phone', files: 1, disabled: false, saves: 2 });
+});
+
+test('the next scan does not resend photos from an already saved batch', async t => {
+    const page = await fixture(t, 'addPhones.html');
+    await prepareBulkSave(page);
+    await page.evaluate(async () => {
+        window.fetch = async () => ({ ok: true });
+        await sendFinalPhones();
+        window.scanPhotoCount = null;
+        window.fetch = async (url, options) => {
+            scanPhotoCount = options.body.getAll('photos').length;
+            return { ok: true, json: async () => [] };
+        };
+    });
+    await page.locator('#addBulkBtn').click();
+    await page.waitForFunction(() => scanPhotoCount !== null);
+    assert.equal(await page.evaluate(() => scanPhotoCount), 0);
 });
