@@ -156,3 +156,62 @@ test('late reservation responses are aborted and cannot overwrite the next rende
     });
     assert.deepEqual(result, { aborted: true, tooltip: 'Rezerwujący: Test (123)', timers: 20 });
 });
+
+test('sale is submitted once across rapid clicks and a list refresh', async t => {
+    const page = await fixture(t);
+    const result = await page.evaluate(async () => {
+        await loadStock();
+        const originalFetch = window.fetch;
+        let requests = 0;
+        let finish;
+        window.fetch = (url, options) => url.startsWith('/api/v1/cart/add?')
+            ? (requests++, new Promise(resolve => { finish = resolve; })) : originalFetch(url, options);
+        const sale = sellPhone('test-0');
+        document.getElementById('sellBtntest-0').click();
+        await sellPhone('test-0');
+        await loadStock();
+        const pendingDisabled = document.getElementById('sellBtntest-0').disabled;
+        document.getElementById('sellBtntest-0').click();
+        finish({ ok: true, json: async () => ({ items: [{ technicalId: 'test-0', itemType: 'PHONE' }] }) });
+        await sale;
+        return { requests, pendingDisabled, disabled: document.getElementById('sellBtntest-0').disabled,
+            label: document.getElementById('sellBtntest-0').textContent.trim(), pending: pendingCartAdds.size };
+    });
+    assert.equal(result.requests, 1);
+    assert.equal(result.pendingDisabled, true);
+    assert.equal(result.disabled, true);
+    assert.match(result.label, /W koszyku/);
+    assert.equal(result.pending, 0);
+});
+
+for (const outcome of ['conflict', 'server error', 'network error']) {
+    test(`sale can be retried after ${outcome}, even if its button was replaced`, async t => {
+        const page = await fixture(t);
+        const result = await page.evaluate(async outcome => {
+            await loadStock();
+            const originalFetch = window.fetch;
+            let requests = 0;
+            window.fetch = async (url, options) => {
+                if (!url.startsWith('/api/v1/cart/add?')) return originalFetch(url, options);
+                requests++;
+                await loadStock();
+                if (outcome === 'network error') throw new TypeError('offline');
+                return { ok: false, status: outcome === 'conflict' ? 409 : 500 };
+            };
+            await sellPhone('test-0');
+            const disabled = document.getElementById('sellBtntest-0').disabled;
+            await sellPhone('test-0');
+            return { disabled, requests, pending: pendingCartAdds.size };
+        }, outcome);
+        assert.deepEqual(result, { disabled: false, requests: 2, pending: 0 });
+    });
+}
+
+test('opening the full cart does not lose the already-in-cart guard', async t => {
+    const page = await fixture(t);
+    assert.equal(await page.evaluate(async () => {
+        cartState = { phones: [{ technicalId: 'test-0' }], miscItems: [] };
+        await loadStock();
+        return document.getElementById('sellBtntest-0').disabled;
+    }), true);
+});

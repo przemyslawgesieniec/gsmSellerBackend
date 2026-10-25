@@ -22,6 +22,7 @@ let stockLoadRequestId = 0;
 let stockLoadAbortController = null;
 let reservationStatusController = null;
 const reservationIntervals = new Set();
+const pendingCartAdds = new Set();
 const stockListStateStorageKey = "gsm-seller.stock-list-state.v1";
 
 const listContainer = document.getElementById("phone-list");
@@ -1002,12 +1003,14 @@ function renderPhones(phones) {
     phones.forEach((phone) => {
         const statusClass = phone.status ? phone.status.toUpperCase() : "";
         const inCart = isPhoneInCart(phone.technicalId);
+        const addingToCart = pendingCartAdds.has(phone.technicalId);
         const displayPrice = getDisplayPrice(phone);
 
         const disableSellButton =
             phone.status !== "DOSTĘPNY"
             || !phone.locationName
             || inCart
+            || addingToCart
                 ? "disabled"
                 : "";
 
@@ -1226,11 +1229,13 @@ function renderPhones(phones) {
             
             </ul>
             
-              <button class="btn-small green darken-2 ${disableSellButton}"
+              <button id="${sellButtonIdPrefix}${phone.technicalId}"
+                 data-can-sell="${phone.status === 'DOSTĘPNY' && Boolean(phone.locationName)}"
+                 class="btn-small green darken-2 ${disableSellButton}"
                  onclick="sellPhone('${phone.technicalId}')"
                 ${disableSellButton ? "disabled" : ""}>
                 <i class="material-icons left">attach_money</i>
-                ${inCart ? "W koszyku" : "Sprzedaj"}
+                ${inCart ? "W koszyku" : addingToCart ? "Dodawanie..." : "Sprzedaj"}
               </button>
 
         </div>
@@ -1360,87 +1365,50 @@ function acceptPhone(technicalId) {
 }
 
 
+function updateSellButton(technicalId) {
+    const btn = document.getElementById(sellButtonIdPrefix + technicalId);
+    if (!btn) return;
+    const inCart = isPhoneInCart(technicalId);
+    const pending = pendingCartAdds.has(technicalId);
+    btn.disabled = btn.dataset.canSell !== "true" || inCart || pending;
+    btn.classList.toggle("disabled", btn.disabled);
+    btn.innerHTML = `<i class="material-icons left">attach_money</i>${inCart ? "W koszyku" : pending ? "Dodawanie..." : "Sprzedaj"}`;
+}
+
 async function sellPhone(technicalId) {
-    if (isPhoneInCart(technicalId)) {
-        return;
-    }
+    const btn = document.getElementById(sellButtonIdPrefix + technicalId);
+    if (pendingCartAdds.has(technicalId) || isPhoneInCart(technicalId) || btn?.disabled) return;
 
-    const btn = document.getElementById("sellBtn" + technicalId);
-    if (btn) {
-        btn.disabled = true;
-        btn.classList.add("grey");
-        btn.innerText = "W koszyku";
-    }
-
+    pendingCartAdds.add(technicalId);
+    updateSellButton(technicalId);
     try {
-        // opcjonalnie: zablokuj przycisk na czas requestu
-        const btn = document.querySelector(`button[data-technical-id="${technicalId}"]`);
-        if (btn) {
-            btn.disabled = true;
-        }
-
         const params = new URLSearchParams({technicalId});
-
         const response = await fetch(`/api/v1/cart/add?${params.toString()}`, {
             method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-                // jeśli używasz CSRF, trzeba tu dodać nagłówek z tokenem
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
 
         if (response.status === 409) {
             M.toast({ html: 'Telefon nie jest w twojej lokalizacji', classes: 'red' });
-
-            // cofamy UI
-            const btn = document.getElementById("sellBtn" + technicalId);
-            if (btn) {
-                btn.disabled = false;
-                btn.innerText = "Sprzedaj";
-                btn.classList.remove("grey");
-            }
             return;
         }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-
-        const updatedCart = await response.json();
-        cartState = updatedCart;
-        refreshStockListPreservingState();
-
-        // 🔢 aktualizacja liczby w koszyku – dostosuj do swojego modelu Cart
-        // Zakładam np. że masz: cart.items albo cart.phones
-        const items = updatedCart.items || updatedCart.phones || [];
-        cartCount = items.length;
-
-        // Jeśli masz gdzieś licznik w UI, np. badge przy ikonce koszyka:
-        const cartCountBadge = document.getElementById('cartCountBadge');
-        if (cartCountBadge) {
-            cartCountBadge.textContent = cartCount;
-        }
-
+        cartState = await response.json();
+        const count = (cartState.items || cartState.phones || []).length;
+        ['cartCountBadge', 'cartBadge'].forEach(id => {
+            const badge = document.getElementById(id);
+            if (badge) badge.textContent = count;
+        });
         M.toast({html: 'Telefon dodany do koszyka', classes: 'green'});
-
-        // opcjonalnie: zmień wygląd przycisku na „W koszyku”
-        if (btn) {
-            btn.textContent = 'W koszyku';
-            btn.classList.remove('orange', 'darken-2');
-            btn.classList.add('grey');
-        }
-
+        await refreshStockListPreservingState();
     } catch (e) {
         console.error('Error adding to cart:', e);
         M.toast({html: 'Nie udało się dodać do koszyka', classes: 'red'});
-
-        // przy błędzie pozwól znowu kliknąć
-        const btn = document.querySelector(`button[data-technical-id="${technicalId}"]`);
-        if (btn) {
-            btn.disabled = false;
-        }
+    } finally {
+        pendingCartAdds.delete(technicalId);
+        // Find the current button: a refresh may have replaced the original node.
+        updateSellButton(technicalId);
     }
 }
 
@@ -1944,11 +1912,10 @@ async function loadLocationsFilter() {
 }
 
 function isPhoneInCart(technicalId) {
-    if (!cartState || !cartState.items) return false;
-
-    return cartState.items.some(item =>
+    if (cartState?.items?.some(item =>
         item.technicalId === technicalId && item.itemType === "PHONE"
-    );
+    )) return true;
+    return cartState?.phones?.some(phone => phone.technicalId === technicalId) || false;
 }
 
 function debounce(fn, delay = 300) {
