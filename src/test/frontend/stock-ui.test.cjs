@@ -103,3 +103,56 @@ test('menu actions still work with keyboard and ignore disabled items', async t 
     });
     assert.equal(ignored, 0);
 });
+
+test('repeated refreshes release detached menus, tooltips and reservation timers', async t => {
+    const page = await fixture(t);
+    await page.evaluate(() => {
+        window.testIntervals = new Map();
+        let nextId = 0;
+        window.setInterval = fn => { testIntervals.set(++nextId, fn); return nextId; };
+        window.clearInterval = id => testIntervals.delete(id);
+    });
+    for (let i = 0; i < 10; i++) await page.evaluate(() => loadStock());
+    const counts = await page.evaluate(() => ({
+        cards: document.querySelectorAll('#phone-list .card').length,
+        dropdowns: M.Dropdown._dropdowns.length,
+        detached: M.Dropdown._dropdowns.filter(d => !d.el.isConnected).length,
+        tooltips: document.querySelectorAll('.material-tooltip').length,
+        timers: testIntervals.size
+    }));
+    assert.deepEqual(counts, { cards: 20, dropdowns: 20, detached: 0, tooltips: 40, timers: 20 });
+    await openPhoneMenu(page);
+    const empty = await page.evaluate(async () => {
+        testPhones = [];
+        await loadStock();
+        return { dropdowns: M.Dropdown._dropdowns.length,
+            tooltips: document.querySelectorAll('.material-tooltip').length, timers: testIntervals.size };
+    });
+    assert.deepEqual(empty, { dropdowns: 0, tooltips: 0, timers: 0 });
+});
+
+test('late reservation responses are aborted and cannot overwrite the next render', async t => {
+    const page = await fixture(t);
+    const result = await page.evaluate(async () => {
+        const originalFetch = window.fetch;
+        const pending = [];
+        window.fetch = (url, options) => url.includes('/reservations/status/')
+            ? new Promise(resolve => pending.push({ resolve, signal: options.signal }))
+            : originalFetch(url, options);
+        await loadStock();
+        const stale = pending.splice(0);
+        window.fetch = originalFetch;
+        await loadStock();
+        // Simulate a response that ignores abort (already buffered/in flight).
+        for (const request of stale) request.resolve({ ok: true, json: async () => ({
+            name: 'STALE', phoneNumber: 'OLD', expiryTime: new Date(Date.now() + 14400000).toISOString()
+        }) });
+        await new Promise(resolve => setTimeout(resolve, 0));
+        return {
+            aborted: stale.every(request => request.signal.aborted),
+            tooltip: document.getElementById('reservation-test-0').getAttribute('data-tooltip'),
+            timers: reservationIntervals.size
+        };
+    });
+    assert.deepEqual(result, { aborted: true, tooltip: 'Rezerwujący: Test (123)', timers: 20 });
+});

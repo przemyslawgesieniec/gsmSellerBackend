@@ -20,6 +20,8 @@ let stockModelOptionsByBrand = {};
 let stockMemoryOptions = [];
 let stockLoadRequestId = 0;
 let stockLoadAbortController = null;
+let reservationStatusController = null;
+const reservationIntervals = new Set();
 const stockListStateStorageKey = "gsm-seller.stock-list-state.v1";
 
 const listContainer = document.getElementById("phone-list");
@@ -823,7 +825,7 @@ async function loadStock(page = 0, stateFilters = null) {
 
         renderPhones(phones);
         initDropdowns();
-        M.Tooltip.init(document.querySelectorAll('.tooltipped'));
+        M.Tooltip.init(listContainer.querySelectorAll('.tooltipped'));
         startReservationTimers(phones);
         loadPagination(data.number, data.totalPages);
     } catch (error) {
@@ -973,7 +975,29 @@ const PURCHASE_TYPE_LABELS = {
     VAT_23: "Faktura VAT (23%)"
 };
 
+function disposeStockCards() {
+    stopReservationTimers();
+    listContainer.querySelectorAll('.dropdown-trigger').forEach(el => {
+        const instance = M.Dropdown.getInstance(el);
+        if (!instance) return;
+        // Materialize removes document touch/click handlers only when closing.
+        instance.options.autoFocus = false;
+        instance.close();
+        M.anime.remove(instance.dropdownEl);
+        instance.destroy();
+    });
+    listContainer.querySelectorAll('.tooltipped').forEach(el => {
+        const instance = M.Tooltip.getInstance(el);
+        if (!instance) return;
+        clearTimeout(instance._enterDelayTimeout);
+        clearTimeout(instance._exitDelayTimeout);
+        M.anime.remove(instance.tooltipEl);
+        instance.destroy();
+    });
+}
+
 function renderPhones(phones) {
+    disposeStockCards();
     listContainer.innerHTML = "";
     phones.forEach((phone) => {
         const statusClass = phone.status ? phone.status.toUpperCase() : "";
@@ -1245,46 +1269,58 @@ function formatPrice(price) {
 
 let cartBtn = null;
 
+function stopReservationTimers() {
+    reservationStatusController?.abort();
+    reservationStatusController = null;
+    reservationIntervals.forEach(interval => clearInterval(interval));
+    reservationIntervals.clear();
+}
+
 function startReservationTimers(phones) {
+    stopReservationTimers();
+    const controller = new AbortController();
+    reservationStatusController = controller;
+
     phones.filter(p => p.isReserved).forEach(async (phone) => {
         try {
-            const response = await fetch(`/api/v1/external/reservations/status/${phone.technicalId}`);
+            const response = await fetch(`/api/v1/external/reservations/status/${phone.technicalId}`, {
+                signal: controller.signal
+            });
             if (!response.ok) return;
             const status = await response.json();
-            
+            // A response from a previous render must not update the new cards.
+            if (controller.signal.aborted) return;
+
             const badge = document.getElementById(`reservation-${phone.technicalId}`);
             if (badge) {
-                const tooltipInstance = M.Tooltip.getInstance(badge);
-                if (tooltipInstance) {
-                    tooltipInstance.destroy();
-                }
                 badge.setAttribute('data-tooltip', `Rezerwujący: ${status.name} (${status.phoneNumber})`);
-                M.Tooltip.init(badge);
             }
 
             const expiryTime = new Date(status.expiryTime).getTime();
             const timerElement = document.getElementById(`timer-${phone.technicalId}`);
-            
-            if (timerElement) {
-                const interval = setInterval(() => {
-                    const now = new Date().getTime();
-                    const distance = expiryTime - now;
-                    
-                    if (distance < 0) {
-                        clearInterval(interval);
-                        timerElement.innerHTML = "EXPIRED";
-                        return;
-                    }
-                    
-                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                    
-                    timerElement.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
-                }, 1000);
+            if (!timerElement || !Number.isFinite(expiryTime)) return;
+
+            let interval;
+            const updateTimer = () => {
+                const distance = expiryTime - Date.now();
+                if (!timerElement.isConnected || distance <= 0) {
+                    clearInterval(interval);
+                    reservationIntervals.delete(interval);
+                    if (timerElement.isConnected) timerElement.textContent = "EXPIRED";
+                    return false;
+                }
+                const hours = Math.floor(distance / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                timerElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+                return true;
+            };
+            if (updateTimer()) {
+                interval = setInterval(updateTimer, 1000);
+                reservationIntervals.add(interval);
             }
         } catch (e) {
-            console.error("Error loading reservation status", e);
+            if (e.name !== "AbortError") console.error("Error loading reservation status", e);
         }
     });
 }
