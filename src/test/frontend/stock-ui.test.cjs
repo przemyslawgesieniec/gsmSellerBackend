@@ -57,3 +57,49 @@ test('refresh arriving while a modal is open preserves its instance and releases
     assert.deepEqual(state, { sameInstance: true, overflow: '', openCount: 0 });
     await page.waitForFunction(() => document.querySelectorAll('.modal-overlay').length === 0);
 });
+
+async function openPhoneMenu(page) {
+    await page.evaluate(() => {
+        const trigger = document.querySelector('[data-target="dropdown-test-0"]');
+        trigger.scrollIntoView();
+        M.Dropdown.getInstance(trigger).open();
+    });
+    await page.waitForFunction(() => document.activeElement?.id === 'dropdown-test-0');
+}
+
+test('touching and swiping a menu item does not execute it; a completed tap does', async t => {
+    const page = await fixture(t);
+    await page.evaluate(() => loadStock());
+    await openPhoneMenu(page);
+    const action = page.locator('#dropdown-test-0 a[data-action="edit"]');
+    const box = await action.boundingBox();
+    const cdp = await page.context().newCDPSession(page);
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
+    assert.equal(await page.evaluate(() => M.Modal.getInstance(document.getElementById('editPhoneModal')).isOpen), false);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...point, y: point.y - 70 }] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    assert.equal(await page.evaluate(() => M.Modal.getInstance(document.getElementById('editPhoneModal')).isOpen), false);
+    await openPhoneMenu(page);
+    await action.tap();
+    assert.equal(await page.evaluate(() => M.Modal.getInstance(document.getElementById('editPhoneModal')).isOpen), true);
+    assert.equal(await page.evaluate(() => M.Modal._modalsOpen), 1);
+});
+
+test('menu actions still work with keyboard and ignore disabled items', async t => {
+    const page = await fixture(t);
+    await page.evaluate(() => loadStock());
+    await openPhoneMenu(page);
+    await page.locator('#dropdown-test-0 a[data-action="edit"]').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.evaluate(() => M.Modal.getInstance(document.getElementById('editPhoneModal')).isOpen), true);
+    const ignored = await page.evaluate(() => {
+        const link = document.querySelector('#dropdown-test-0 a[data-action="remove-from-location"]');
+        link.classList.add('disabled-link');
+        let requests = 0;
+        window.fetch = () => { requests++; return new Promise(() => {}); };
+        link.click();
+        return requests;
+    });
+    assert.equal(ignored, 0);
+});

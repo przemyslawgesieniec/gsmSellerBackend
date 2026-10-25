@@ -1979,7 +1979,6 @@ document.getElementById("confirmDeletePhoneBtn")
             })
     });
 
-document.addEventListener("touchstart", handleDropdownAction, { passive: false });
 document.addEventListener("click", handleDropdownAction);
 
 
@@ -1988,13 +1987,15 @@ function handleDropdownAction(e) {
     if (!el) return;
 
     e.preventDefault();
-    e.stopImmediatePropagation(); // 🔥 WAŻNE
+    e.stopPropagation();
+    if (el.classList.contains("disabled-link")) return;
 
     const action = el.dataset.action;
     const id = el.dataset.id;
 
     // ręcznie zamykamy dropdown
     const dropdown = el.closest(".dropdown-content");
+    if (!dropdown) return;
     const instance = M.Dropdown.getInstance(
         document.querySelector(`[data-target="${dropdown.id}"]`)
     );
