@@ -34,6 +34,8 @@
   <div class="section">
     <h4>Dokument sprzedaży</h4>
 
+    <form id="invoiceForm">
+    <fieldset id="invoiceFields" class="receipt-edit-fields" disabled>
     <!-- VAT -->
     <div class="section">
       <h6><b>Stawka VAT</b></h6>
@@ -73,12 +75,21 @@
         <tr>
           <th>#</th>
           <th>Opis</th>
-          <th>Cena (zł)</th>
+          <th>Cena netto (zł)</th>
         </tr>
         </thead>
         <tbody id="invoiceItems"></tbody>
       </table>
     </div>
+
+    <section class="section" aria-labelledby="manualItemsHeading">
+      <h6 id="manualItemsHeading"><b>Pozycje ręczne</b></h6>
+      <p class="grey-text text-darken-2">Wpisz opis i cenę netto. Możesz wystawić fakturę wyłącznie z pozycjami ręcznymi, także przy pustym koszyku.</p>
+      <div id="manualInvoiceItems"></div>
+      <button type="button" id="addManualItemBtn" class="btn waves-effect waves-light">
+        Dodaj pozycję ręcznie
+      </button>
+    </section>
 
     <!-- PODSUMOWANIE -->
     <div class="section right-align">
@@ -89,11 +100,13 @@
 
     <!-- PRZYCISK -->
     <div class="section right-align">
-      <button class="btn-large green waves-effect waves-light" onclick="saveAndPrint()">
+      <button type="submit" id="saveInvoiceBtn" class="btn-large green waves-effect waves-light">
         <i class="material-icons left">print</i>
         Zapisz i drukuj
       </button>
     </div>
+    </fieldset>
+    </form>
   </div>
 </div>
 

@@ -4,6 +4,8 @@
  * =========================
  */
 let CURRENT_CART = null;
+let invoiceSaving = false;
+let manualItemCounter = 0;
 
 /**
  * =========================
@@ -33,7 +35,6 @@ function renderInvoice(cart) {
     const tbody = document.getElementById("invoiceItems");
     tbody.innerHTML = "";
 
-    let totalNet = 0;
     let counter = 1;
 
     cart.items.forEach(item => {
@@ -42,7 +43,6 @@ function renderInvoice(cart) {
             `${item.name ?? ""} ${item.model ?? ""}`.trim();
 
         const price = Number(item.sellingPrice ?? item.price ?? 0);
-        totalNet += price;
 
         let extraFields = "";
 
@@ -103,7 +103,10 @@ function renderInvoice(cart) {
         `);
     });
 
-    updateTotals(totalNet);
+    if (!cart.items.length) {
+        tbody.innerHTML = '<tr><td colspan="3" class="grey-text">Koszyk jest pusty. Dodaj pozycję ręcznie poniżej.</td></tr>';
+    }
+    updateTotals();
 }
 
 /**
@@ -111,14 +114,75 @@ function renderInvoice(cart) {
  *  TOTALS
  * =========================
  */
-function updateTotals(netTotal) {
-    const vatValue = getSelectedVatBackend();
-    const grossTotal = calculateGrossTotal(netTotal, vatValue);
+function updateTotals() {
+    const rate = Math.round(parseVatRate(getSelectedVatBackend()) * 100);
+    const prices = [
+        ...(CURRENT_CART?.items ?? []).map(item => Number(item.sellingPrice ?? item.price ?? 0)),
+        ...collectManualInvoiceItems().map(item => item.price)
+    ];
+    let netCents = 0;
+    let vatCents = 0;
+    prices.forEach(price => {
+        if (!Number.isFinite(price) || price < 0) return;
+        const cents = Math.round(price * 100);
+        // The PDF rounds VAT per item using HALF_EVEN.
+        const numerator = cents * rate;
+        const whole = Math.floor(numerator / 100);
+        const remainder = numerator % 100;
+        netCents += cents;
+        vatCents += whole + (remainder > 50 || (remainder === 50 && whole % 2 !== 0) ? 1 : 0);
+    });
+    document.getElementById("totalNet").textContent = (netCents / 100).toFixed(2);
+    document.getElementById("totalVat").textContent = (vatCents / 100).toFixed(2);
+    document.getElementById("invoiceTotal").textContent = ((netCents + vatCents) / 100).toFixed(2);
+}
 
-    document.getElementById("totalNet").textContent = netTotal.toFixed(2);
-    document.getElementById("invoiceTotal").textContent = grossTotal.toFixed(2);
-    document.getElementById("totalVat").textContent =
-        (grossTotal - netTotal).toFixed(2);
+function addManualInvoiceItem() {
+    const id = ++manualItemCounter;
+    const row = document.createElement("div");
+    row.className = "card-panel manual-invoice-item";
+    row.innerHTML = `
+        <div class="row">
+            <div class="input-field col s12 m8">
+                <input id="manual-description-${id}" class="manual-description" type="text" required>
+                <label for="manual-description-${id}">Opis pozycji</label>
+            </div>
+            <div class="input-field col s12 m4">
+                <input id="manual-price-${id}" class="manual-price" type="number"
+                       min="0.01" max="9999999999.99" step="0.01" required inputmode="decimal">
+                <label for="manual-price-${id}">Cena netto (zł)</label>
+            </div>
+        </div>
+        <button type="button" class="btn-flat red-text remove-manual-item">Usuń pozycję</button>`;
+    const description = row.querySelector('.manual-description');
+    const validateDescription = () => description.setCustomValidity(
+        description.value.trim() ? '' : 'Wpisz opis pozycji.'
+    );
+    validateDescription();
+    description.addEventListener('input', validateDescription);
+    row.addEventListener('input', () => {
+        M.updateTextFields();
+        updateTotals();
+    });
+    row.querySelector('.remove-manual-item').addEventListener('click', () => {
+        row.remove();
+        updateTotals();
+        document.getElementById('addManualItemBtn').focus();
+    });
+    document.getElementById('manualInvoiceItems').appendChild(row);
+    description.focus();
+    updateTotals();
+}
+
+function collectManualInvoiceItems() {
+    return Array.from(document.querySelectorAll('.manual-invoice-item'), row => ({
+        itemType: 'MISC',
+        technicalId: null,
+        description: row.querySelector('.manual-description').value.trim(),
+        price: Number(row.querySelector('.manual-price').value),
+        warrantyMonths: null,
+        used: null
+    }));
 }
 
 /**
@@ -138,28 +202,34 @@ function parseVatRate(vatValue) {
     return 0;
 }
 
-function calculateGrossTotal(netTotal, vatValue) {
-    return netTotal * (1 + parseVatRate(vatValue));
-}
-
 /**
  * =========================
  *  SAVE + PRINT
  * =========================
  */
 async function saveAndPrint() {
+    if (invoiceSaving) return;
     if (!CURRENT_CART) {
         M.toast({ html: "Brak danych koszyka", classes: "red" });
+        return;
+    }
+
+    if (!document.getElementById('invoiceForm').reportValidity()) return;
+    const items = [...collectInvoiceExtraData(CURRENT_CART), ...collectManualInvoiceItems()];
+    if (!items.length) {
+        M.toast({ html: "Dodaj przynajmniej jedną pozycję do faktury", classes: "red" });
         return;
     }
 
     const payload = {
         vatRate: getSelectedVatBackend(),
         sellDate: getSellDate(),
-        items: collectInvoiceExtraData(CURRENT_CART),
+        items,
         customerNote: document.getElementById("customerNote")?.value ?? ""
     };
 
+    invoiceSaving = true;
+    document.getElementById('invoiceFields').disabled = true;
     try {
         const res = await fetch("/api/v1/receipt", {
             method: "POST",
@@ -167,7 +237,7 @@ async function saveAndPrint() {
             body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error();
+        if (!res.ok || res.redirected) throw new Error();
 
         const receiptUuid = await res.json();
         M.toast({ html: "Dokument zapisany", classes: "green" });
@@ -176,6 +246,9 @@ async function saveAndPrint() {
 
     } catch {
         M.toast({ html: "Błąd zapisu dokumentu", classes: "red" });
+    } finally {
+        invoiceSaving = false;
+        document.getElementById('invoiceFields').disabled = false;
     }
 }
 
@@ -189,7 +262,6 @@ function collectInvoiceExtraData(cart) {
         const price = Number(item.sellingPrice ?? item.price ?? 0);
         const descTmp = item.description ??
                 `${item.name ?? ""} ${item.model ?? ""}`.trim();
-        console.log("Item: " + item)
 
         if (item.itemType !== "PHONE") {
             return {
@@ -231,8 +303,16 @@ function getSellDate() {
 }
 
 function resetInvoiceForm() {
+    CURRENT_CART = { items: [] };
+    document.getElementById('manualInvoiceItems').replaceChildren();
+    document.getElementById('customerNote').value = '';
+    renderInvoice(CURRENT_CART);
     const dp = M.Datepicker.getInstance(document.getElementById("sellDate"));
-    if (dp) dp.setDate(new Date());
+    if (dp) {
+        dp.setDate(new Date());
+        dp.setInputValue();
+    }
+    M.updateTextFields();
 }
 
 /**
@@ -250,16 +330,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         yearRange: 5
     });
 
-    // LOAD CART
-    CURRENT_CART = await fetchCart();
-    if (CURRENT_CART) renderInvoice(CURRENT_CART);
+    document.getElementById('invoiceForm').addEventListener('submit', event => {
+        event.preventDefault();
+        saveAndPrint();
+    });
+    document.getElementById('addManualItemBtn').addEventListener('click', addManualInvoiceItem);
+    // Recalculate without rebuilding inputs: keep phone details and manual edits.
+    document.getElementById('vatSelect').addEventListener('change', updateTotals);
 
-    // VAT CHANGE
-    document
-        .getElementById("vatSelect")
-        ?.addEventListener("change", () => {
-            renderInvoice(CURRENT_CART);
-        });
+    CURRENT_CART = await fetchCart();
+    if (CURRENT_CART) {
+        renderInvoice(CURRENT_CART);
+        document.getElementById('invoiceFields').disabled = false;
+    }
 });
 
 new TomSelect('#vatSelect', {
