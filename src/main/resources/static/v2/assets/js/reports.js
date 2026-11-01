@@ -146,7 +146,7 @@ function renderProfitChart(data) {
             datasets: [{
                 label: "Zysk dzienny",
                 data: data.map(d => d.profit),
-                backgroundColor: '#00857f',
+                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--brand').trim(),
                 borderRadius: 5
             }]
         },

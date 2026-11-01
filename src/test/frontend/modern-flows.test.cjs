@@ -187,3 +187,16 @@ test('empty inventory, lists and repair board render without runtime errors',asy
   await goto(screen);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,screen);assert.deepEqual(errors,[],screen);
  }
 });
+
+for(const width of [375,844,1440])test(`inventory exposes full phone data without expanding at ${width}px`,async t=>{
+ const {page,goto,errors}=await app.fixture(t);await page.setViewportSize({width,height:900});await goto('index.html');
+ const card=page.locator(`[data-technical-id="${id}"].panel`);
+ for(const label of ['Model:','Model z bazy:','RAM:','Pamięć:','SIM:','Kolor:','Pochodzenie:','Forma zakupu:','IMEI:','Dodano:','Opis:','Komentarz:','Stan baterii:']){
+  const field=card.locator('.phone-data p').filter({has:page.locator('b').filter({hasText:label})});
+  assert.equal(await field.first().isVisible(),true,label);
+ }
+ for(const value of [phone.memory,phone.ram,phone.simCardType,phone.description,phone.comment,phone.source,phone.color,phone.imei])assert.ok((await card.innerText()).includes(value),value);
+ assert.equal(await card.locator('details').count(),0);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+ assert.deepEqual(errors,[]);
+});

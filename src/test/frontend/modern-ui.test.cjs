@@ -14,6 +14,11 @@ for(const mobile of [false,true])for(const screen of screens){
   assert.deepEqual(errors,[]);
   assert.deepEqual(external,[]);
   assert.equal(await page.evaluate(()=>typeof M),'undefined');
+  const logos=page.locator('img[alt^="Teleakcesoria"]');
+  assert.ok(await logos.count()>0,'Original brand logo must be present');
+  assert.equal(await logos.evaluateAll(imgs=>imgs.every(img=>img.complete&&img.naturalWidth>0)),true,'Brand assets load');
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()),'#00aed8');
+  assert.ok(await logos.evaluateAll(imgs=>imgs.some(img=>img.getBoundingClientRect().width>0)),'Logo visible at this viewport');
   const missing=await page.evaluate(ids=>ids.filter(id=>!document.getElementById(id)),screen.legacyFieldIds);
   assert.deepEqual(missing,[],'Missing original data-bound fields');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'Horizontal page overflow');

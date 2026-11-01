@@ -1,4 +1,4 @@
-# GSM Workspace — frontend v2
+# Teleakcesoria — frontend v2
 
 Nowy interfejs: `/v2/index.html`. Klasyczny frontend pozostaje pod dotychczasowymi adresami.
 Przełączniki w obu nawigacjach zachowują bieżący ekran i query string (np. identyfikator faktury).
@@ -50,7 +50,7 @@ npm ci --prefix src/test/frontend
 cd src/test/frontend && npx playwright install chromium && npm test
 ```
 
-80 testów przeglądarkowych obejmuje oba interfejsy, wszystkie 16 nowych ekranów przy
+83 testy przeglądarkowe obejmują oba interfejsy, wszystkie 16 nowych ekranów przy
 szerokościach 375 i 1440 px, dialogi, uprawnienia, operacje formularzy, dokumenty/PDF,
 OCR multipart, koszyk, serwis, raporty, logowanie/wylogowanie i puste listy.
 
@@ -63,3 +63,16 @@ Nowe adresy `/v2/` kierują niezalogowanego użytkownika na `/v2/login.html`, kl
 adresy zachowują `/login.html`. Wylogowanie nowego widoku korzysta z istniejącego `/logout`.
 
 Testy używają lokalnego Chromium i kontrolowanych odpowiedzi API; nie modyfikują danych produkcyjnych.
+
+## Identyfikacja i lista magazynu
+
+Wspólne style zachowują identyfikację Teleakcesoria: czerń i błękit `#00aed8`.
+Oryginalne logotypy z `static/imgs` są dostarczane także w `v2/assets/brand`, aby były
+publicznie dostępne na ekranie logowania bez zmiany reguł API. Ciemny wariant jest
+używany w nawigacji i panelu logowania, jasny w nagłówku mobilnym i przy formularzu.
+Nazwy ekranów i stopki używają nazwy Teleakcesoria.
+
+Karty magazynu pokazują pełne dane od razu: model, model z bazy, RAM, pamięć, SIM,
+kolor, pochodzenie, formę zakupu, IMEI, datę dodania, opis, komentarz i baterię.
+Układ dwóch kolumn zawija długie wartości również na telefonie; ceny i status
+pozostają osobno widoczne. Nie trzeba otwierać sekcji „Dane urządzenia”.

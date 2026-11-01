@@ -1068,24 +1068,16 @@ function renderPhones(phones) {
                   </span>
                   ` : ""}
                 </div>
-                <p><i class="ui-icon tiny">smartphone</i> <b>Model:</b> ${phone.model}</p>
+                <p><i class="ui-icon tiny">smartphone</i> <b>Model:</b> ${phone.model || "—"}</p>
 
                 <p>
                   <i class="ui-icon tiny">dns</i>
                   <b>Model z bazy:</b> ${phone.phoneModelDisplayName || "Nie ustawiono"}
                 </p>
 
-                ${(phone.ram != null || phone.memory != null || phone.simCardType != null) ? `
-                <p>
-                  <i class="ui-icon tiny">memory</i>
-                  <b>Specyfikacja:</b>
-                  ${phone.ram != null ? `${phone.ram}` : ``}
-                  ${phone.ram != null && phone.memory != null ? ` / ` : ``}
-                  ${phone.memory != null ? `${phone.memory}` : ``}
-                  ${(phone.ram != null || phone.memory != null) && phone.simCardType != null ? ` / ` : ``}
-                  ${phone.simCardType != null ? `${phone.simCardType}` : ``}
-                </p>
-                ` : ``}
+                <p><i class="ui-icon tiny">memory</i> <b>RAM:</b> ${phone.ram || "—"}</p>
+                <p><i class="ui-icon tiny">storage</i> <b>Pamięć:</b> ${phone.memory || "—"}</p>
+                <p><i class="ui-icon tiny">sim_card</i> <b>SIM:</b> ${phone.simCardType || "—"}</p>
 
                 ${phone.source != null && phone.source !== "" ? `
                 <p>
@@ -1094,7 +1086,7 @@ function renderPhones(phones) {
                 </p>
                 ` : ``}
 
-                <p><i class="ui-icon tiny">palette</i> <b>Kolor:</b> ${phone.color}</p>
+                <p><i class="ui-icon tiny">palette</i> <b>Kolor:</b> ${phone.color || "—"}</p>
 
             <p>
               <i class="ui-icon tiny">receipt</i>
@@ -1122,7 +1114,7 @@ function renderPhones(phones) {
                   <b>Komentarz:</b> ${phone.comment}
                 </p>
                 ` : ``}
-                ${phone.batteryCondition ? `
+                ${phone.batteryCondition != null ? `
                 <p class="battery-row">
                   <i class="ui-icon tiny ${getBatteryIconClass(phone.batteryCondition)}">
                     ${getBatteryIcon(phone.batteryCondition)}
@@ -1243,15 +1235,16 @@ function renderPhones(phones) {
     });
     listContainer.innerHTML = cards.join("");
     if (!phones.length) listContainer.innerHTML = '<div class="empty-state surface"><i class="ui-icon">inventory_2</i><h2>Brak urządzeń</h2><p>Zmień filtry lub dodaj pierwszy telefon do magazynu.</p><a href="addPhones.html" class="button">Dodaj telefony</a></div>';
+    // Stock data stays visible without opening a separate detail panel.
     listContainer.querySelectorAll('.phone-left').forEach(left => {
-        const details = document.createElement('details'); details.className = 'phone-details';
-        const summary = document.createElement('summary'); summary.textContent = 'Dane urządzenia'; details.append(summary);
-        const content = document.createElement('div'); details.append(content);
-        [...left.querySelectorAll(':scope > p')].forEach(p => {
-            const text = p.textContent.trim();
-            if (p.querySelector('b')?.textContent.trim() !== 'IMEI:' && !p.classList.contains('location')) content.append(p);
+        const data = document.createElement('div');
+        data.className = 'phone-data';
+        [...left.querySelectorAll(':scope > p')].forEach(row => {
+            const label = row.querySelector('b')?.textContent.trim();
+            if (['Model:', 'Opis:', 'Komentarz:', 'Model z bazy:'].includes(label)) row.classList.add('phone-data-wide');
+            data.append(row);
         });
-        left.append(details);
+        left.append(data);
     });
 }
 
