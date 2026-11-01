@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Historia serwisu · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="serviceHistory">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Serwis
+     </p>
+     <h1>
+      Historia serwisu
+     </h1>
+     <p class="page-description">
+      Przeglądaj zakończone zlecenia i historię urządzeń.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container wide-layout">
+    <div class="surface">
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12 span-m-3">
+       <label for="historySearch">
+        Wyszukaj
+       </label>
+       <i class="ui-icon prefix">
+        search
+       </i>
+       <input class="autocomplete" id="historySearch" placeholder="Klient, RMA, Producent lub Model" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-3">
+       <label for="locationFilter">
+        Lokalizacja
+       </label>
+       <i class="ui-icon prefix">
+        location_on
+       </i>
+       <select id="locationFilter">
+        <option value="">
+         Wszystkie lokalizacje
+        </option>
+       </select>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-3">
+       <label class="active" for="receiptDateRange">
+        Data przyjęcia
+       </label>
+       <i class="ui-icon prefix">
+        event
+       </i>
+       <input class="date-input" id="receiptDateRange" placeholder="Wybierz zakres dat przyjęcia" readonly="" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-3">
+       <label class="active" for="handoverDateRange">
+        Data oddania
+       </label>
+       <i class="ui-icon prefix">
+        event_available
+       </i>
+       <input class="date-input" id="handoverDateRange" placeholder="Wybierz zakres dat oddania" readonly="" type="text"/>
+      </div>
+     </div>
+     <div class="form-grid">
+      <div class="grid-cell span-s-12 span-m-3">
+       <p>
+        <label>
+         <input id="inHouseRepairFilter" type="checkbox"/>
+         <span>
+          Naprawa własna
+         </span>
+        </label>
+       </p>
+      </div>
+      <div class="grid-cell span-s-12 right-align">
+       <button class="button interactive interactive-light grey" id="clearFiltersBtn">
+        Wyczyść
+       </button>
+      </div>
+     </div>
+    </div>
+    <ul class="disclosure" id="historyCollapsible">
+    </ul>
+    <div class="center-align" id="paginationContainer">
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/serviceHistory.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/serviceHistory.js">
+  </script>
+ </body>
+</html>

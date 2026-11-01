@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Dodaj telefony · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="addPhones">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Magazyn
+     </p>
+     <h1>
+      Dodaj telefony
+     </h1>
+     <p class="page-description">
+      Wprowadź urządzenie ręcznie lub zeskanuj zdjęcia etykiet.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container wide-layout">
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-10 span-l-8 offset-m1 offset-l2">
+      <div class="panel white">
+       <div class="panel-body">
+        <p class="grey-text">
+         Dodaj zdjęcia naklejek i automatycznie odczytaj dane urządzeń.
+        </p>
+        <div class="drop-area elevation" id="dropArea">
+         <p>
+          Przeciągnij zdjęcia tutaj lub kliknij, aby wybrać z dysku
+         </p>
+         <input accept=".jpg,.jpeg,.png,.heic,.heif" id="fileInput" multiple="" style="display:none" type="file"/>
+        </div>
+        <div class="form-grid">
+         <div class="field grid-cell span-s-12 span-m-4">
+          <label for="manualInitialPrice">
+           Cena zakupu
+          </label>
+          <input id="manualInitialPrice" type="number"/>
+         </div>
+         <div class="field grid-cell span-s-12 span-m-4">
+          <label for="manualSellingPrice">
+           Cena sprzedaży
+          </label>
+          <input id="manualSellingPrice" type="number"/>
+         </div>
+         <div class="field grid-cell span-s-12 span-m-4">
+          <label for="manualSource">
+           Pochodzenie
+          </label>
+          <input id="manualSource" type="text"/>
+         </div>
+         <div class="grid-cell span-s-12">
+          <div class="switch">
+           <label>
+            Podaj nazwę
+            <input checked="" id="identitySourceToggle" type="checkbox"/>
+            <span class="lever">
+            </span>
+            Wybierz model z bazy
+           </label>
+          </div>
+         </div>
+         <div class="field grid-cell span-s-12 span-m-8 hide" id="manualNameWrapper">
+          <label for="manualName">
+           Nazwa
+          </label>
+          <input id="manualName" type="text"/>
+         </div>
+         <div class="field grid-cell span-s-12 span-m-8" id="manualPhoneModelWrapper">
+          <label class="active" for="manualPhoneModelSelect">
+           Model z bazy
+          </label>
+          <select id="manualPhoneModelSelect">
+          </select>
+         </div>
+         <div class="field grid-cell span-s-12 span-m-4">
+          <label for="manualPurchaseType">
+           Forma zakupu
+          </label>
+          <select id="manualPurchaseType">
+           <option disabled="" selected="" value="">
+            Wybierz
+           </option>
+           <option value="CASH">
+            Gotówka
+           </option>
+           <option value="VAT_EXEMPT">
+            Faktura marża (ZW)
+           </option>
+           <option value="VAT_23">
+            Faktura VAT (23%)
+           </option>
+          </select>
+         </div>
+         <div class="grid-cell span-s-12" id="manualVariantWrapper">
+          <div class="form-grid">
+           <div class="field grid-cell span-s-12 span-m-3">
+            <label class="active" for="manualRamSelect">
+             RAM
+            </label>
+            <select data-placeholder="Wybierz RAM" id="manualRamSelect">
+            </select>
+           </div>
+           <div class="field grid-cell span-s-12 span-m-3">
+            <label class="active" for="manualMemorySelect">
+             Pamięć
+            </label>
+            <select data-placeholder="Wybierz pamięć" id="manualMemorySelect">
+            </select>
+           </div>
+           <div class="field grid-cell span-s-12 span-m-3">
+            <label class="active" for="manualColorSelect">
+             Kolor
+            </label>
+            <select data-placeholder="Wybierz kolor" id="manualColorSelect">
+            </select>
+           </div>
+           <div class="field grid-cell span-s-12 span-m-3">
+            <label class="active" for="manualSimCardTypeSelect">
+             SIM
+            </label>
+            <select data-placeholder="Wybierz SIM" id="manualSimCardTypeSelect">
+            </select>
+           </div>
+          </div>
+         </div>
+         <div class="field grid-cell span-s-12">
+          <label for="manualDescription">
+           Uwagi
+          </label>
+          <textarea class="text-area" id="manualDescription"></textarea>
+         </div>
+         <div class="grid-cell span-s-12 span-m-4">
+          <div class="switch">
+           <label>
+            Nowy
+            <input id="manualUsed" type="checkbox"/>
+            <span class="lever">
+            </span>
+            Używany
+           </label>
+          </div>
+         </div>
+         <div class="grid-cell span-s-12 span-m-4">
+          <div class="switch">
+           <label>
+            Sprawny
+            <input id="manualDamaged" type="checkbox"/>
+            <span class="lever">
+            </span>
+            Uszkodzony
+           </label>
+          </div>
+         </div>
+         <div class="field grid-cell span-s-12 span-m-4 hide" id="manualBatteryConditionWrapper">
+          <label for="manualBatteryCondition">
+           Kondycja baterii (%)
+          </label>
+          <input id="manualBatteryCondition" max="100" min="0" step="1" type="number"/>
+         </div>
+        </div>
+        <div class="switch">
+         <label>
+          Automatycznie (zdjęcia)
+          <input id="manualToggle" type="checkbox"/>
+          <span class="lever">
+          </span>
+          Wprowadzaj dane manualnie (formularz)
+         </label>
+        </div>
+       </div>
+       <div class="panel-actions right-align">
+        <button class="button blue darken-2" id="addBulkBtn">
+         Dodaj
+        </button>
+       </div>
+      </div>
+      <div id="scanResultsContainer">
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="loading-overlay hide" id="loadingOverlay">
+    <div class="panel white elevation">
+     <h6 class="blue-text text-darken-2" id="loaderText">
+      Przetwarzanie zdjęć…
+     </h6>
+     <div class="progress">
+      <div class="determinate blue" id="progressBar">
+      </div>
+     </div>
+     <p class="grey-text text-darken-1" id="progressPercent">
+      0%
+     </p>
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/addPhones.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <dialog aria-label="Wykryto duplikaty! OK" class="dialog" id="duplicatesModal">
+   <div class="dialog-body">
+    <h5 class="orange-text text-darken-2">
+     Wykryto duplikaty!
+    </h5>
+    <p id="duplicatesModalText">
+    </p>
+   </div>
+   <div class="dialog-footer">
+    <button class="dialog-close button-quiet">
+     OK
+    </button>
+   </div>
+  </dialog>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/vendor/heic2any.js"></script>
+  <script src="assets/js/uploadFiles.js">
+  </script>
+  <script src="assets/js/addPhones-init.js">
+  </script>
+ </body>
+</html>

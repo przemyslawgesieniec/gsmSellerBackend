@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Nowy dokument sprzedaży · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="invoice">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Sprzedaż
+     </p>
+     <h1>
+      Nowy dokument sprzedaży
+     </h1>
+     <p class="page-description">
+      Pozycje z koszyka i pozycje ręczne. Wszystko gotowe do wystawienia.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container">
+    <div class="section">
+     <form id="invoiceForm">
+      <fieldset class="receipt-edit-fields" disabled="" id="invoiceFields">
+       <div class="document-basics">
+        <div class="field">
+         <label for="vatSelect">
+          Stawka VAT
+         </label>
+         <select id="vatSelect">
+          <option value="ZW">
+           ZW
+          </option>
+          <option value="0%">
+           0%
+          </option>
+          <option value="5%">
+           5%
+          </option>
+          <option value="8%">
+           8%
+          </option>
+          <option value="23%">
+           23%
+          </option>
+         </select>
+        </div>
+        <div class="field">
+         <label for="sellDate">
+          Data sprzedaży
+         </label>
+         <input class="date-input" id="sellDate" type="text"/>
+        </div>
+       </div>
+       <div class="section">
+        <div class="field">
+         <label for="customerNote">
+          Informacje dla klienta (widoczne na dokumencie)
+         </label>
+         <textarea class="text-area" id="customerNote"></textarea>
+        </div>
+       </div>
+       <div class="section">
+        <table class="highlight invoice-table">
+         <thead>
+          <tr>
+           <th>
+            #
+           </th>
+           <th>
+            Opis
+           </th>
+           <th>
+            Cena netto (zł)
+           </th>
+          </tr>
+         </thead>
+         <tbody id="invoiceItems">
+         </tbody>
+        </table>
+       </div>
+       <section aria-labelledby="manualItemsHeading" class="section">
+        <h6 id="manualItemsHeading">
+         <b>
+          Pozycje ręczne
+         </b>
+        </h6>
+        <p class="grey-text text-darken-2">
+         Wpisz opis i cenę netto. Możesz wystawić fakturę wyłącznie z pozycjami ręcznymi, także przy pustym koszyku.
+        </p>
+        <div id="manualInvoiceItems">
+        </div>
+        <button class="button interactive interactive-light" id="addManualItemBtn" type="button">
+         Dodaj pozycję ręcznie
+        </button>
+       </section>
+       <div class="section right-align">
+        Netto:
+        <span id="totalNet">
+         0.00
+        </span>
+        zł
+        <br/>
+        VAT:
+        <span id="totalVat">
+         0.00
+        </span>
+        zł
+        <br/>
+        <b>
+         Brutto:
+         <span id="invoiceTotal">
+          0.00
+         </span>
+         zł
+        </b>
+       </div>
+       <div class="section right-align">
+        <button class="button-large green interactive interactive-light" id="saveInvoiceBtn" type="submit">
+         <i class="ui-icon left">
+          print
+         </i>
+         Zapisz i drukuj
+        </button>
+       </div>
+      </fieldset>
+     </form>
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/invoice.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/invoice.js">
+  </script>
+ </body>
+</html>

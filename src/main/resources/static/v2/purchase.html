@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Skup urządzeń · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="purchase">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Internet
+     </p>
+     <h1>
+      Skup urządzeń
+     </h1>
+     <p class="page-description">
+      Przeprowadź zgłoszenie od wyceny do zakończenia transakcji.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container wide-layout">
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <div class="page-heading">
+       <div>
+        <p class="grey-text">
+         Obsługa zgłoszeń od klientów, ustaleń cenowych i historii kontaktu.
+        </p>
+       </div>
+       <button class="button blue darken-2 interactive" id="refreshPurchasesBtn">
+        <i class="ui-icon left">
+         refresh
+        </i>
+        Odśwież
+       </button>
+      </div>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="field">
+       <label for="purchaseSearch">
+        Szukaj po modelu, telefonie lub opisie
+       </label>
+       <input id="purchaseSearch" type="text"/>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="field">
+       <label class="active" for="purchaseStatusFilter">
+        Status zgłoszeń
+       </label>
+       <select id="purchaseStatusFilter">
+        <option selected="" value="all">
+         Wszystkie
+        </option>
+        <option value="active">
+         Aktywne
+        </option>
+        <option value="closed">
+         Zamknięte
+        </option>
+       </select>
+      </div>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <div class="panel">
+       <div class="panel-body">
+        <table class="highlight responsive-table models-table">
+         <thead>
+          <tr>
+           <th>
+            Data
+           </th>
+           <th>
+            Klient
+           </th>
+           <th>
+            Model
+           </th>
+           <th>
+            Status
+           </th>
+           <th>
+            Kwota
+           </th>
+           <th>
+            Materiały
+           </th>
+           <th>
+            Ostatni komentarz
+           </th>
+           <th class="right-align">
+            Akcje
+           </th>
+          </tr>
+         </thead>
+         <tbody id="purchaseTableBody">
+         </tbody>
+        </table>
+        <div class="center-align grey-text hide" id="purchaseEmptyState">
+         Brak zgłoszeń skupu dla wybranego filtra.
+        </div>
+        <div class="center-align hide" id="purchaseLoader">
+         <div class="preloader-wrapper small active">
+          <div class="spinner-layer spinner-blue-only">
+           <div class="circle-clipper left">
+            <div class="circle">
+            </div>
+           </div>
+           <div class="gap-patch">
+            <div class="circle">
+            </div>
+           </div>
+           <div class="circle-clipper right">
+            <div class="circle">
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <ul class="pagination center-align" id="purchasePagination">
+      </ul>
+     </div>
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/purchase.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <dialog aria-label="Szczegóły zgłoszenia close Model Telefon Data zgłoszenia Ustalona kwota Kontakt z klientem" class="dialog dialog-wide" id="purchaseDetailsModal">
+   <div class="dialog-body">
+    <h5>
+     Szczegóły zgłoszenia
+    </h5>
+    <a class="dialog-close right">
+     <i class="ui-icon">
+      close
+     </i>
+    </a>
+    <input id="detailPurchaseId" type="hidden"/>
+    <div class="form-grid purchase-details-layout">
+     <div class="grid-cell span-s-12 span-m-7">
+      <div class="purchase-summary-panel">
+       <div>
+        <span class="grey-text">
+         Model
+        </span>
+        <h5 id="detailModel">
+        </h5>
+       </div>
+       <span id="detailStatus">
+       </span>
+      </div>
+      <div class="form-grid purchase-detail-grid">
+       <div class="grid-cell span-s-12 span-m-6">
+        <span class="grey-text">
+         Telefon
+        </span>
+        <p id="detailPhone">
+        </p>
+       </div>
+       <div class="grid-cell span-s-12 span-m-6">
+        <span class="grey-text">
+         Data zgłoszenia
+        </span>
+        <p id="detailDate">
+        </p>
+       </div>
+       <div class="grid-cell span-s-12 span-m-6">
+        <span class="grey-text">
+         Ustalona kwota
+        </span>
+        <p id="detailPrice">
+        </p>
+       </div>
+       <div class="grid-cell span-s-12 span-m-6">
+        <span class="grey-text">
+         Kontakt z klientem
+        </span>
+        <p id="detailContacted">
+        </p>
+       </div>
+       <div class="grid-cell span-s-12">
+        <span class="grey-text">
+         Opis klienta
+        </span>
+        <p id="detailDescription">
+        </p>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-5">
+      <div class="dynamic-field-group">
+       <div class="dynamic-field-header">
+        <h6>
+         Zdjęcia
+        </h6>
+       </div>
+       <div class="purchase-photos-grid" id="detailPhotos">
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12">
+      <div class="dynamic-field-group purchase-action-section" id="purchaseActionSection">
+       <div class="dynamic-field-header">
+        <h6>
+         Obsługa skupu
+        </h6>
+       </div>
+       <div class="purchase-actions-grid">
+        <div class="purchase-success-actions">
+         <div class="field purchase-price-field">
+          <label for="agreedPriceInput">
+           Ustalona kwota
+          </label>
+          <input id="agreedPriceInput" min="0.01" step="0.01" type="number"/>
+         </div>
+         <div class="purchase-action-buttons">
+          <button class="button-small blue darken-2" id="saveAgreedPriceBtn">
+           <i class="ui-icon left">
+            price_check
+           </i>
+           Cena ustalona
+          </button>
+          <button class="button-small green darken-2" id="markPurchasedBtn">
+           <i class="ui-icon left">
+            check_circle
+           </i>
+           Skup udany
+          </button>
+         </div>
+        </div>
+        <div class="purchase-failure-actions">
+         <div class="field purchase-failure-reason">
+          <label for="closureReasonInput">
+           Powód zamknięcia bez skupu
+          </label>
+          <textarea class="text-area" id="closureReasonInput"></textarea>
+         </div>
+         <div class="purchase-close-row">
+          <label>
+           <input id="contactedCustomerInput" type="checkbox"/>
+           <span>
+            Klient został poinformowany
+           </span>
+          </label>
+          <button class="button-small red darken-2" id="closeFailedBtn">
+           <i class="ui-icon left">
+            cancel
+           </i>
+           Zamknij niepowodzeniem
+          </button>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12">
+      <div class="dynamic-field-group">
+       <div class="dynamic-field-header">
+        <h6>
+         Komentarze
+        </h6>
+       </div>
+       <div class="purchase-comments" id="purchaseComments">
+       </div>
+       <div class="purchase-comment-form">
+        <div class="field">
+         <label for="newCommentInput">
+          Dodaj komentarz
+         </label>
+         <textarea class="text-area" id="newCommentInput"></textarea>
+        </div>
+        <button class="button-small blue darken-2" id="addCommentBtn">
+         <i class="ui-icon left">
+          add_comment
+         </i>
+         Dodaj komentarz
+        </button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close">
+     Zamknij
+    </button>
+   </div>
+  </dialog>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/purchase.js">
+  </script>
+ </body>
+</html>

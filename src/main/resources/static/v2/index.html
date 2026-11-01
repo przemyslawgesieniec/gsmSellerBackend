@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+
+<html lang="pl">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="light" name="color-scheme"/>
+<title>
+   Magazyn telefonów · GSM Workspace
+  </title>
+<link href="/favicon.ico" rel="icon"/>
+<link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+<link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+<link href="assets/css/workspace.css" rel="stylesheet"/>
+</head>
+<body data-page="index">
+<a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+<div id="workspaceShell">
+</div>
+<main class="workspace-main" id="main-content" tabindex="-1">
+<header class="page-heading">
+<div>
+<p class="eyebrow">
+      Magazyn
+     </p>
+<h1>
+      Magazyn telefonów
+     </h1>
+<p class="page-description">
+      Wszystkie urządzenia, dostępność i sprzedaż w jednym miejscu.
+     </p>
+</div>
+<div class="page-actions" id="pageActions">
+</div>
+</header>
+<div class="container wide-layout">
+<div class="form-grid">
+<div class="active-filters" id="active-filters">
+</div>
+<div class="chips-container" id="activeFiltersChips">
+</div>
+<div class="grid-cell span-s-12 span-m-4 span-l-3 filters-col">
+<div class="surface filter-panel elevation">
+<div class="form-grid">
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="filterName">
+          Nazwa
+         </label>
+<input id="filterName" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="filterColor">
+          Kolor
+         </label>
+<input id="filterColor" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="filterImei">
+          Imei
+         </label>
+<input id="filterImei" type="text"/>
+</div>
+<div class="field grid-cell span-s-6">
+<label for="filterPriceMin">
+          Cena od
+         </label>
+<input id="filterPriceMin" type="number"/>
+</div>
+<div class="field grid-cell span-s-6">
+<label for="filterPriceMax">
+          Cena do
+         </label>
+<input id="filterPriceMax" type="number"/>
+</div>
+<div class="field grid-cell span-s-12">
+<label class="active" for="filterStatus">
+          Status
+         </label>
+<select id="filterStatus">
+<option selected="" value="">
+           Dowolny
+          </option>
+<option value="DOSTĘPNY">
+           DOSTĘPNY
+          </option>
+<option value="SPRZEDANY">
+           SPRZEDANY
+          </option>
+<option value="WPROWADZONY">
+           WPROWADZONY
+          </option>
+<option value="USUNIĘTY">
+           USUNIĘTY
+          </option>
+<option value="ODDANY">
+           ODDANY
+          </option>
+<option value="SERWIS">
+           SERWIS
+          </option>
+</select>
+</div>
+<div class="field grid-cell span-s-12">
+<label class="active" for="filterLocation">
+          Lokalizacja
+         </label>
+<select id="filterLocation">
+<option selected="" value="">
+           Dowolna
+          </option>
+<option value="__NO_LOCATION__">
+           Brak lokalizacji
+          </option>
+</select>
+</div>
+<div class="field grid-cell span-s-12">
+<label class="active" for="filterBrand">
+          Marka
+         </label>
+<select id="filterBrand">
+<option selected="" value="">
+           Dowolna
+          </option>
+</select>
+</div>
+<div class="field grid-cell span-s-12">
+<label class="active" for="filterModel">
+          Model
+         </label>
+<select disabled="" id="filterModel">
+<option selected="" value="">
+           Wybierz markę
+          </option>
+</select>
+</div>
+<div class="field grid-cell span-s-12">
+<label class="active" for="filterMemory">
+          Pamięć
+         </label>
+<select id="filterMemory">
+<option selected="" value="">
+           Dowolna
+          </option>
+</select>
+</div>
+<div class="grid-cell span-s-12">
+<p>
+<label>
+<input id="filterHasOffer" type="checkbox"/>
+<span>
+            Oferta internetowa
+           </span>
+</label>
+</p>
+</div>
+<div class="grid-cell span-s-12">
+<p>
+<label>
+<input id="filterAfterService" type="checkbox"/>
+<span>
+            Po serwisie
+           </span>
+</label>
+</p>
+</div>
+</div>
+<div class="form-grid">
+<div class="grid-cell span-s-12 right-align filter-buttons">
+<button class="button blue darken-2 interactive" id="resetFilters">
+          Wyczyść
+         </button>
+</div>
+</div>
+</div>
+</div>
+<div class="grid-cell span-s-12 span-m-8 span-l-9 phones-col">
+<div class="form-grid" id="phone-list">
+</div>
+<ul class="pagination center-align" id="dynamicPagination">
+</ul>
+</div>
+</div>
+</div>
+<footer class="workspace-footer">
+<span>
+     Teleakcesoria · GSM Workspace
+    </span>
+<a href="/index.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+</footer>
+</main>
+
+
+<dialog aria-label="Edycja telefonu close Nazwa Model Kolor Imei Pochodzenie Cena Cena zakupu Opis Komentarz N" class="dialog" id="editPhoneModal">
+<div class="dialog-body">
+<h5>
+     Edycja telefonu
+    </h5>
+<a class="dialog-close right">
+<i class="ui-icon">
+      close
+     </i>
+</a>
+<div class="form-grid">
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editName">
+       Nazwa
+      </label>
+<input id="editName" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editModel">
+       Model
+      </label>
+<input id="editModel" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editColor">
+       Kolor
+      </label>
+<input id="editColor" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editImei">
+       Imei
+      </label>
+<input id="editImei" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editSource">
+       Pochodzenie
+      </label>
+<input id="editSource" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editPrice">
+       Cena
+      </label>
+<input id="editPrice" type="number"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6 hide admin-only" id="editPurchasePriceWrapper">
+<label for="editPurchasePrice">
+       Cena zakupu
+      </label>
+<input id="editPurchasePrice" step="0.01" type="number"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editDescription">
+       Opis
+      </label>
+<textarea class="text-area" id="editDescription"></textarea>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="editComment">
+       Komentarz
+      </label>
+<textarea class="text-area" id="editComment"></textarea>
+</div>
+<div class="grid-cell span-s-12 span-m-6">
+<div class="switch">
+<label>
+        Nowy
+        <input id="editUsed" type="checkbox"/>
+<span class="lever">
+</span>
+        Używany
+       </label>
+</div>
+</div>
+<div class="field grid-cell span-s-12 span-m-6 hide" id="editBatteryConditionWrapper">
+<label for="editBatteryCondition">
+       Kondycja baterii (%)
+      </label>
+<input id="editBatteryCondition" max="100" min="0" step="1" type="number"/>
+</div>
+</div>
+</div>
+<div class="dialog-footer">
+<button class="button blue darken-2" id="saveEditBtn">
+     Zapisz
+    </button>
+</div>
+</dialog>
+<dialog aria-label="Ustaw model z bazy close Model z bazy Zapisz" class="dialog" id="assignModelModal">
+<div class="dialog-body">
+<h5>
+     Ustaw model z bazy
+    </h5>
+<a class="dialog-close right">
+<i class="ui-icon">
+      close
+     </i>
+</a>
+<p class="grey-text" id="assignModelPhoneInfo">
+</p>
+<div class="form-grid">
+<div class="field grid-cell span-s-12">
+<label class="active" for="assignPhoneModelSelect">
+       Model z bazy
+      </label>
+<select id="assignPhoneModelSelect">
+</select>
+</div>
+<div class="grid-cell span-s-12" id="assignModelVariantFields">
+</div>
+</div>
+</div>
+<div class="dialog-footer">
+<button class="button blue darken-2" id="saveAssignModelBtn">
+     Zapisz
+    </button>
+</div>
+</dialog>
+<dialog aria-label="Czy na pewno chcesz przyjąć ten telefon na sklep? TAK NIE" class="dialog" id="acceptConfirmModal">
+<div class="dialog-body">
+<h5>
+     Czy na pewno chcesz przyjąć ten telefon na sklep?
+    </h5>
+</div>
+<div class="dialog-footer">
+<button class="button green" id="confirmAcceptYes">
+     TAK
+    </button>
+<button class="dialog-close button red">
+     NIE
+    </button>
+</div>
+</dialog>
+<dialog aria-label="Wystaw dokument sprzedaży Zamknij" class="dialog" id="cartModal">
+<div class="dialog-body">
+<div id="cartContainer">
+</div>
+</div>
+<div class="dialog-footer">
+<span id="cartTotal">
+</span>
+<div class="dialog-footer">
+<button class="button blue" onclick="goToInvoice()">
+      Wystaw dokument sprzedaży
+     </button>
+</div>
+<button class="button-quiet dialog-close">
+     Zamknij
+    </button>
+</div>
+</dialog>
+<dialog aria-label="Usunięcie telefonu Czy na pewno chcesz usunąć ten telefon? Operacja jest nieodwracalna. Ni" class="dialog" id="deletePhoneModal">
+<div class="dialog-body">
+<h5>
+     Usunięcie telefonu
+    </h5>
+<p>
+     Czy na pewno chcesz usunąć ten telefon?
+     <br/>
+<strong>
+      Operacja jest nieodwracalna.
+     </strong>
+</p>
+</div>
+<div class="dialog-footer">
+<button class="dialog-close button-quiet red-text">
+     Nie
+    </button>
+<button class="button green" id="confirmDeletePhoneBtn">
+     Tak
+    </button>
+</div>
+</dialog>
+<dialog aria-label="Przekazanie telefonu Czy na pewno chcesz przekazać ten telefon? Operacja zmieni jego statu" class="dialog" id="handoverPhoneModal">
+<div class="dialog-body">
+<h5>
+     Przekazanie telefonu
+    </h5>
+<p class="grey-text">
+     Czy na pewno chcesz przekazać ten telefon? Operacja zmieni jego status.
+    </p>
+<div class="form-grid">
+<div class="field grid-cell span-s-12 span-m-8">
+<label for="handoverComment">
+       Komentarz
+      </label>
+<textarea class="text-area" id="handoverComment" rows="4"></textarea>
+</div>
+<div class="field grid-cell span-s-12 span-m-4">
+<label for="handoverPrice">
+       Cena
+      </label>
+<input id="handoverPrice" type="number"/>
+</div>
+</div>
+</div>
+<div class="dialog-footer">
+<a class="dialog-close button-quiet" href="#!">
+     Anuluj
+    </a>
+<a class="button red darken-2" href="#!" id="confirmHandoverBtn">
+     Przekaż
+    </a>
+</div>
+</dialog>
+<dialog aria-label="Zarezerwuj telefon Rezerwacja wygaśnie automatycznie po 4 godzinach. Imię rezerwującego Nu" class="dialog" id="reservationModal">
+<div class="dialog-body">
+<h5>
+     Zarezerwuj telefon
+    </h5>
+<p>
+     Rezerwacja wygaśnie automatycznie po 4 godzinach.
+    </p>
+<div class="form-grid">
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="reservationName">
+       Imię rezerwującego
+      </label>
+<input id="reservationName" type="text"/>
+</div>
+<div class="field grid-cell span-s-12 span-m-6">
+<label for="reservationPhone">
+       Numer telefonu
+      </label>
+<input id="reservationPhone" type="text"/>
+</div>
+</div>
+</div>
+<div class="dialog-footer">
+<a class="dialog-close button-quiet" href="#!">
+     Anuluj
+    </a>
+<a class="button blue darken-2" href="#!" id="confirmReservationBtn">
+     Zarezerwuj
+    </a>
+</div>
+</dialog>
+<script src="assets/vendor/lucide.js">
+</script>
+<script src="assets/vendor/tom-select.js">
+</script>
+<script src="assets/vendor/flatpickr.js">
+</script>
+<script src="assets/vendor/flatpickr-pl.js">
+</script>
+<script src="assets/js/ui.js">
+</script>
+<script src="assets/js/auth.js">
+</script>
+<script src="assets/js/shell.js">
+</script>
+<script src="assets/js/main.js">
+</script>
+
+<script src="assets/js/cart.js">
+</script>
+<script src="assets/js/index-init.js">
+</script>
+</body>
+</html>

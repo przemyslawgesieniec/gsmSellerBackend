@@ -5,6 +5,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         const html = await response.text();
         document.getElementById("navbar").innerHTML = html;
 
+        const currentPage = location.pathname.split('/').pop() || 'index.html';
+        document.querySelectorAll('.new-workspace-link').forEach(link => {
+            link.href = '/v2/' + currentPage + location.search;
+        });
+
         // 2️⃣ init Materialize
         M.Sidenav.init(document.querySelectorAll('.sidenav'));
         M.Dropdown.init(document.querySelectorAll('#navbar .dropdown-trigger'), {

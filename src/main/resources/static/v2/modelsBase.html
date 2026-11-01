@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Baza modeli · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="modelsBase">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Internet
+     </p>
+     <h1>
+      Baza modeli
+     </h1>
+     <p class="page-description">
+      Specyfikacje i warianty urządzeń dostępne dla całego zespołu.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container wide-layout">
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <div class="page-heading">
+       <div>
+        <p class="grey-text">
+         Specyfikacje używane przy tworzeniu ofert i przypisywaniu modeli do magazynu.
+        </p>
+       </div>
+       <button class="button blue darken-2 interactive" id="openCreateModelBtn">
+        <i class="ui-icon left">
+         add
+        </i>
+        Dodaj model
+       </button>
+      </div>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="field">
+       <label for="modelSearch">
+        Szukaj po marce, modelu lub pamięci
+       </label>
+       <input id="modelSearch" type="text"/>
+      </div>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <div class="panel">
+       <div class="panel-body">
+        <table class="highlight responsive-table models-table">
+         <thead>
+          <tr>
+           <th>
+            Model
+           </th>
+           <th>
+            Ekran
+           </th>
+           <th>
+            Pamięć
+           </th>
+           <th>
+            SIM
+           </th>
+           <th>
+            Kolory
+           </th>
+           <th>
+            Priorytet
+           </th>
+           <th>
+            Aparaty
+           </th>
+           <th>
+            Bateria
+           </th>
+           <th class="right-align">
+            Akcje
+           </th>
+          </tr>
+         </thead>
+         <tbody id="modelsTableBody">
+         </tbody>
+        </table>
+        <div class="center-align grey-text hide" id="modelsEmptyState">
+         Brak modeli w bazie.
+        </div>
+        <div class="center-align hide" id="modelsLoader">
+         <div class="preloader-wrapper small active">
+          <div class="spinner-layer spinner-blue-only">
+           <div class="circle-clipper left">
+            <div class="circle">
+            </div>
+           </div>
+           <div class="gap-patch">
+            <div class="circle">
+            </div>
+           </div>
+           <div class="circle-clipper right">
+            <div class="circle">
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <ul class="pagination center-align" id="modelsPagination">
+      </ul>
+     </div>
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/modelsBase.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <dialog aria-label="Dodaj model close Marka Model Ekran Rozdzielczość Rodzaj wyświetlacza Wybierz USB-C Lightn" class="dialog" id="modelModal">
+   <div class="dialog-body">
+    <h5 id="modelModalTitle">
+     Dodaj model
+    </h5>
+    <a class="dialog-close right">
+     <i class="ui-icon">
+      close
+     </i>
+    </a>
+    <form id="modelForm">
+     <input id="modelTechnicalId" type="hidden"/>
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="brand">
+        Marka
+       </label>
+       <input id="brand" required="" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="model">
+        Model
+       </label>
+       <input id="model" required="" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="screen">
+        Ekran
+       </label>
+       <input id="screen" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="screenResolution">
+        Rozdzielczość
+       </label>
+       <input id="screenResolution" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="displayType">
+        Rodzaj wyświetlacza
+       </label>
+       <input id="displayType" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label class="active" for="portType">
+        Port
+       </label>
+       <select id="portType">
+        <option selected="" value="">
+         Wybierz
+        </option>
+        <option value="USB-C">
+         USB-C
+        </option>
+        <option value="Lightning">
+         Lightning
+        </option>
+        <option value="micro-USB">
+         micro-USB
+        </option>
+        <option value="Inny">
+         Inny
+        </option>
+       </select>
+      </div>
+      <div class="grid-cell span-s-12 span-m-4">
+       <p>
+        <label>
+         <input id="dualSim" type="checkbox"/>
+         <span>
+          Dual SIM
+         </span>
+        </label>
+       </p>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="batteryCapacity">
+        Pojemność baterii
+       </label>
+       <input id="batteryCapacity" min="0" step="1" type="number"/>
+      </div>
+      <div class="grid-cell span-s-12 span-m-4">
+       <label class="active" for="displayPriority">
+        Priorytet wyświetlania oferty:
+        <span id="displayPriorityValue">
+         0
+        </span>
+       </label>
+       <p class="range-field">
+        <input id="displayPriority" max="10" min="0" step="1" type="range" value="0"/>
+       </p>
+      </div>
+      <div class="grid-cell span-s-12 span-m-6">
+       <div class="dynamic-field-group">
+        <div class="dynamic-field-header">
+         <h6>
+          Pamięć
+         </h6>
+         <button class="button-small blue darken-2" id="addMemoryBtn" type="button">
+          <i class="ui-icon left">
+           add
+          </i>
+          Dodaj
+         </button>
+        </div>
+        <div class="dynamic-fields" id="memoryFields">
+        </div>
+       </div>
+      </div>
+      <div class="grid-cell span-s-12 span-m-6">
+       <div class="dynamic-field-group">
+        <div class="dynamic-field-header">
+         <h6>
+          RAM
+         </h6>
+         <button class="button-small blue darken-2" id="addRamBtn" type="button">
+          <i class="ui-icon left">
+           add
+          </i>
+          Dodaj
+         </button>
+        </div>
+        <div class="dynamic-fields" id="ramFields">
+        </div>
+       </div>
+      </div>
+      <div class="grid-cell span-s-12">
+       <div class="dynamic-field-group">
+        <div class="dynamic-field-header">
+         <h6>
+          Typy kart SIM
+         </h6>
+         <button class="button-small blue darken-2" id="addSimCardTypeBtn" type="button">
+          <i class="ui-icon left">
+           add
+          </i>
+          Dodaj SIM
+         </button>
+        </div>
+        <div class="dynamic-fields" id="simCardTypeFields">
+        </div>
+       </div>
+      </div>
+      <div class="grid-cell span-s-12">
+       <div class="dynamic-field-group">
+        <div class="dynamic-field-header">
+         <h6>
+          Kolory
+         </h6>
+         <button class="button-small blue darken-2" id="addColorBtn" type="button">
+          <i class="ui-icon left">
+           add
+          </i>
+          Dodaj kolor
+         </button>
+        </div>
+        <div class="dynamic-fields" id="colorsFields">
+        </div>
+       </div>
+      </div>
+      <div class="grid-cell span-s-12 span-m-6">
+       <div class="dynamic-field-group">
+        <div class="dynamic-field-header">
+         <h6>
+          Aparaty przód
+         </h6>
+         <button class="button-small blue darken-2" id="addFrontCameraBtn" type="button">
+          <i class="ui-icon left">
+           add
+          </i>
+          Dodaj
+         </button>
+        </div>
+        <div class="dynamic-fields" id="frontCameraFields">
+        </div>
+       </div>
+      </div>
+      <div class="grid-cell span-s-12 span-m-6">
+       <div class="dynamic-field-group">
+        <div class="dynamic-field-header">
+         <h6>
+          Aparaty tył
+         </h6>
+         <button class="button-small blue darken-2" id="addBackCameraBtn" type="button">
+          <i class="ui-icon left">
+           add
+          </i>
+          Dodaj
+         </button>
+        </div>
+        <div class="dynamic-fields" id="backCameraFields">
+        </div>
+       </div>
+      </div>
+     </div>
+    </form>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close">
+     Anuluj
+    </button>
+    <button class="button blue darken-2" id="saveModelBtn">
+     Zapisz
+    </button>
+   </div>
+  </dialog>
+  <dialog aria-label="Usunięcie modelu Czy na pewno chcesz usunąć ten model z bazy? Anuluj Usuń" class="dialog" id="deleteModelModal">
+   <div class="dialog-body">
+    <h5>
+     Usunięcie modelu
+    </h5>
+    <p>
+     Czy na pewno chcesz usunąć ten model z bazy?
+    </p>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close">
+     Anuluj
+    </button>
+    <button class="button red darken-2" id="confirmDeleteModelBtn">
+     Usuń
+    </button>
+   </div>
+  </dialog>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/modelsBase.js">
+  </script>
+ </body>
+</html>

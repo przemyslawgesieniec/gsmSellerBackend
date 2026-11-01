@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Witaj ponownie · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="login">
+  <main class="auth-layout" id="main-content">
+   <section class="auth-brand">
+    <a class="brand" href="index.html">
+     <span class="brand-mark">
+      G
+     </span>
+     GSM
+     <span>
+      workspace
+     </span>
+    </a>
+    <p class="eyebrow">
+     TELEAKCESORIA
+    </p>
+    <h1>
+     Twój biznes.
+     <br/>
+     W jednym miejscu.
+    </h1>
+    <p>
+     Magazyn, sprzedaż i serwis.
+     <br/>
+     Przestrzeń do codziennej pracy Twojego zespołu.
+    </p>
+    <div aria-hidden="true" class="auth-illustration">
+     <div class="device-outline">
+      <i class="ui-icon">
+       smartphone
+      </i>
+     </div>
+     <span class="auth-pill">
+      Wszystko pod kontrolą
+     </span>
+    </div>
+   </section>
+   <section class="auth-content">
+    <div class="panel login-card elevation">
+     <div class="center-align">
+      <i class="ui-icon large blue-text text-darken-3">
+       phonelink_ring
+      </i>
+      <h5 class="blue-text text-darken-2">
+       Teleakcesoria
+      </h5>
+     </div>
+     <form action="/login" id="loginForm" method="post">
+      <div class="field">
+       <label for="username">
+        Login
+       </label>
+       <input id="username" name="username" required="" type="text"/>
+      </div>
+      <div class="field">
+       <label for="password">
+        Hasło
+       </label>
+       <input id="password" name="password" required="" type="password"/>
+      </div>
+      <button class="button blue darken-2" type="submit">
+       Zaloguj się
+      </button>
+     </form>
+     <div class="divider">
+     </div>
+     <div class="form-grid">
+      <div class="grid-cell span-s-6 center-align">
+       <button class="button-quiet blue-text dialog-trigger" data-target="registerModal" type="button">
+        Zarejestruj się
+       </button>
+      </div>
+      <div class="grid-cell span-s-6 center-align">
+       <button class="button-quiet grey-text dialog-trigger" data-target="resetModal" id="showReset" type="button">
+        Zapomniałem hasła
+       </button>
+      </div>
+     </div>
+    </div>
+    <a class="legacy-link" href="/login.html">
+     Przejdź do klasycznego widoku
+    </a>
+   </section>
+  </main>
+  <dialog aria-label="Rejestracja Email Hasło Powtórz hasło Zarejestruj" class="dialog" id="registerModal">
+   <div class="dialog-body">
+    <h5>
+     Rejestracja
+    </h5>
+    <div class="field">
+     <label for="regEmail">
+      Email
+     </label>
+     <input id="regEmail" type="email"/>
+    </div>
+    <div class="field">
+     <label for="regPass1">
+      Hasło
+     </label>
+     <input id="regPass1" type="password"/>
+    </div>
+    <div class="field">
+     <label for="regPass2">
+      Powtórz hasło
+     </label>
+     <input id="regPass2" type="password"/>
+    </div>
+   </div>
+   <div class="dialog-footer">
+    <button class="button blue" id="registerBtn">
+     Zarejestruj
+    </button>
+   </div>
+  </dialog>
+  <dialog aria-label="Reset hasła Email (login) Nowe hasło Powtórz nowe hasło Resetuj hasło" class="dialog" id="resetModal">
+   <div class="dialog-body">
+    <h5>
+     Reset hasła
+    </h5>
+    <div class="field">
+     <label for="resetEmail">
+      Email (login)
+     </label>
+     <input id="resetEmail" required="" type="email"/>
+    </div>
+    <div class="field">
+     <label for="resetPass1">
+      Nowe hasło
+     </label>
+     <input id="resetPass1" required="" type="password"/>
+    </div>
+    <div class="field">
+     <label for="resetPass2">
+      Powtórz nowe hasło
+     </label>
+     <input id="resetPass2" required="" type="password"/>
+    </div>
+   </div>
+   <div class="dialog-footer">
+    <button class="button blue" id="resetPasswordBtn">
+     Resetuj hasło
+    </button>
+   </div>
+  </dialog>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/login-init.js">
+  </script>
+ </body>
+</html>

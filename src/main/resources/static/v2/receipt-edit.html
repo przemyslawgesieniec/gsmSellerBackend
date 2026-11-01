@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Popraw fakturę · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="receipt-edit">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Sprzedaż
+     </p>
+     <h1>
+      Popraw fakturę
+      <span id="receiptNumber">
+      </span>
+     </h1>
+     <p class="page-description">
+      Zmień dane dokumentu i wybierz sposób pobrania.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <main class="container section">
+    <div class="page-heading">
+     <a class="button-quiet blue-text" href="receipts.html">
+      Wróć do listy faktur
+     </a>
+    </div>
+    <p aria-live="polite" id="editStatus" role="status">
+     Ładowanie faktury…
+    </p>
+    <form class="hide" id="receiptEditForm">
+     <fieldset class="receipt-edit-fields" id="editFields">
+      <div class="surface">
+       <div class="form-grid">
+        <div class="field grid-cell span-s-12 span-m-6">
+         <label class="active" for="generateDate">
+          Data wystawienia
+         </label>
+         <input id="generateDate" required="" type="date"/>
+        </div>
+        <div class="field grid-cell span-s-12 span-m-6">
+         <label class="active" for="sellDate">
+          Data sprzedaży
+         </label>
+         <input id="sellDate" required="" type="date"/>
+        </div>
+       </div>
+       <p>
+        Podaj kwoty sprzedaży netto. VAT i kwota brutto zostaną przeliczone automatycznie.
+       </p>
+       <div id="editItems">
+       </div>
+       <div aria-live="polite" class="section right-align">
+        Netto:
+        <span id="totalNet">
+         0,00
+        </span>
+        zł
+        <br/>
+        VAT:
+        <span id="totalVat">
+         0,00
+        </span>
+        zł
+        <br/>
+        <strong>
+         Brutto:
+         <span id="totalGross">
+          0,00
+         </span>
+         zł
+        </strong>
+       </div>
+      </div>
+      <p>
+       „Pobierz i zapisz” aktualizuje fakturę w systemie i pobiera PDF.
+                „Pobierz bez zapisywania” pobiera PDF z wprowadzonymi zmianami bez zapisu w systemie.
+      </p>
+      <div class="receipt-edit-actions">
+       <button class="button green interactive interactive-light" name="action" type="submit" value="save">
+        Pobierz i zapisz
+       </button>
+       <button class="button blue darken-2 interactive interactive-light" name="action" type="submit" value="download">
+        Pobierz bez zapisywania
+       </button>
+      </div>
+     </fieldset>
+    </form>
+   </main>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/receipt-edit.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/receipt-edit.js">
+  </script>
+ </body>
+</html>

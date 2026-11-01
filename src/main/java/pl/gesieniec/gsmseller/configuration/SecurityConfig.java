@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 import pl.gesieniec.gsmseller.user.UserStatus;
@@ -35,6 +36,8 @@ public class SecurityConfig {
                     "/login",// endpoint POST logowania
                     "/api/v1/auth/register", // endpoint POST rejestracja
                     "/api/v1/auth/reset-password",
+                    "/v2/login.html",
+                    "/v2/assets/**",
                     "/login.html",  // strona logowania
                     "/css/**",
                     "/js/**",
@@ -43,10 +46,14 @@ public class SecurityConfig {
                     "/api/v1/external/**",
                     "/h2-console/**"
                 ).permitAll()
-                .requestMatchers("/receipt-edit.html", "/api/v1/receipt/*/edit").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/receipt-edit.html", "/v2/receipt-edit.html", "/api/v1/receipt/*/edit").hasAuthority("ROLE_ADMIN")
                 .anyRequest().authenticated()
             )
 
+            .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint((request, response, error) -> {
+                String loginPage = request.getServletPath().startsWith("/v2/") ? "/v2/login.html" : "/login.html";
+                new LoginUrlAuthenticationEntryPoint(loginPage).commence(request, response, error);
+            }))
             .formLogin(form -> form
                 .loginPage("/login.html")     // wyświetlana strona logowania
                 .loginProcessingUrl("/login") // endpoint do POST logowania

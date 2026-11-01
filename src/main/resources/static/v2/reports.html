@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Raporty i wyniki · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="reports">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Zarządzanie
+     </p>
+     <h1>
+      Raporty i wyniki
+     </h1>
+     <p class="page-description">
+      Sprzedaż, rentowność oraz wyniki serwisu w liczbach.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container">
+    <p class="grey-text">
+     Sprzedaż, magazyn oraz bieżąca aktywność.
+    </p>
+    <h5 class="blue-text text-darken-2">
+     Dzisiaj
+    </h5>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         shopping_bag
+        </i>
+        <h6>
+         Sprzedane sztuki
+        </h6>
+        <h5 id="soldTodayCount">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         attach_money
+        </i>
+        <h6>
+         Obrót dzisiaj
+        </h6>
+        <h5 id="todayTurnover">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         trending_up
+        </i>
+        <h6>
+         Zysk dzisiaj
+        </h6>
+        <h5 id="todayProfit">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+    </div>
+    <h5 class="blue-text text-darken-2">
+     Magazyn
+    </h5>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         inventory_2
+        </i>
+        <h6>
+         Stan magazynowy
+        </h6>
+        <h5 id="stockCount">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         payments
+        </i>
+        <h6>
+         Wartość magazynu
+        </h6>
+        <h5 id="stockValue">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         show_chart
+        </i>
+        <h6>
+         Potencjalny zysk
+        </h6>
+        <h5 id="potentialProfit">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+    </div>
+    <h5 class="blue-text text-darken-2">
+     Sprzedaż
+    </h5>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4">
+      <label class="active" for="dateRangePicker">
+       Zakres dat
+      </label>
+      <input class="date-input" id="dateRangePicker" placeholder="Wybierz zakres dat" readonly="" type="text"/>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-3">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         shopping_cart
+        </i>
+        <h6>
+         Obrót
+        </h6>
+        <h5 id="turnover">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-3">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         receipt_long
+        </i>
+        <h6>
+         Koszt
+        </h6>
+        <h5 id="cost">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-3">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         trending_up
+        </i>
+        <h6>
+         Zysk
+        </h6>
+        <h5 id="profit">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-3">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         extension
+        </i>
+        <h6>
+         Akcesoria
+        </h6>
+        <h5 id="miscGrossAmount">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <div class="panel">
+       <div class="panel-body">
+        <span class="panel-title">
+         Zyski w dniach
+        </span>
+        <canvas id="profitPerDayChart">
+        </canvas>
+       </div>
+      </div>
+     </div>
+    </div>
+    <h5 class="blue-text text-darken-2">
+     Serwis
+    </h5>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4">
+      <label class="active" for="repairDateRangePicker">
+       Zakres dat (Serwis)
+      </label>
+      <input class="date-input" id="repairDateRangePicker" placeholder="Wybierz zakres dat dla serwisu" readonly="" type="text"/>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         build
+        </i>
+        <h6>
+         Ilość napraw serwisowych
+        </h6>
+        <h5 id="totalRepairs">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         assignment
+        </i>
+        <h6>
+         Statusy napraw
+        </h6>
+        <div id="repairStatuses">
+         <p>
+          Anulowane:
+          <span id="cancelledCount">
+           0
+          </span>
+         </p>
+         <p>
+          Nie naprawione:
+          <span id="notRepairedCount">
+           0
+          </span>
+         </p>
+         <p>
+          W naprawie:
+          <span id="inRepairCount">
+           0
+          </span>
+         </p>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="grid-cell span-s-12 span-m-4">
+      <div class="panel center-align">
+       <div class="panel-body">
+        <i class="ui-icon large blue-text text-darken-2">
+         trending_up
+        </i>
+        <h6>
+         Zysk z serwisu
+        </h6>
+        <h5 id="repairProfit">
+         —
+        </h5>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/reports.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/vendor/chart.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/reports.js">
+  </script>
+ </body>
+</html>

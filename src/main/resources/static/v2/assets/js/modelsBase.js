@@ -1,0 +1,409 @@
+const modelsPageSize = 20;
+const SIM_CARD_TYPE_OPTIONS = [
+    "sim",
+    "e-sim",
+    "sim 1 + sim 2",
+    "sim + e-sim",
+    "e-sim 1 + e-sim 2"
+];
+let modelsCurrentPage = 1;
+let modelToDelete = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+    UI.Dialog.init(document.querySelectorAll(".dialog"));
+    UI.Select.init(document.querySelectorAll("select"));
+
+    document.getElementById("openCreateModelBtn").addEventListener("click", openCreateModelModal);
+    document.getElementById("saveModelBtn").addEventListener("click", saveModel);
+    document.getElementById("confirmDeleteModelBtn").addEventListener("click", deleteModel);
+    document.getElementById("modelSearch").addEventListener("input", debounce(() => loadModels(1), 300));
+    document.getElementById("addMemoryBtn").addEventListener("click", () => addNumericField("memoryFields", "Pamięć"));
+    document.getElementById("addRamBtn").addEventListener("click", () => addNumericField("ramFields", "RAM"));
+    document.getElementById("addSimCardTypeBtn").addEventListener("click", () => addSimCardTypeField());
+    document.getElementById("addColorBtn").addEventListener("click", () => addDynamicField("colorsFields", "Kolor"));
+    document.getElementById("addFrontCameraBtn").addEventListener("click", () => addNumericField("frontCameraFields", "Aparat przód (Mpx)"));
+    document.getElementById("addBackCameraBtn").addEventListener("click", () => addNumericField("backCameraFields", "Aparat tył (Mpx)"));
+    document.getElementById("displayPriority").addEventListener("input", updateDisplayPriorityValue);
+
+    loadModels(1);
+});
+
+async function loadModels(page = 1) {
+    modelsCurrentPage = page;
+    const search = document.getElementById("modelSearch").value.trim();
+    const params = new URLSearchParams({
+        page,
+        size: modelsPageSize,
+        search
+    });
+
+    showModelsLoader(true);
+
+    try {
+        const response = await fetch(`/api/v1/phone-models?${params.toString()}`);
+        if (!response.ok) throw new Error("Błąd pobierania modeli");
+
+        const data = await response.json();
+        renderModels(data.content || []);
+        renderModelsPagination(data);
+    } catch (e) {
+        UI.toast({ html: "Nie udało się pobrać modeli", classes: "red" });
+    } finally {
+        showModelsLoader(false);
+    }
+}
+
+function renderModels(models) {
+    const tbody = document.getElementById("modelsTableBody");
+    const empty = document.getElementById("modelsEmptyState");
+    tbody.innerHTML = "";
+
+    empty.classList.toggle("hide", models.length > 0);
+
+    models.forEach(model => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                <strong>${escapeHtml(model.brand || "")} ${escapeHtml(model.model || "")}</strong>
+                <br>
+                <span class="grey-text">${escapeHtml(model.displayName || "")}</span>
+            </td>
+            <td>
+                ${escapeHtml(model.screen || "—")}
+                ${model.screenResolution ? `<br><span class="grey-text">${escapeHtml(model.screenResolution)}</span>` : ""}
+                ${model.displayType ? `<br><span class="grey-text">${escapeHtml(model.displayType)}</span>` : ""}
+            </td>
+            <td>${escapeHtml([model.memory, model.ram].filter(Boolean).join(" / ") || "—")}</td>
+            <td>
+                ${escapeHtml(model.simCardType || "—")}
+                ${model.portType ? `<br><span class="grey-text">Port: ${escapeHtml(model.portType)}</span>` : ""}
+                ${model.dualSim ? '<br><span class="badge blue white-text">Dual SIM</span>' : ""}
+            </td>
+            <td>${escapeHtml(model.colors || "—")}</td>
+            <td>${escapeHtml(model.displayPriority ?? 0)}/10</td>
+            <td>
+                <span class="grey-text">Przód:</span> ${escapeHtml(model.frontCameras || "—")}
+                <br>
+                <span class="grey-text">Tył:</span> ${escapeHtml(model.backCameras || "—")}
+            </td>
+            <td>${escapeHtml(model.batteryCapacity || "—")}</td>
+            <td class="right-align">
+                <button class="button-small blue darken-2" data-action="edit" data-id="${model.technicalId}">
+                    <i class="ui-icon">edit</i>
+                </button>
+                <button class="button-small red darken-2" data-action="delete" data-id="${model.technicalId}">
+                    <i class="ui-icon">delete</i>
+                </button>
+            </td>
+        `;
+
+        tr.querySelector('[data-action="edit"]').addEventListener("click", () => openEditModelModal(model));
+        tr.querySelector('[data-action="delete"]').addEventListener("click", () => openDeleteModelModal(model.technicalId));
+        tbody.appendChild(tr);
+    });
+}
+
+function openCreateModelModal() {
+    resetModelForm();
+    document.getElementById("modelModalTitle").textContent = "Dodaj model";
+    UI.Dialog.getInstance(document.getElementById("modelModal")).open();
+}
+
+function openEditModelModal(model) {
+    document.getElementById("modelModalTitle").textContent = "Edytuj model";
+    document.getElementById("modelTechnicalId").value = model.technicalId || "";
+    document.getElementById("brand").value = model.brand || "";
+    document.getElementById("model").value = model.model || "";
+    document.getElementById("screen").value = model.screen || "";
+    document.getElementById("screenResolution").value = model.screenResolution || "";
+    document.getElementById("displayType").value = model.displayType || "";
+    document.getElementById("portType").value = model.portType || "";
+    document.getElementById("dualSim").checked = model.dualSim === true;
+    document.getElementById("batteryCapacity").value = model.batteryCapacity || "";
+    document.getElementById("displayPriority").value = normalizePriority(model.displayPriority);
+    updateDisplayPriorityValue();
+    setNumericFields("memoryFields", "Pamięć", splitCommaList(model.memory));
+    setNumericFields("ramFields", "RAM", splitCommaList(model.ram));
+    setSimCardTypeFields(splitCommaList(model.simCardType));
+    setDynamicFields("colorsFields", "Kolor", splitCommaList(model.colors));
+    setNumericFields("frontCameraFields", "Aparat przód (Mpx)", splitCommaList(model.frontCameras));
+    setNumericFields("backCameraFields", "Aparat tył (Mpx)", splitCommaList(model.backCameras));
+
+    UI.Select.init(document.querySelectorAll("select"));
+    UI.updateTextFields();
+    UI.Dialog.getInstance(document.getElementById("modelModal")).open();
+}
+
+async function saveModel() {
+    const form = document.getElementById("modelForm");
+    if (!form.reportValidity()) return;
+    if (!validateNumericModelFields()) return;
+
+    const technicalId = document.getElementById("modelTechnicalId").value;
+    const payload = {
+        brand: document.getElementById("brand").value.trim(),
+        model: document.getElementById("model").value.trim(),
+        screen: document.getElementById("screen").value.trim(),
+        screenResolution: document.getElementById("screenResolution").value.trim(),
+        displayType: document.getElementById("displayType").value.trim(),
+        memory: collectDynamicFields("memoryFields"),
+        ram: collectDynamicFields("ramFields"),
+        simCardType: collectSimCardTypeFields(),
+        portType: document.getElementById("portType").value,
+        dualSim: document.getElementById("dualSim").checked,
+        colors: collectDynamicFields("colorsFields"),
+        frontCameras: collectDynamicFields("frontCameraFields"),
+        backCameras: collectDynamicFields("backCameraFields"),
+        batteryCapacity: document.getElementById("batteryCapacity").value.trim(),
+        displayPriority: normalizePriority(document.getElementById("displayPriority").value)
+    };
+
+    try {
+        const response = await fetch(technicalId ? `/api/v1/phone-models/${technicalId}` : "/api/v1/phone-models", {
+            method: technicalId ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Błąd zapisu modelu");
+
+        UI.toast({ html: technicalId ? "Model zaktualizowany" : "Model dodany", classes: "green" });
+        UI.Dialog.getInstance(document.getElementById("modelModal")).close();
+        loadModels(modelsCurrentPage);
+    } catch (e) {
+        UI.toast({ html: "Nie udało się zapisać modelu", classes: "red" });
+    }
+}
+
+function openDeleteModelModal(technicalId) {
+    modelToDelete = technicalId;
+    UI.Dialog.getInstance(document.getElementById("deleteModelModal")).open();
+}
+
+async function deleteModel() {
+    if (!modelToDelete) return;
+
+    try {
+        const response = await fetch(`/api/v1/phone-models/${modelToDelete}`, { method: "DELETE" });
+        if (!response.ok) {
+            const error = await response.json().catch(() => null);
+            throw new Error(error?.message || "Nie można usunąć modelu");
+        }
+
+        UI.toast({ html: "Model usunięty", classes: "green" });
+        UI.Dialog.getInstance(document.getElementById("deleteModelModal")).close();
+        loadModels(modelsCurrentPage);
+    } catch (e) {
+        UI.toast({ html: e.message || "Nie udało się usunąć modelu", classes: "red" });
+    }
+}
+
+function resetModelForm() {
+    document.getElementById("modelForm").reset();
+    document.getElementById("modelTechnicalId").value = "";
+    document.getElementById("dualSim").checked = false;
+    document.getElementById("portType").value = "";
+    document.getElementById("displayPriority").value = "0";
+    updateDisplayPriorityValue();
+    setNumericFields("memoryFields", "Pamięć", [""]);
+    setNumericFields("ramFields", "RAM", [""]);
+    setSimCardTypeFields([""]);
+    setDynamicFields("colorsFields", "Kolor", [""]);
+    setNumericFields("frontCameraFields", "Aparat przód (Mpx)", [""]);
+    setNumericFields("backCameraFields", "Aparat tył (Mpx)", [""]);
+    UI.Select.init(document.querySelectorAll("select"));
+    UI.updateTextFields();
+}
+
+function addNumericField(containerId, label, value = "") {
+    addDynamicField(containerId, label, value, {
+        type: "number",
+        min: "0",
+        step: "1",
+        numeric: true
+    });
+}
+
+function addDynamicField(containerId, label, value = "", options = {}) {
+    const container = document.getElementById(containerId);
+    const row = document.createElement("div");
+    row.className = "dynamic-field-row";
+    row.innerHTML = `
+        <div class="field dynamic-field-input">
+            <input type="${options.type || "text"}"
+                   value="${escapeHtml(value)}"
+                   ${options.min != null ? `min="${options.min}"` : ""}
+                   ${options.step != null ? `step="${options.step}"` : ""}
+                   ${options.numeric ? 'inputmode="numeric" pattern="[0-9]*"' : ""}>
+            <label class="${value ? "active" : ""}">${escapeHtml(label)}</label>
+        </div>
+        <button type="button" class="button-quiet red-text dynamic-remove-btn" title="Usuń">
+            <i class="ui-icon">close</i>
+        </button>
+    `;
+
+    row.querySelector(".dynamic-remove-btn").addEventListener("click", () => {
+        row.remove();
+        if (container.children.length === 0) {
+            addDynamicField(containerId, label);
+        }
+    });
+
+    container.appendChild(row);
+    UI.updateTextFields();
+}
+
+function setDynamicFields(containerId, label, values) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    const normalized = values.length > 0 ? values : [""];
+    normalized.forEach(value => addDynamicField(containerId, label, value));
+}
+
+function setNumericFields(containerId, label, values) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    const normalized = values.length > 0 ? values : [""];
+    normalized.forEach(value => addNumericField(containerId, label, value));
+}
+
+function addSimCardTypeField(value = "") {
+    const container = document.getElementById("simCardTypeFields");
+    const row = document.createElement("div");
+    const optionValues = value && !SIM_CARD_TYPE_OPTIONS.includes(value)
+        ? [...SIM_CARD_TYPE_OPTIONS, value]
+        : SIM_CARD_TYPE_OPTIONS;
+
+    row.className = "dynamic-field-row";
+    row.innerHTML = `
+        <div class="field dynamic-field-input">
+            <select>
+                <option value="" ${value ? "" : "selected"}>Wybierz typ SIM</option>
+                ${optionValues.map(option => `
+                    <option value="${escapeHtml(option)}" ${option === value ? "selected" : ""}>${escapeHtml(option)}</option>
+                `).join("")}
+            </select>
+            <label class="active">Typ karty SIM</label>
+        </div>
+        <button type="button" class="button-quiet red-text dynamic-remove-btn" title="Usuń">
+            <i class="ui-icon">close</i>
+        </button>
+    `;
+
+    row.querySelector(".dynamic-remove-btn").addEventListener("click", () => {
+        row.remove();
+        if (container.children.length === 0) {
+            addSimCardTypeField();
+        }
+    });
+
+    container.appendChild(row);
+    UI.Select.init(row.querySelectorAll("select"));
+}
+
+function setSimCardTypeFields(values) {
+    const container = document.getElementById("simCardTypeFields");
+    container.innerHTML = "";
+    const normalized = values.length > 0 ? values : [""];
+    normalized.forEach(value => addSimCardTypeField(value));
+}
+
+function collectDynamicFields(containerId) {
+    return Array.from(document.querySelectorAll(`#${containerId} input`))
+        .map(input => input.value.trim())
+        .filter(Boolean)
+        .join(",");
+}
+
+function collectSimCardTypeFields() {
+    return Array.from(document.querySelectorAll("#simCardTypeFields select"))
+        .map(select => select.value.trim())
+        .filter(Boolean)
+        .join(",");
+}
+
+function splitCommaList(value) {
+    if (!value) return [];
+    return value.split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
+function validateNumericModelFields() {
+    const battery = document.getElementById("batteryCapacity");
+    const displayPriority = document.getElementById("displayPriority");
+    const numericInputs = [
+        battery,
+        displayPriority,
+        ...document.querySelectorAll("#memoryFields input, #ramFields input, #frontCameraFields input, #backCameraFields input")
+    ];
+
+    const invalid = numericInputs.find(input => {
+        const value = input.value.trim();
+        return value !== "" && !/^\d+$/.test(value);
+    });
+
+    if (invalid) {
+        invalid.focus();
+        UI.toast({ html: "Pamięć, RAM, aparaty i bateria mogą zawierać tylko liczby", classes: "red" });
+        return false;
+    }
+
+    if (normalizePriority(displayPriority.value) !== Number(displayPriority.value)) {
+        displayPriority.focus();
+        UI.toast({ html: "Priorytet musi być liczbą od 0 do 10", classes: "red" });
+        return false;
+    }
+
+    return true;
+}
+
+function normalizePriority(value) {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) return 0;
+    return Math.max(0, Math.min(10, parsed));
+}
+
+function updateDisplayPriorityValue() {
+    document.getElementById("displayPriorityValue").textContent = normalizePriority(
+        document.getElementById("displayPriority").value
+    );
+}
+
+function showModelsLoader(show) {
+    document.getElementById("modelsLoader").classList.toggle("hide", !show);
+}
+
+function renderModelsPagination(data) {
+    const pagination = document.getElementById("modelsPagination");
+    pagination.innerHTML = "";
+
+    if (!data || data.totalPages <= 1) return;
+
+    const activePage = (data.number ?? 0) + 1;
+
+    for (let page = 1; page <= data.totalPages; page++) {
+        const li = document.createElement("li");
+        li.className = page === activePage ? "active blue" : "interactive";
+        li.innerHTML = `<a href="#!">${page}</a>`;
+        li.addEventListener("click", () => loadModels(page));
+        pagination.appendChild(li);
+    }
+}
+
+function debounce(fn, delay = 300) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}

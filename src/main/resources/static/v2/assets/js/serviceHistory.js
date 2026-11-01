@@ -1,0 +1,369 @@
+let currentPage = 0;
+const pageSize = 10;
+let receiptPicker, handoverPicker;
+let selectedClientsMap = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    UI.Disclosure.init(document.querySelectorAll('.disclosure'));
+    UI.Select.init(document.querySelectorAll('select'));
+    initDatePickers();
+    initClientAutocomplete();
+    initLocationFilter();
+    initInHouseRepairFilter();
+
+    // Obsługa parametru query z URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryParam = urlParams.get('query');
+    if (queryParam) {
+        document.getElementById('historySearch').value = queryParam;
+        UI.updateTextFields();
+    }
+
+    loadHistory();
+
+    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+        document.getElementById('historySearch').value = '';
+        const locationFilter = document.getElementById('locationFilter');
+        if (locationFilter) {
+            locationFilter.value = '';
+            UI.Select.init(locationFilter);
+        }
+        if (receiptPicker) receiptPicker.clear();
+        if (handoverPicker) handoverPicker.clear();
+        const inHouseRepairFilter = document.getElementById('inHouseRepairFilter');
+        if (inHouseRepairFilter) {
+            inHouseRepairFilter.checked = false;
+        }
+        currentPage = 0;
+        loadHistory();
+    });
+});
+
+async function initLocationFilter() {
+    const select = document.getElementById('locationFilter');
+    try {
+        const response = await fetch('/api/v1/locations');
+        const locations = await response.json();
+
+        locations.forEach(loc => {
+            const opt = document.createElement('option');
+            opt.value = loc.name;
+            opt.textContent = loc.name;
+            select.appendChild(opt);
+        });
+
+        UI.Select.init(select);
+
+        select.addEventListener('change', () => {
+            currentPage = 0;
+            loadHistory();
+        });
+    } catch (error) {
+        console.error('Error fetching locations:', error);
+    }
+}
+
+function initInHouseRepairFilter() {
+    const checkbox = document.getElementById('inHouseRepairFilter');
+    if (!checkbox) return;
+
+    checkbox.addEventListener('change', () => {
+        currentPage = 0;
+        loadHistory();
+    });
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+function initClientAutocomplete() {
+    const el = document.getElementById('historySearch');
+    UI.Autocomplete.init(el, {
+        data: {},
+        onAutocomplete: function(val) {
+            currentPage = 0;
+            loadHistory();
+        },
+        minLength: 2
+    });
+
+    el.addEventListener('input', debounce(async (e) => {
+        const query = e.target.value;
+
+        // Automatyczne filtrowanie przy wpisywaniu (jeśli nie wybieramy z autocomplete)
+        currentPage = 0;
+        loadHistory();
+
+        if (query.length < 2) return;
+
+        try {
+            const response = await fetch(`/api/v1/repair-clients/search?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            const autocompleteData = {};
+            selectedClientsMap = {};
+
+            data.content.forEach(client => {
+                const display = `${client.name} ${client.surname} (${client.phoneNumber})`;
+                autocompleteData[display] = null;
+                selectedClientsMap[display] = client;
+            });
+
+            const instance = UI.Autocomplete.getInstance(el);
+            instance.updateData(autocompleteData);
+            instance.open();
+        } catch (error) {
+            console.error('Error fetching clients:', error);
+        }
+    }, 300));
+}
+
+function initDatePickers() {
+    const commonOptions = {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        locale: flatpickr.l10ns.pl,
+        monthSelectorType: "dropdown",
+        onClose: function(selectedDates) {
+            if (selectedDates.length === 2 || selectedDates.length === 0) {
+                currentPage = 0;
+                loadHistory();
+            }
+        }
+    };
+
+    receiptPicker = flatpickr("#receiptDateRange", commonOptions);
+    handoverPicker = flatpickr("#handoverDateRange", commonOptions);
+}
+
+async function loadHistory() {
+    const query = document.getElementById('historySearch').value;
+    const location = document.getElementById('locationFilter').value;
+    const inHouseRepair = document.getElementById('inHouseRepairFilter')?.checked;
+
+    // Spring interprets parametry paginacji jako 1-based, a stan widoku pozostaje 0-based.
+    const requestPage = currentPage + 1;
+    let url = `/api/v1/repairs/history?page=${requestPage}&size=${pageSize}&sort=handoverDate,DESC`;
+
+    if (query) url += `&query=${encodeURIComponent(query)}`;
+    if (location) url += `&location=${encodeURIComponent(location)}`;
+    if (inHouseRepair) url += `&inHouseRepair=true`;
+
+    if (receiptPicker && receiptPicker.selectedDates.length === 2) {
+        const from = formatDate(receiptPicker.selectedDates[0]);
+        const to = formatDate(receiptPicker.selectedDates[1]);
+        url += `&receiptDateFrom=${encodeURIComponent(from + 'T00:00:00')}`;
+        url += `&receiptDateTo=${encodeURIComponent(to + 'T23:59:59')}`;
+    }
+
+    if (handoverPicker && handoverPicker.selectedDates.length === 2) {
+        const from = formatDate(handoverPicker.selectedDates[0]);
+        const to = formatDate(handoverPicker.selectedDates[1]);
+        url += `&handoverDateFrom=${encodeURIComponent(from + 'T00:00:00')}`;
+        url += `&handoverDateTo=${encodeURIComponent(to + 'T23:59:59')}`;
+    }
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        renderHistory(data.content);
+        renderPagination(data);
+    } catch (error) {
+        console.error('Error loading history:', error);
+        UI.toast({html: 'Błąd ładowania historii', classes: 'red'});
+    }
+}
+
+function formatDate(date) {
+    const d = new Date(date);
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    const year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
+}
+
+function renderHistory(repairs) {
+    const container = document.getElementById('historyCollapsible');
+    container.innerHTML = '';
+
+    if (repairs.length === 0) {
+        container.innerHTML = '<li class="center-align grey-text p-10">Brak napraw spełniających kryteria</li>';
+        return;
+    }
+
+    repairs.forEach(repair => {
+        const li = document.createElement('li');
+        const statusColor = getStatusColor(repair.status, repair.archived);
+        const handoverDateStr = repair.handoverDate ? new Date(repair.handoverDate).toLocaleDateString() : '---';
+        const receiptDateStr = repair.receiptDate ? new Date(repair.receiptDate).toLocaleDateString() : '---';
+
+        const archived = repair.archived;
+        const goToBoardBtn = !archived ? `
+            <button class="button-small orange darken-2 interactive interactive-light" onclick="goToBoard('${repair.technicalId}')" style="margin-right: 10px;">
+                <i class="ui-icon left">dashboard</i>Do tablicy
+            </button>
+        ` : '';
+
+        const unarchiveBtn = archived ? `
+            <button class="button-small teal interactive interactive-light" onclick="unarchiveRepair('${repair.technicalId}')" style="margin-right: 10px;">
+                <i class="ui-icon left">unarchive</i>Przywróć
+            </button>
+        ` : '';
+
+        const clientNameDisplay = (repair.anonymous || (!repair.clientName && !repair.clientSurname))
+            ? 'Anonimowy klient'
+            : `${repair.clientName || ''} ${repair.clientSurname || ''}`.trim();
+
+        li.innerHTML = `
+            <div class="disclosure-heading">
+                <i class="ui-icon ${statusColor}-text">history</i>
+                <span style="flex: 1; display: flex; align-items: center; gap: 10px;">
+                    <b>${repair.manufacturer || ''} ${repair.model}</b>
+                    ${repair.color ? `<span class="grey-text">(${repair.color})</span>` : ''}
+                    <span class="grey-text">|</span>
+                    <span>${clientNameDisplay}</span>
+                    <span class="grey-text">|</span>
+                    <span class="grey-text"><i class="ui-icon tiny" style="vertical-align: middle;">location_on</i> ${repair.location || 'Brak'}</span>
+                    ${repair.businessId ? `<span class="blue-text" style="margin-left: auto; padding-right: 10px;">[${repair.businessId}]</span>` : ''}
+                </span>
+                <span class="grey-text hide-on-small-only" style="margin-right: 20px;">
+                    Przyjęto: ${receiptDateStr} | Oddano: ${handoverDateStr}
+                </span>
+                <span class="badge ${statusColor} white-text" style="border-radius: 4px; min-width: 100px;">
+                    ${repair.archived ? '<i class="ui-icon tiny left" style="margin-right: 4px;">archive</i> archiwalna ' : ''}
+                    ${repair.status}
+                </span>
+            </div>
+            <div class="disclosure-body">
+                <div class="form-grid">
+                    <div class="grid-cell span-s-12 span-m-6">
+                        <p> ${repair.businessId || '-'}</p>
+                        <p><b>IMEI:</b> ${repair.imei || 'Brak'}</p>
+                        ${repair.color ? `<p><b>Kolor:</b> ${repair.color}</p>` : ''}
+                        <p><b>Klient:</b> ${clientNameDisplay} (${repair.clientPhoneNumber || 'Brak telefonu'})</p>
+                        <p><b>Lokalizacja:</b> ${repair.location || 'Brak'}</p>
+                        <p><b>Opis problemu:</b> ${repair.problemDescription || repair.damageDescription || 'Brak'}</p>
+                        <p><b>Uwagi:</b> ${repair.remarks || repair.repairOrderDescription || 'Brak'}</p>
+                    </div>
+                    <div class="grid-cell span-s-12 span-m-6">
+                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) && !repair.archived ? `
+                            <p><b>Koszt szacowany:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '---'}</p>
+                        ` : ''}
+
+                        ${repair.status === 'NAPRAWIONY' || (repair.archived && repair.purchasePrice && repair.purchasePrice > 0) ? `
+                            <p><b>Koszt naprawy:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '---'}</p>
+                            <p><b>Cena dla klienta:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '---'}</p>
+                        ` : `
+                            <p><b>Cena ostateczna:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '---'}</p>
+                        `}
+                        <p><b>Typ:</b> ${repair.forCustomer ? 'Dla klienta' : 'Na sklep'}</p>
+                    </div>
+                </div>
+                <div class="right-align">
+                    ${goToBoardBtn}
+                    ${unarchiveBtn}
+                    <button class="button-small blue darken-2 interactive interactive-light" onclick="downloadPdf('${repair.technicalId}')">
+                        <i class="ui-icon left">description</i>Pobierz dokument
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(li);
+    });
+    UI.Disclosure.init(container);
+}
+
+function goToBoard(technicalId) {
+    window.location.href = `repair.html?highlight=${technicalId}`;
+}
+
+async function unarchiveRepair(technicalId) {
+    if (!confirm('Czy na pewno chcesz przywrócić tę naprawę do aktywnych zleceń?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}/unarchive`, {
+            method: 'PATCH'
+        });
+
+        if (response.ok) {
+            UI.toast({html: 'Naprawa została przywrócona', classes: 'green'});
+            loadHistory();
+        } else {
+            const error = await response.text();
+            UI.toast({html: 'Błąd: ' + error, classes: 'red'});
+        }
+    } catch (error) {
+        console.error('Error unarchiving repair:', error);
+        UI.toast({html: 'Błąd serwera', classes: 'red'});
+    }
+}
+
+function getStatusColor(status, archived) {
+    switch (status) {
+        case 'DO_NAPRAWY': return 'blue';
+        case 'W_NAPRAWIE': return 'orange';
+        case 'NAPRAWIONY': return 'green';
+        case 'NIE_DO_NAPRAWY': return 'red';
+        case 'ANULOWANY': return 'grey';
+        default: return archived ? 'blue-grey' : 'blue';
+    }
+}
+
+function renderPagination(data) {
+    const container = document.getElementById('paginationContainer');
+    container.innerHTML = '';
+
+    if (data.totalPages <= 1) return;
+
+    const ul = document.createElement('ul');
+    ul.className = 'pagination';
+
+    // Back
+    ul.innerHTML += `
+        <li class="${data.first ? 'disabled' : 'interactive'}">
+            <a href="#!" onclick="${data.first ? '' : 'changePage(' + (currentPage - 1) + ')'}">
+                <i class="ui-icon">chevron_left</i>
+            </a>
+        </li>
+    `;
+
+    // Pages
+    for (let i = 0; i < data.totalPages; i++) {
+        ul.innerHTML += `
+            <li class="${i === currentPage ? 'active blue darken-2' : 'interactive'}">
+                <a href="#!" onclick="changePage(${i})">${i + 1}</a>
+            </li>
+        `;
+    }
+
+    // Next
+    ul.innerHTML += `
+        <li class="${data.last ? 'disabled' : 'interactive'}">
+            <a href="#!" onclick="${data.last ? '' : 'changePage(' + (currentPage + 1) + ')'}">
+                <i class="ui-icon">chevron_right</i>
+            </a>
+        </li>
+    `;
+
+    container.appendChild(ul);
+}
+
+function changePage(page) {
+    currentPage = page;
+    loadHistory();
+}
+
+function downloadPdf(technicalId) {
+    window.open(`/api/v1/repairs/${technicalId}/handover`, '_blank');
+}

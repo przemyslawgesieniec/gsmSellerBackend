@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Dokumenty sprzedaży · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="receipts">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Sprzedaż
+     </p>
+     <h1>
+      Dokumenty sprzedaży
+     </h1>
+     <p class="page-description">
+      Wyszukuj faktury, pobieraj dokumenty i zarządzaj sprzedażą.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container">
+    <p class="grey-text">
+     Poniżej znajduje się lista wszystkich faktur wygenerowanych przez system.
+    </p>
+    <div class="surface">
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="invoiceNumberFilter">
+        Numer faktury
+       </label>
+       <i class="ui-icon prefix">
+        receipt
+       </i>
+       <input id="invoiceNumberFilter" placeholder="np. 001/5/2026" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="receiptImeiFilter">
+        IMEI
+       </label>
+       <i class="ui-icon prefix">
+        fingerprint
+       </i>
+       <input id="receiptImeiFilter" placeholder="pełny lub fragment IMEI" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label class="active" for="receiptDateRange">
+        Data sprzedaży
+       </label>
+       <i class="ui-icon prefix">
+        event
+       </i>
+       <input class="date-input" id="receiptDateRange" placeholder="Wybierz zakres dat sprzedaży" readonly="" type="text"/>
+      </div>
+     </div>
+     <div class="form-grid">
+      <div class="grid-cell span-s-12 right-align">
+       <button class="button interactive interactive-light grey" id="clearReceiptFiltersBtn">
+        Wyczyść
+       </button>
+      </div>
+     </div>
+    </div>
+    <ul class="disclosure popout" id="receiptList">
+    </ul>
+    <div class="center-align">
+     <button class="button blue darken-2" id="loadMoreBtn">
+      Załaduj więcej
+     </button>
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/receipts.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <dialog aria-label="Potwierdzenie Czy na pewno chcesz anulować sprzedaż? Operacja jest nieodwracalna . Nie Tak" class="dialog" id="cancelModal">
+   <div class="dialog-body">
+    <h5>
+     Potwierdzenie
+    </h5>
+    <p>
+     Czy na pewno chcesz anulować sprzedaż?
+     <br/>
+     Operacja jest
+     <strong>
+      nieodwracalna
+     </strong>
+     .
+    </p>
+   </div>
+   <div class="dialog-footer">
+    <button class="dialog-close button-quiet red-text">
+     Nie
+    </button>
+    <button class="button green" id="confirmCancelBtn">
+     Tak
+    </button>
+   </div>
+  </dialog>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/receipts.js">
+  </script>
+  <script src="assets/js/receipts-init.js">
+  </script>
+ </body>
+</html>

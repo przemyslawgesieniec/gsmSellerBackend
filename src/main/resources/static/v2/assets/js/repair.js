@@ -1,0 +1,1430 @@
+document.addEventListener('DOMContentLoaded', function() {
+    loadCurrentUser().then(user => {
+        if (IS_ADMIN) {
+            document.getElementById('repairLocationSection').style.display = 'block';
+        }
+
+        // Ustawienie domyślnej lokalizacji w filtrze
+        if (user && user.location) {
+            const filterSelect = document.getElementById('filterLocationSelect');
+            // Musimy poczekać aż lokalizacje się załadują, albo ustawić to po loadLocations
+            // Ale loadLocations jest asynchroniczne.
+        }
+
+        loadLocations().then(() => {
+            if (user && user.location && tsFilterLocation) {
+                tsFilterLocation.setValue(user.location);
+            }
+            loadRepairs();
+        });
+    });
+
+    document.getElementById('saveRepairBtn').addEventListener('click', saveRepair);
+    document.getElementById('btnAddRepairNote').addEventListener('click', addRepairNote);
+
+    const filterSelect = document.getElementById('filterLocationSelect');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', loadRepairs);
+    }
+
+    // Inicjalizacja selectów TomSelect
+    initAllSelects();
+
+    document.getElementById('editRepairBtn').addEventListener('click', () => {
+        toggleFields(false);
+        document.getElementById('editRepairBtn').style.display = 'none';
+        document.getElementById('saveRepairBtn').style.display = 'inline-block';
+    });
+    document.getElementById('confirmRestoreBtn').addEventListener('click', confirmRestore);
+    document.getElementById('confirmServicePointBtn').addEventListener('click', confirmServicePointSelection);
+    document.getElementById('btnConfirmFinalizeStatus').addEventListener('click', handleFinalizeStatus);
+    document.getElementById('finalStatusSelect').addEventListener('change', (e) => {
+        const status = e.target.value;
+        const diagnosticSection = document.getElementById('diagnosticCostSection');
+        const repairSection = document.getElementById('repairFinishedSection');
+
+        if (status === 'NAPRAWIONY') {
+            repairSection.style.display = 'block';
+            diagnosticSection.style.display = 'none';
+        } else if (status === 'NIE_DO_NAPRAWY' || status === 'ANULOWANY') {
+            repairSection.style.display = 'none';
+            diagnosticSection.style.display = 'block';
+        } else {
+            repairSection.style.display = 'none';
+            diagnosticSection.style.display = 'none';
+        }
+    });
+    document.getElementById('selectedClientChip').addEventListener('click', (e) => {
+        if (!e.target.closest('#clearSelectedClient')) {
+            const clientDisplay = document.getElementById('selectedClientDisplay').innerText;
+            // Spodziewany format: "Imię Nazwisko (Telefon)"
+            // Zmieniamy format przekazywany w query na "[Imię Nazwisko (Telefon)]"
+            const match = clientDisplay.match(/(.*) \((.*)\)/);
+            if (match) {
+                const query = clientDisplay;
+                window.location.href = `serviceHistory.html?query=${encodeURIComponent(query)}`;
+            }
+        }
+    });
+    loadLocations();
+
+    // Floating button reset form
+    const fab = document.querySelector('.fab-fixed a');
+    fab.addEventListener('click', () => {
+        resetForm();
+        toggleFields(false);
+        document.getElementById('editRepairBtn').style.display = 'none';
+        document.getElementById('saveRepairBtn').style.display = 'inline-block';
+        document.getElementById('modalTitle').innerText = 'Nowe zlecenie naprawy';
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        document.getElementById('repairReceiptDate').value = today;
+        document.getElementById('repairEstimatedRepairDate').value = nextWeek;
+
+        UI.updateTextFields();
+        UI.Dialog.getInstance(document.getElementById('repairModal')).open();
+    });
+
+    initClientAutocomplete();
+    initClientToggles();
+    initServicePointPicker('repair');
+    initServicePointPicker('status');
+
+    loadCurrentUser().then(() => {
+        if (IS_ADMIN) {
+            document.getElementById('repairLocationSection').style.display = 'block';
+        }
+    });
+});
+
+function initSimpleSelect(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+
+    return new TomSelect(el, {
+        controlInput: null,
+        create: false,
+        searchField: [],
+        shouldSort: false,
+        hideSelected: true,
+        closeAfterSelect: true,
+        allowEmptyOption: true
+    });
+}
+
+let tsFilterLocation, tsRepairDeviceType, tsRepairLocation, tsRestoreLocation, tsFinalStatus;
+
+function initAllSelects() {
+    tsFilterLocation = initSimpleSelect('#filterLocationSelect');
+    tsRepairDeviceType = initSimpleSelect('#repairDeviceType');
+    tsRepairLocation = initSimpleSelect('#repairLocation');
+    tsRestoreLocation = initSimpleSelect('#restoreLocation');
+    tsFinalStatus = initSimpleSelect('#finalStatusSelect');
+}
+
+const servicePointSuggestions = {
+    repair: {},
+    status: {}
+};
+
+function getServicePointElements(context) {
+    const prefix = context === 'repair' ? 'repair' : 'status';
+    const buttonSuffix = context === 'repair' ? 'RepairServicePoint' : 'StatusServicePoint';
+    return {
+        search: document.getElementById(`${prefix}ServicePointSearch`),
+        technicalId: document.getElementById(`${prefix}ServicePointTechnicalId`),
+        searchSection: document.getElementById(`${prefix}ServicePointSearchSection`),
+        newFields: document.getElementById(`${prefix}NewServicePointFields`),
+        newName: document.getElementById(`${prefix}NewServicePointName`),
+        selectedInfo: document.getElementById(`${prefix}SelectedServicePointInfo`),
+        selectedDisplay: document.getElementById(`${prefix}SelectedServicePointDisplay`),
+        addButton: document.getElementById(`btnAddNew${buttonSuffix}`),
+        cancelButton: document.getElementById(`cancelNew${buttonSuffix}`),
+        clearButton: document.getElementById(`clear${buttonSuffix}`)
+    };
+}
+
+function initServicePointPicker(context) {
+    const elements = getServicePointElements(context);
+    UI.Autocomplete.init(elements.search, {
+        data: {},
+        onAutocomplete: value => {
+            const point = servicePointSuggestions[context][value];
+            if (point) selectServicePoint(context, point);
+        },
+        minLength: 1
+    });
+
+    elements.search.addEventListener('input', debounce(async event => {
+        elements.technicalId.value = '';
+        const query = event.target.value.trim();
+        if (!query) return;
+
+        try {
+            const response = await fetch(
+                `/api/v1/repair-service-points?query=${encodeURIComponent(query)}`
+            );
+            if (!response.ok) throw new Error('Błąd pobierania punktów serwisowych');
+
+            const points = await response.json();
+            const autocompleteData = {};
+            servicePointSuggestions[context] = {};
+            points.forEach(point => {
+                autocompleteData[point.name] = null;
+                servicePointSuggestions[context][point.name] = point;
+            });
+
+            const autocomplete = UI.Autocomplete.getInstance(elements.search);
+            autocomplete.updateData(autocompleteData);
+            autocomplete.open();
+        } catch (error) {
+            console.error(error);
+        }
+    }, 300));
+
+    elements.addButton.addEventListener('click', () => {
+        elements.newName.value = elements.search.value.trim();
+        elements.searchSection.style.display = 'none';
+        elements.newFields.style.display = 'block';
+        elements.selectedInfo.style.display = 'none';
+        elements.technicalId.value = '';
+        UI.updateTextFields();
+        elements.newName.focus();
+    });
+
+    elements.cancelButton.addEventListener('click', () => {
+        resetServicePointPicker(context);
+    });
+
+    elements.clearButton.addEventListener('click', () => {
+        resetServicePointPicker(context);
+    });
+}
+
+function selectServicePoint(context, point) {
+    const elements = getServicePointElements(context);
+    elements.technicalId.value = point.technicalId;
+    elements.selectedDisplay.innerText = point.name;
+    elements.search.value = '';
+    elements.newName.value = '';
+    elements.searchSection.style.display = 'none';
+    elements.newFields.style.display = 'none';
+    elements.selectedInfo.style.display = 'block';
+}
+
+function resetServicePointPicker(context) {
+    const elements = getServicePointElements(context);
+    elements.search.value = '';
+    elements.technicalId.value = '';
+    elements.newName.value = '';
+    elements.searchSection.style.display = 'block';
+    elements.newFields.style.display = 'none';
+    elements.selectedInfo.style.display = 'none';
+    UI.updateTextFields();
+}
+
+function getServicePointSelection(context) {
+    const elements = getServicePointElements(context);
+    if (elements.selectedInfo.style.display === 'block') {
+        return {
+            servicePointTechnicalId: elements.technicalId.value || null,
+            servicePointName: elements.selectedDisplay.innerText || null
+        };
+    }
+    const newName = elements.newName.value.trim();
+    if (elements.newFields.style.display === 'block') {
+        return {
+            servicePointTechnicalId: null,
+            servicePointName: newName || null
+        };
+    }
+    return {
+        servicePointTechnicalId: null,
+        servicePointName: null
+    };
+}
+
+function initClientAutocomplete() {
+    const el = document.getElementById('clientSearch');
+    UI.Autocomplete.init(el, {
+        data: {},
+        onAutocomplete: function(val) {
+            const client = selectedClientsMap[val];
+            if (client) {
+                selectClient(client);
+            }
+        },
+        minLength: 1
+    });
+
+    el.addEventListener('input', debounce(async (e) => {
+        const query = e.target.value;
+        if (query.length < 1) return;
+
+        try {
+            const response = await fetch(`/api/v1/repair-clients/search?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            const autocompleteData = {};
+            selectedClientsMap = {};
+
+            data.content.forEach(client => {
+                const display = `${client.name} ${client.surname} (${client.phoneNumber})`;
+                autocompleteData[display] = null;
+                selectedClientsMap[display] = client;
+            });
+
+            const instance = UI.Autocomplete.getInstance(el);
+            instance.updateData(autocompleteData);
+            instance.open();
+        } catch (error) {
+            console.error('Error fetching clients:', error);
+        }
+    }, 300));
+}
+
+let selectedClientsMap = {};
+
+function selectClient(client) {
+    document.getElementById('selectedClientTechnicalId').value = client.technicalId;
+    document.getElementById('selectedClientDisplay').innerText = `${client.name} ${client.surname} (${client.phoneNumber})`;
+    document.getElementById('clientSearchSection').style.display = 'none';
+    document.getElementById('selectedClientInfo').style.display = 'block';
+    document.getElementById('newClientFields').style.display = 'none';
+}
+
+function initClientToggles() {
+    document.getElementById('btnAddNewClient').addEventListener('click', () => {
+        document.getElementById('clientSearchSection').style.display = 'none';
+        document.getElementById('newClientFields').style.display = 'block';
+        document.getElementById('selectedClientInfo').style.display = 'none';
+        document.getElementById('selectedClientTechnicalId').value = '';
+    });
+
+    document.getElementById('cancelNewClient').addEventListener('click', () => {
+        document.getElementById('clientSearchSection').style.display = 'block';
+        document.getElementById('newClientFields').style.display = 'none';
+        document.getElementById('repairForm').querySelectorAll('#newClientFields input').forEach(i => i.value = '');
+    });
+
+    document.getElementById('clearSelectedClient').addEventListener('click', () => {
+        document.getElementById('clientSearchSection').style.display = 'block';
+        document.getElementById('selectedClientInfo').style.display = 'none';
+        document.getElementById('selectedClientTechnicalId').value = '';
+        document.getElementById('clientSearch').value = '';
+        UI.updateTextFields();
+    });
+
+    document.getElementById('clientAnonymous').addEventListener('change', (e) => {
+        const isAnonymous = e.target.checked;
+        const searchSection = document.getElementById('clientSearchSection');
+        const selectedInfo = document.getElementById('selectedClientInfo');
+        const newClientFields = document.getElementById('newClientFields');
+        const nameSurnameFields = document.getElementById('clientNameSurnameFields');
+
+        if (isAnonymous) {
+            searchSection.style.display = 'none';
+            selectedInfo.style.display = 'none';
+            newClientFields.style.display = 'block';
+            nameSurnameFields.style.display = 'none';
+
+            // Czyścimy imię i nazwisko w trybie anonimowym
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientSurname').value = '';
+        } else {
+            newClientFields.style.display = 'none';
+            searchSection.style.display = 'block';
+            nameSurnameFields.style.display = 'block';
+        }
+    });
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+let repairsData = [];
+
+async function loadRepairs() {
+    const filterSelect = document.getElementById('filterLocationSelect');
+    const locationFilter = filterSelect ? filterSelect.value : '';
+    const url = locationFilter ? `/api/v1/repairs?location=${encodeURIComponent(locationFilter)}` : '/api/v1/repairs';
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Błąd pobierania danych');
+        repairsData = await response.json();
+        renderBoard();
+        checkHighlight();
+    } catch (error) {
+        console.error(error);
+        UI.toast({html: 'Nie udało się załadować napraw', classes: 'red'});
+    }
+}
+
+function checkHighlight() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    if (highlightId) {
+        const repair = repairsData.find(r => r.technicalId === highlightId);
+        if (repair) {
+            // Przełącz na odpowiedni tab na mobilce jeśli trzeba
+            if (window.innerWidth <= 992) {
+                let tabId = '';
+                if (['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status)) {
+                    tabId = 'tab-ZAKONCZONY';
+                } else {
+                    tabId = `tab-${repair.status}`;
+                }
+                const instance = UI.Tabs.getInstance(document.querySelector('.tab-list'));
+                if (instance) instance.select(tabId);
+            }
+
+            // Znajdź kartę i dodaj klasę
+            setTimeout(() => {
+                const cards = document.querySelectorAll(`[data-id="${highlightId}"]`);
+                cards.forEach(card => {
+                    card.classList.add('highlight-card');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+            }, 100);
+        }
+    }
+}
+
+function renderBoard() {
+    const statuses = ['DO_NAPRAWY', 'W_NAPRAWIE', 'ZAKONCZONY'];
+    const finishedStatuses = ['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'];
+
+    statuses.forEach(status => {
+        const desktopContainer = document.getElementById(`cards-${status}`);
+        const mobileContainer = document.getElementById(`mobile-cards-${status}`);
+
+        desktopContainer.innerHTML = '';
+        mobileContainer.innerHTML = '';
+
+        const filteredRepairs = repairsData.filter(r => {
+            if (status === 'ZAKONCZONY') {
+                return finishedStatuses.includes(r.status);
+            }
+            return r.status === status;
+        });
+
+        filteredRepairs.forEach(repair => {
+            const card = createCard(repair);
+            desktopContainer.appendChild(card.cloneNode(true));
+            mobileContainer.appendChild(createMobileCard(repair));
+        });
+    });
+}
+
+function createCard(repair) {
+    const div = document.createElement('div');
+
+    // Sprawdzenie czy karta jest "przestarzała" (> 7 dni w statusie DO_NAPRAWY lub W_NAPRAWIE)
+    let overdueClass = '';
+    let overdueDisplay = '';
+    if (['DO_NAPRAWY', 'W_NAPRAWIE'].includes(repair.status) && repair.createDateTime) {
+        const createDate = new Date(repair.createDateTime);
+        const now = new Date();
+        const diffTime = Math.abs(now - createDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 7) {
+            overdueClass = 'overdue';
+            overdueDisplay = `
+                <div class="overdue-container" style="display: flex; align-items: center; justify-content: flex-end; color: #f57f17; margin-top: 2px;">
+                    <span style="font-size: 0.8rem; font-weight: bold; margin-right: 2px;">${diffDays} dni</span>
+                    <i class="ui-icon" style="font-size: 20px;">warning</i>
+                </div>`;
+        }
+    }
+
+    div.className = `panel kanban-card elevation status-${repair.status} ${overdueClass}`;
+    div.draggable = true;
+    div.setAttribute('data-id', repair.technicalId);
+    div.setAttribute('ondragstart', 'drag(event)');
+    div.setAttribute('onclick', `openRepairDetails('${repair.technicalId}')`);
+
+    const statusLabels = {
+        'NAPRAWIONY': '<span class="new badge green left" data-badge-caption="naprawiony" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'ANULOWANY': '<span class="new badge grey left" data-badge-caption="anulowany" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
+    };
+    const statusLabel = statusLabels[repair.status] || '';
+
+    const clientNameDisplay = (repair.anonymous || (!repair.clientName && !repair.clientSurname))
+        ? 'Anonimowy klient'
+        : `${repair.clientName || ''} ${repair.clientSurname || ''}`.trim();
+
+    let clientSection = `
+        <p><b>Klient:</b> ${clientNameDisplay}</p>
+        <p><b>Tel:</b> ${repair.clientPhoneNumber ? repair.clientPhoneNumber : '-'}</p>
+    `;
+
+    if (repair.forCustomer === false) {
+        clientSection = `<p class="blue-text text-darken-2"><b>Naprawa własna</b></p>`;
+    }
+
+    const servicePointSection = repair.servicePointName ? `
+        <p class="service-point-label">
+            <i class="ui-icon">build</i>
+            <b>Serwis:</b> ${repair.servicePointName}
+        </p>
+    ` : '';
+
+    div.innerHTML = `
+        <div class="panel-body">
+            <div class="repair-card-location">
+                ${repair.location ? `
+                    <p class="location" style="margin: 0; display: flex; align-items: center; justify-content: flex-end;">
+                        <i class="ui-icon tiny blue-text">place</i>
+                        <b>${repair.location}</b>
+                    </p>
+                ` : ''}
+                ${overdueDisplay}
+            </div>
+            ${statusLabel}
+            <div style="clear: both;"></div>
+            <span class="panel-title">
+                ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
+                <br>
+                <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
+            </span>
+            ${servicePointSection}
+            ${clientSection}
+            <p><b>IMEI:</b> ${repair.imei || '-'}</p>
+            <p><b>Kolor:</b> ${repair.color || '-'} </p>
+            <div class="divider" style="margin: 5px 0;"></div>
+            ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
+            ` : ''}
+
+            ${repair.status === 'NAPRAWIONY' ? `
+                <p><b>Koszt naprawy:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>
+                <p><b>Cena dla klienta:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+            ` : ''}
+
+            ${['ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                <p><b>Koszt diagnostyki:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+            ` : ''}
+
+            ${['DO_NAPRAWY'].includes(repair.status) && repair.forCustomer ? `
+                <div class="right-align" style="margin-top: 10px;">
+                    <button class="button-small blue darken-2 interactive interactive-light"
+                            onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'receipt')">
+                        <i class="ui-icon left">description</i>Pokwitowanie
+                    </button>
+                </div>
+            ` : ''}
+
+            ${['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                <div class="right-align" style="margin-top: 10px;">
+                    ${repair.forCustomer ? `
+                        <button class="button-small green darken-2 interactive interactive-light"
+                                onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'handover')">
+                            <i class="ui-icon left">check_circle</i>Odbiór
+                        </button>
+                    ` : ''}
+                    ${!repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
+                        <button class="button-small orange darken-2 interactive interactive-light"
+                                onclick="event.stopPropagation(); openRestoreModal('${repair.technicalId}')">
+                            <i class="ui-icon left">store</i>Przywróć na sklep
+                        </button>
+                    ` : ''}
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    // Inicjalizacja tooltipów po wyrenderowaniu
+    setTimeout(() => {
+        UI.Tooltip.init(div.querySelectorAll('.hint'));
+    }, 0);
+
+    addRepairCardActions(div, repair);
+    return div;
+}
+
+function createMobileCard(repair) {
+    const div = document.createElement('div');
+    div.className = 'grid-cell span-s-12';
+
+    // Sprawdzenie czy karta jest "przestarzała"
+    let overdueClass = '';
+    let overdueDisplay = '';
+    if (['DO_NAPRAWY', 'W_NAPRAWIE'].includes(repair.status) && repair.createDateTime) {
+        const createDate = new Date(repair.createDateTime);
+        const now = new Date();
+        const diffTime = Math.abs(now - createDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 7) {
+            overdueClass = 'overdue';
+            overdueDisplay = `
+                <div class="overdue-container" style="display: flex; align-items: center; justify-content: flex-end; color: #f57f17; margin-top: 2px;">
+                    <span style="font-size: 0.8rem; font-weight: bold; margin-right: 2px;">${diffDays} dni</span>
+                    <i class="ui-icon" style="font-size: 20px;">warning</i>
+                </div>`;
+        }
+    }
+
+    const statusLabels = {
+        'NAPRAWIONY': '<span class="new badge green left" data-badge-caption="naprawiony" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'ANULOWANY': '<span class="new badge grey left" data-badge-caption="anulowany" style="margin-left: 0; margin-bottom: 5px;"></span>',
+        'NIE_DO_NAPRAWY': '<span class="new badge red left" data-badge-caption="nie do naprawy" style="margin-left: 0; margin-bottom: 5px;"></span>'
+    };
+    const statusLabel = statusLabels[repair.status] || '';
+
+    const clientNameDisplay = (repair.anonymous || (!repair.clientName && !repair.clientSurname))
+        ? 'Anonimowy klient'
+        : `${repair.clientName || ''} ${repair.clientSurname || ''}`.trim();
+
+    let clientSection = `
+        <p><b>Klient:</b> ${clientNameDisplay}</p>
+        <p><b>Tel:</b> ${repair.clientPhoneNumber ? repair.clientPhoneNumber : '-'}</p>
+    `;
+
+    if (repair.forCustomer === false) {
+        clientSection = `<p class="blue-text text-darken-2"><b>Naprawa własna</b></p>`;
+    }
+
+    const servicePointSection = repair.servicePointName ? `
+        <p class="service-point-label">
+            <i class="ui-icon">build</i>
+            <b>Serwis:</b> ${repair.servicePointName}
+        </p>
+    ` : '';
+
+    div.innerHTML = `
+        <div class="panel elevation status-${repair.status} ${overdueClass}" onclick="openRepairDetails('${repair.technicalId}')">
+            <div class="panel-body">
+                <div class="repair-card-location">
+                    ${repair.location ? `
+                        <p class="location" style="margin: 0; display: flex; align-items: center; justify-content: flex-end;">
+                            <i class="ui-icon tiny blue-text">place</i>
+                            <b>${repair.location}</b>
+                        </p>
+                    ` : ''}
+                    ${overdueDisplay}
+                </div>
+                ${statusLabel}
+                <div style="clear: both;"></div>
+                <span class="panel-title">
+                    ${(repair.manufacturer ? repair.manufacturer + ' ' : '') + (repair.model || '')}
+                    <br>
+                    <small style="font-weight: bold; color: #1565c0;"> ${repair.businessId || '-'}</small>
+                </span>
+                ${servicePointSection}
+                ${clientSection}
+                <div class="form-grid" style="margin-bottom: 0;">
+                    <div class="grid-cell span-s-6">
+                        <p><b>IMEI:</b> ${repair.imei || '-'}</p>
+                    </div>
+                    <div class="grid-cell span-s-6 right-align">
+                        ${!['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                            <p><b>Szac. koszt:</b> ${repair.estimatedCost ? repair.estimatedCost + ' zł' : '-'}</p>
+                        ` : ''}
+                        ${repair.status === 'NAPRAWIONY' ? `
+                            <p><b>Koszt:</b> ${repair.purchasePrice ? repair.purchasePrice + ' zł' : '-'}</p>
+                            <p><b>Cena:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+                        ` : ''}
+                        ${['ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                            <p><b>Diagnostyka:</b> ${repair.repairPrice ? repair.repairPrice + ' zł' : '-'}</p>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${['DO_NAPRAWY'].includes(repair.status) && repair.forCustomer ? `
+                    <div class="right-align" style="margin-top: 10px;">
+                        <button class="button blue darken-2 interactive interactive-light"
+                                onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'receipt')">
+                            <i class="ui-icon left">description</i>Pokwitowanie dla klienta
+                        </button>
+                    </div>
+                ` : ''}
+
+                ${['NAPRAWIONY', 'ANULOWANY', 'NIE_DO_NAPRAWY'].includes(repair.status) ? `
+                    <div class="right-align" style="margin-top: 10px;">
+                        ${repair.forCustomer ? `
+                            <button class="button green darken-2 interactive interactive-light"
+                                    onclick="event.stopPropagation(); downloadRepairPdf('${repair.technicalId}', 'handover')">
+                                <i class="ui-icon left">check_circle</i>Potwierdzenie odbioru
+                            </button>
+                        ` : ''}
+                        ${!repair.forCustomer && repair.status === 'NAPRAWIONY' ? `
+                            <button class="button orange darken-2 interactive interactive-light"
+                                    onclick="event.stopPropagation(); openRestoreModal('${repair.technicalId}')">
+                                <i class="ui-icon left">store</i>Przywróć na sklep
+                            </button>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    // Inicjalizacja tooltipów po wyrenderowaniu
+    setTimeout(() => {
+        UI.Tooltip.init(div.querySelectorAll('.hint'));
+    }, 0);
+
+    addRepairCardActions(div, repair);
+    return div;
+}
+
+// The same actions are reachable by touch and keyboard as well as drag and drop.
+function addRepairCardActions(root, repair) {
+    const card = root.matches('.kanban-card') ? root : root.querySelector('.panel');
+    card.tabIndex = 0;
+    card.setAttribute('aria-label', `Szczegóły naprawy ${repair.businessId || repair.model || ''}`);
+    card.addEventListener('keydown', event => {
+        if (event.target === card && ['Enter', ' '].includes(event.key)) {
+            event.preventDefault(); openRepairDetails(repair.technicalId);
+        }
+    });
+    const field = document.createElement('label');
+    field.className = 'repair-status-action';
+    field.textContent = 'Zmień etap';
+    field.addEventListener('click', event => event.stopPropagation());
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', `Zmień etap naprawy ${repair.businessId || repair.model || ''}`);
+    select.add(new Option('Wybierz etap…', ''));
+    for (const [value, label] of [['DO_NAPRAWY', 'Do naprawy'], ['W_NAPRAWIE', 'W naprawie'], ['ZAKONCZONY', 'Zakończ naprawę']]) {
+        if (value !== repair.status) select.add(new Option(label, value));
+    }
+    select.addEventListener('change', () => {
+        if (select.value) requestRepairStatus(repair.technicalId, select.value);
+        select.value = '';
+    });
+    field.append(select); card.querySelector('.panel-body').append(field);
+}
+
+// Drag & Drop logic
+window.allowDrop = function(ev) {
+    ev.preventDefault();
+    ev.currentTarget.classList.add('drag-over');
+}
+
+window.dragLeave = function(ev) {
+    ev.currentTarget.classList.remove('drag-over');
+}
+
+window.drag = function(ev) {
+    const id = ev.target.closest('.kanban-card').getAttribute('data-id');
+    ev.dataTransfer.setData("text", id);
+}
+
+window.drop = async function(ev) {
+    ev.preventDefault();
+    const container = ev.currentTarget.closest('.kanban-column');
+    container.classList.remove('drag-over');
+
+    const id = ev.dataTransfer.getData("text");
+    const newStatus = container.id.replace('col-', '');
+
+    await requestRepairStatus(id, newStatus);
+}
+
+async function requestRepairStatus(id, newStatus) {
+    const repair = repairsData.find(r => r.technicalId === id);
+    if (!repair || repair.status === newStatus) return;
+
+    if (newStatus === 'ZAKONCZONY') {
+        document.getElementById('statusSelectionRepairId').value = id;
+
+        // Reset modal fields
+        if (tsFinalStatus) {
+            tsFinalStatus.setValue('');
+        }
+        document.getElementById('diagnosticCostSection').style.display = 'none';
+        document.getElementById('repairFinishedSection').style.display = 'none';
+        document.getElementById('diagnosticCost').value = '70';
+        document.getElementById('finalRealCost').value = '';
+        document.getElementById('finalCustomerPrice').value = '';
+        document.getElementById('repairDescriptionDiagnostic').value = '';
+        document.getElementById('repairDescriptionFinished').value = '';
+
+        // Fill pre-filled fields
+        document.getElementById('finalAdvancePayment').value = repair.advancePayment || 0;
+        document.getElementById('finalEstimatedCost').value = repair.estimatedCost || 0;
+
+        // Custom logic for shop repairs (forCustomer === false)
+        const statusSelectionWrapper = document.getElementById('finalStatusSelectionWrapper');
+        const finishedCustomerFields = document.getElementById('repairFinishedCustomerFields');
+        const customerPriceWrapper = document.getElementById('finalCustomerPriceWrapper');
+        const realCostWrapper = document.getElementById('finalRealCostWrapper');
+
+        if (repair.forCustomer === false) {
+            // Hide status selection and set it to NAPRAWIONY automatically
+            statusSelectionWrapper.style.display = 'none';
+            document.getElementById('finalStatusSelect').value = 'NAPRAWIONY';
+
+            // Show repair section but hide customer specific fields
+            document.getElementById('repairFinishedSection').style.display = 'block';
+            finishedCustomerFields.style.display = 'none';
+            customerPriceWrapper.style.display = 'none';
+
+            // Adjust real cost field layout to full width or just keep it
+            realCostWrapper.className = 'field grid-cell span-s-12';
+            document.querySelector('#finalRealCostWrapper label').innerText = 'Całkowity koszt naprawy';
+        } else {
+            // Restore default view for customer repairs
+            statusSelectionWrapper.style.display = 'block';
+            finishedCustomerFields.style.display = 'flex';
+            customerPriceWrapper.style.display = 'block';
+            realCostWrapper.className = 'field grid-cell span-s-12 span-m-6';
+            document.querySelector('#finalRealCostWrapper label').innerText = 'Realny koszt naprawy (koszt części itp.)';
+        }
+
+        UI.updateTextFields();
+
+        UI.Dialog.getInstance(document.getElementById('statusSelectionModal')).open();
+        return;
+    }
+
+    if (newStatus === 'W_NAPRAWIE') {
+        document.getElementById('servicePointSelectionRepairId').value = id;
+        resetServicePointPicker('status');
+        if (repair.servicePointTechnicalId) {
+            selectServicePoint('status', {
+                technicalId: repair.servicePointTechnicalId,
+                name: repair.servicePointName
+            });
+        }
+        UI.Dialog.getInstance(document.getElementById('servicePointSelectionModal')).open();
+        return;
+    }
+
+    // Dla innych statusów wymagamy potwierdzenia
+    const statusNames = {
+        'DO_NAPRAWY': 'DO NAPRAWY',
+        'W_NAPRAWIE': 'W NAPRAWIE'
+    };
+
+    document.getElementById('confirmStatusChangeMessage').innerText = `Czy na pewno chcesz zmienić status zlecenia na ${statusNames[newStatus]}?`;
+    const confirmBtn = document.getElementById('confirmStatusChangeBtn');
+
+    // Usuwamy stare listenery (klonowanie węzła to najprostszy sposób w czystym JS)
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    newConfirmBtn.addEventListener('click', async () => {
+        UI.Dialog.getInstance(document.getElementById('confirmStatusChangeModal')).close();
+        await updateRepairStatus(id, newStatus);
+    });
+
+    UI.Dialog.getInstance(document.getElementById('confirmStatusChangeModal')).open();
+}
+
+async function confirmServicePointSelection() {
+    const id = document.getElementById('servicePointSelectionRepairId').value;
+    const servicePoint = getServicePointSelection('status');
+    if (!servicePoint.servicePointTechnicalId && !servicePoint.servicePointName) {
+        UI.toast({html: 'Wybierz lub wpisz punkt serwisowy', classes: 'orange'});
+        return;
+    }
+
+    const success = await updateRepairStatus(id, 'W_NAPRAWIE', servicePoint);
+    if (success) {
+        UI.Dialog.getInstance(document.getElementById('servicePointSelectionModal')).close();
+    }
+}
+
+async function updateRepairStatus(id, newStatus, servicePoint = {}) {
+    const repair = repairsData.find(r => r.technicalId === id);
+    if (repair && (repair.status !== newStatus || (newStatus === 'W_NAPRAWIE' && (servicePoint.servicePointTechnicalId || servicePoint.servicePointName)))) {
+        try {
+            const params = new URLSearchParams({status: newStatus});
+            if (servicePoint.servicePointTechnicalId) {
+                params.set('servicePointTechnicalId', servicePoint.servicePointTechnicalId);
+            }
+            if (servicePoint.servicePointName) {
+                params.set('servicePointName', servicePoint.servicePointName);
+            }
+            const response = await fetch(`/api/v1/repairs/${id}/status?${params}`, {
+                method: 'PATCH'
+            });
+            if (!response.ok) throw new Error('Błąd zmiany statusu');
+
+            UI.toast({html: 'Status zaktualizowany', classes: 'green'});
+            loadRepairs();
+            return true;
+        } catch (error) {
+            console.error(error);
+            UI.toast({html: 'Błąd podczas zmiany statusu', classes: 'red'});
+        }
+    }
+    return false;
+}
+
+async function handleFinalizeStatus() {
+    const id = document.getElementById('statusSelectionRepairId').value;
+    const status = document.getElementById('finalStatusSelect').value;
+
+    if (!status) {
+        UI.toast({html: 'Wybierz status końcowy', classes: 'orange'});
+        return;
+    }
+
+    const repair = repairsData.find(r => r.technicalId === id);
+    if (!repair) return;
+
+    let updateData = { ...repair };
+    updateData.status = status;
+
+    if (status === 'NAPRAWIONY') {
+        const realCost = document.getElementById('finalRealCost').value;
+        const customerPrice = document.getElementById('finalCustomerPrice').value;
+        updateData.repairDescription = document.getElementById('repairDescriptionFinished').value;
+
+        if (repair.forCustomer === false) {
+            if (!realCost) {
+                UI.toast({html: 'Podaj całkowity koszt naprawy', classes: 'orange'});
+                return;
+            }
+            updateData.purchasePrice = realCost;
+            updateData.repairPrice = 0; // Or whatever is appropriate for shop repairs
+        } else {
+            if (!realCost || !customerPrice) {
+                UI.toast({html: 'Podaj wszystkie koszty', classes: 'orange'});
+                return;
+            }
+            updateData.purchasePrice = realCost;
+            updateData.repairPrice = customerPrice;
+        }
+    } else {
+        const diagnosticCost = document.getElementById('diagnosticCost').value;
+        updateData.repairDescription = document.getElementById('repairDescriptionDiagnostic').value;
+        if (!diagnosticCost) {
+            UI.toast({html: 'Podaj koszt diagnostyki', classes: 'orange'});
+            return;
+        }
+        updateData.repairPrice = diagnosticCost;
+        updateData.purchasePrice = 0;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+        });
+
+        if (!response.ok) throw new Error('Błąd zapisu');
+
+        UI.toast({html: 'Status zaktualizowany', classes: 'green'});
+        UI.Dialog.getInstance(document.getElementById('statusSelectionModal')).close();
+        loadRepairs();
+    } catch (error) {
+        console.error(error);
+        UI.toast({html: 'Błąd podczas zmiany statusu', classes: 'red'});
+    }
+}
+
+window.finalizeStatus = async function(selectedStatus) {
+    const id = document.getElementById('statusSelectionRepairId').value;
+    UI.Dialog.getInstance(document.getElementById('statusSelectionModal')).close();
+    await updateRepairStatus(id, selectedStatus);
+}
+
+window.cancelStatusSelection = function() {
+    UI.Dialog.getInstance(document.getElementById('statusSelectionModal')).close();
+    loadRepairs(); // Refresh to move the card back to its original position visually
+}
+
+async function openRepairDetails(technicalId) {
+    const repair = repairsData.find(r => r.technicalId === technicalId);
+    if (!repair) return;
+
+    resetForm();
+    document.getElementById('modalTitle').innerText = 'Szczegóły naprawy';
+    document.getElementById('repairTechnicalId').value = repair.technicalId;
+    document.getElementById('isForCustomer').value = repair.forCustomer;
+    document.getElementById('phoneTechnicalId').value = repair.phoneTechnicalId || '';
+
+    // Obsługa widoczności sekcji klienta dla napraw własnych
+    if (repair.forCustomer === false) {
+        document.getElementById('repairClientSectionWrapper').style.display = 'none';
+        document.getElementById('ownRepairInfo').style.display = 'block';
+    } else {
+        document.getElementById('repairClientSectionWrapper').style.display = 'block';
+        document.getElementById('ownRepairInfo').style.display = 'none';
+    }
+
+    if (repair.businessId) {
+        document.getElementById('rmaDisplay').style.display = 'block';
+        document.getElementById('repairRma').value = repair.businessId;
+    } else {
+        document.getElementById('rmaDisplay').style.display = 'none';
+    }
+
+    document.getElementById('clientAnonymous').checked = repair.anonymous || false;
+    const nameSurnameFields = document.getElementById('clientNameSurnameFields');
+    if (repair.anonymous) {
+        document.getElementById('clientSearchSection').style.display = 'none';
+        document.getElementById('newClientFields').style.display = 'block';
+        nameSurnameFields.style.display = 'none';
+        document.getElementById('clientPhone').value = repair.clientPhoneNumber || '';
+    } else {
+        nameSurnameFields.style.display = 'block';
+    }
+
+    if (repair.deviceType && tsRepairDeviceType) {
+        tsRepairDeviceType.setValue(repair.deviceType);
+    }
+
+    // Klient
+    if (repair.clientTechnicalId) {
+        selectClient({
+            technicalId: repair.clientTechnicalId,
+            name: repair.clientName,
+            surname: repair.clientSurname,
+            phoneNumber: repair.clientPhoneNumber
+        });
+    }
+
+    // Urządzenie
+    document.getElementById('repairManufacturer').value = repair.manufacturer || '';
+    document.getElementById('repairModel').value = repair.model || '';
+    document.getElementById('repairImei').value = repair.imei || '';
+    document.getElementById('repairColor').value = repair.color || '';
+
+    if (tsRepairLocation) {
+        tsRepairLocation.setValue(repair.location || '');
+    }
+    if (repair.servicePointTechnicalId) {
+        selectServicePoint('repair', {
+            technicalId: repair.servicePointTechnicalId,
+            name: repair.servicePointName
+        });
+    }
+
+    // Naprawa
+    document.getElementById('repairProblemDescription').value = repair.problemDescription || repair.damageDescription || '';
+    document.getElementById('repairDeviceCondition').value = repair.deviceCondition || '';
+    document.getElementById('repairRemarks').value = repair.remarks || repair.repairOrderDescription || '';
+    document.getElementById('repairLockCode').value = repair.lockCode || repair.pinPassword || '';
+
+    document.getElementById('repairMoistureTraces').checked = repair.moistureTraces;
+    document.getElementById('repairWarrantyRepair').checked = repair.warrantyRepair;
+    document.getElementById('repairTurnsOn').checked = repair.turnsOn;
+
+    if (repair.receiptDate) {
+        document.getElementById('repairReceiptDate').value = repair.receiptDate.split('T')[0];
+    }
+    if (repair.estimatedRepairDate) {
+        document.getElementById('repairEstimatedRepairDate').value = repair.estimatedRepairDate.split('T')[0];
+    }
+    document.getElementById('repairEstimatedCost').value = repair.estimatedCost || '';
+    document.getElementById('repairAdvancePayment').value = repair.advancePayment || '';
+    document.getElementById('repairPrice').value = repair.repairPrice || '';
+    document.getElementById('repairPurchasePrice').value = repair.purchasePrice || '';
+
+    renderRepairNotes(repair.notes, repair.technicalId);
+
+    // Visibility of price fields
+    if (repair.status === 'NAPRAWIONY' || repair.status === 'NIE_DO_NAPRAWY') {
+        document.getElementById('repairFinalPriceWrapper').style.display = 'block';
+    } else {
+        document.getElementById('repairFinalPriceWrapper').style.display = 'none';
+    }
+
+    if (repair.forCustomer) {
+        document.getElementById('shopRepairFields').style.display = 'none';
+    } else {
+        document.getElementById('shopRepairFields').style.display = 'block';
+    }
+
+    UI.updateTextFields();
+    UI.textareaAutoResize(document.getElementById('repairProblemDescription'));
+    UI.textareaAutoResize(document.getElementById('repairDeviceCondition'));
+    UI.textareaAutoResize(document.getElementById('repairRemarks'));
+
+    toggleFields(true);
+    document.getElementById('editRepairBtn').style.display = 'inline-block';
+    document.getElementById('saveRepairBtn').style.display = 'none';
+
+    const modal = UI.Dialog.getInstance(document.getElementById('repairModal'));
+    modal.open();
+}
+
+async function addRepairNote() {
+    const technicalId = document.getElementById('repairTechnicalId').value;
+    const content = document.getElementById('newRepairNoteContent').value.trim();
+
+    if (!content) {
+        UI.toast({html: 'Wpisz treść notatki', classes: 'orange'});
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: content
+        });
+
+        if (!response.ok) throw new Error('Błąd dodawania notatki');
+
+        const newNote = await response.json();
+        UI.toast({html: 'Notatka dodana', classes: 'green'});
+        document.getElementById('newRepairNoteContent').value = '';
+        UI.textareaAutoResize(document.getElementById('newRepairNoteContent'));
+
+        // Odśwież listę notatek (pobieramy całą naprawę, żeby mieć aktualną listę w repairsData)
+        await refreshRepairData(technicalId);
+        const repair = repairsData.find(r => r.technicalId === technicalId);
+        renderRepairNotes(repair.notes, technicalId);
+    } catch (error) {
+        console.error(error);
+        UI.toast({html: 'Błąd podczas dodawania notatki', classes: 'red'});
+    }
+}
+
+async function deleteRepairNote(technicalId, noteId) {
+    if (!confirm('Czy na pewno chcesz usunąć tę notatkę?')) return;
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}/notes/${noteId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Błąd usuwania notatki');
+        }
+
+        UI.toast({html: 'Notatka usunięta', classes: 'green'});
+        await refreshRepairData(technicalId);
+        const repair = repairsData.find(r => r.technicalId === technicalId);
+        renderRepairNotes(repair.notes, technicalId);
+    } catch (error) {
+        console.error(error);
+        UI.toast({html: error.message, classes: 'red'});
+    }
+}
+
+async function refreshRepairData(technicalId) {
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}`);
+        if (!response.ok) throw new Error('Błąd odświeżania danych naprawy');
+        const updatedRepair = await response.json();
+        const index = repairsData.findIndex(r => r.technicalId === technicalId);
+        if (index !== -1) {
+            repairsData[index] = updatedRepair;
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function renderRepairNotes(notes, technicalId) {
+    const container = document.getElementById('repairNotesList');
+    container.innerHTML = '';
+
+    if (!notes || notes.length === 0) {
+        container.innerHTML = '<p class="grey-text center-align">Brak notatek</p>';
+        return;
+    }
+
+    notes.forEach(note => {
+        const noteEl = document.createElement('div');
+        noteEl.style.marginBottom = '15px';
+        noteEl.style.padding = '10px';
+        noteEl.style.borderRadius = '8px';
+        noteEl.style.backgroundColor = '#fff';
+        noteEl.style.borderLeft = '4px solid #7b1fa2';
+        noteEl.style.position = 'relative';
+        noteEl.className = 'elevation';
+
+        const date = new Date(note.createdAt).toLocaleString();
+
+        const isAuthor = CURRENT_USER && CURRENT_USER.username === note.authorName;
+
+        noteEl.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span class="purple-text text-darken-2" style="font-weight: bold;">
+                    <i class="ui-icon tiny">person</i> ${note.authorName}
+                </span>
+                <span class="grey-text" style="font-size: 0.8rem;">${date}</span>
+            </div>
+            <div style="white-space: pre-wrap; color: #333;">${note.content}</div>
+            ${isAuthor ? `
+                <a href="#!" class="red-text" style="position: absolute; bottom: 5px; right: 10px; font-size: 0.8rem; display: flex; align-items: center;"
+                   onclick="event.stopPropagation(); deleteRepairNote('${technicalId}', ${note.id})">
+                    <i class="ui-icon tiny">delete</i> usuń
+                </a>
+            ` : ''}
+        `;
+        container.appendChild(noteEl);
+    });
+}
+
+async function saveRepair() {
+    const id = document.getElementById('repairTechnicalId').value;
+    const existingRepair = id ? repairsData.find(r => r.technicalId === id) : null;
+
+    const receiptDate = document.getElementById('repairReceiptDate').value;
+    const estimatedDate = document.getElementById('repairEstimatedRepairDate').value;
+
+    const repairDto = {
+        anonymous: document.getElementById('clientAnonymous').checked,
+        clientTechnicalId: document.getElementById('selectedClientTechnicalId').value || null,
+        clientName: document.getElementById('clientName').value,
+        clientSurname: document.getElementById('clientSurname').value,
+        clientPhoneNumber: document.getElementById('clientPhone').value,
+
+        deviceType: document.getElementById('repairDeviceType').value,
+        manufacturer: document.getElementById('repairManufacturer').value,
+        model: document.getElementById('repairModel').value,
+        imei: document.getElementById('repairImei').value,
+        color: document.getElementById('repairColor').value,
+
+        problemDescription: document.getElementById('repairProblemDescription').value,
+        deviceCondition: document.getElementById('repairDeviceCondition').value,
+        remarks: document.getElementById('repairRemarks').value,
+        lockCode: document.getElementById('repairLockCode').value,
+
+        moistureTraces: document.getElementById('repairMoistureTraces').checked,
+        warrantyRepair: document.getElementById('repairWarrantyRepair').checked,
+        turnsOn: document.getElementById('repairTurnsOn').checked,
+
+        receiptDate: receiptDate ? receiptDate + 'T00:00:00' : null,
+        estimatedRepairDate: estimatedDate ? estimatedDate + 'T00:00:00' : null,
+        estimatedCost: document.getElementById('repairEstimatedCost').value || null,
+        advancePayment: document.getElementById('repairAdvancePayment').value || null,
+
+        repairPrice: document.getElementById('repairPrice').value || null,
+        purchasePrice: document.getElementById('repairPurchasePrice').value || null,
+
+        forCustomer: existingRepair ? existingRepair.forCustomer : (document.getElementById('isForCustomer').value === 'true'),
+        phoneTechnicalId: document.getElementById('phoneTechnicalId').value || null,
+        location: IS_ADMIN ? document.getElementById('repairLocation').value : (existingRepair ? existingRepair.location : null)
+    };
+    Object.assign(repairDto, getServicePointSelection('repair'));
+
+    if (!repairDto.model) {
+        UI.toast({html: 'Model urządzenia jest wymagany', classes: 'orange'});
+        return;
+    }
+
+    if (repairDto.anonymous && !repairDto.clientPhoneNumber) {
+        UI.toast({html: 'Numer telefonu jest wymagany dla klienta anonimowego', classes: 'orange'});
+        return;
+    }
+
+    if (!repairDto.clientTechnicalId && !repairDto.clientName && repairDto.forCustomer && !repairDto.anonymous) {
+        UI.toast({html: 'Wybierz klienta lub podaj dane nowego klienta', classes: 'orange'});
+        return;
+    }
+
+    try {
+        const url = id ? `/api/v1/repairs/${id}` : '/api/v1/repairs';
+        const method = id ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(repairDto)
+        });
+
+        if (!response.ok) throw new Error('Błąd zapisu');
+
+        UI.toast({html: 'Zapisano pomyślnie', classes: 'green'});
+
+        toggleFields(true);
+        document.getElementById('editRepairBtn').style.display = 'inline-block';
+        document.getElementById('saveRepairBtn').style.display = 'none';
+
+        // Jeśli to było nowe zlecenie, to zamykamy modal lub odświeżamy dane.
+        // W opisie zadania jest "Po jego utworzeniu pola powinny być nieedytowalne".
+        // Więc zablokowaliśmy je powyżej.
+
+        UI.Dialog.getInstance(document.getElementById('repairModal')).close();
+        loadRepairs();
+    } catch (error) {
+        console.error(error);
+        UI.toast({html: 'Błąd podczas zapisu', classes: 'red'});
+    }
+}
+
+function resetForm() {
+    document.getElementById('repairForm').reset();
+    document.getElementById('newRepairNoteContent').value = '';
+    document.getElementById('repairNotesList').innerHTML = '<p class="grey-text center-align">Brak notatek</p>';
+    document.getElementById('rmaDisplay').style.display = 'none';
+    document.getElementById('repairRma').value = '';
+    document.getElementById('repairTechnicalId').value = '';
+    document.getElementById('selectedClientTechnicalId').value = '';
+    document.getElementById('clientSearchSection').style.display = 'block';
+    document.getElementById('newClientFields').style.display = 'none';
+    document.getElementById('clientNameSurnameFields').style.display = 'block';
+    document.getElementById('selectedClientInfo').style.display = 'none';
+    document.getElementById('clientSearch').value = '';
+    document.getElementById('repairFinalPriceWrapper').style.display = 'none';
+    document.getElementById('shopRepairFields').style.display = 'none';
+    document.getElementById('repairClientSectionWrapper').style.display = 'block';
+    document.getElementById('ownRepairInfo').style.display = 'none';
+    document.getElementById('isForCustomer').value = 'true';
+    document.getElementById('phoneTechnicalId').value = '';
+
+    // Resetuj device type do domyślnego
+    if (tsRepairDeviceType) {
+        tsRepairDeviceType.setValue('TELEFON');
+    }
+    resetServicePointPicker('repair');
+
+    // Resetuj anonimowego klienta
+    document.getElementById('clientAnonymous').checked = false;
+}
+
+function toggleFields(disabled) {
+    const form = document.getElementById('repairForm');
+    const elements = form.querySelectorAll('input, textarea:not(#newRepairNoteContent), select, button:not(.button-quiet):not(#btnAddRepairNote)');
+    elements.forEach(el => {
+        // Nie blokujemy ukrytych pól technicznych
+        if (el.type !== 'hidden') {
+            el.disabled = disabled;
+        }
+    });
+
+    // Obsługa TomSelect dla zablokowanych pól
+    if (tsRepairDeviceType) {
+        disabled ? tsRepairDeviceType.disable() : tsRepairDeviceType.enable();
+    }
+    if (tsRepairLocation) {
+        disabled ? tsRepairLocation.disable() : tsRepairLocation.enable();
+    }
+
+    const servicePointElements = getServicePointElements('repair');
+    [
+        servicePointElements.addButton,
+        servicePointElements.cancelButton,
+        servicePointElements.clearButton
+    ].forEach(element => {
+        element.style.pointerEvents = disabled ? 'none' : 'auto';
+        element.style.opacity = disabled ? '0.5' : '1';
+    });
+
+    // Specyficzna obsługa dla chipa usuwania klienta
+    const clearClient = document.getElementById('clearSelectedClient');
+    if (clearClient) {
+        clearClient.style.pointerEvents = disabled ? 'none' : 'auto';
+        clearClient.style.opacity = disabled ? '0.5' : '1';
+    }
+
+    // Przycisk "Dodaj nowego klienta"
+    const addNewClient = document.getElementById('btnAddNewClient');
+    if (addNewClient) {
+        addNewClient.style.pointerEvents = disabled ? 'none' : 'auto';
+        addNewClient.style.opacity = disabled ? '0.5' : '1';
+    }
+}
+
+function downloadRepairPdf(technicalId, type) {
+    window.open(`/api/v1/repairs/${technicalId}/${type}`, '_blank');
+}
+
+async function loadLocations() {
+    try {
+        const response = await fetch('/api/v1/locations');
+        if (!response.ok) throw new Error('Błąd pobierania lokalizacji');
+        const locations = await response.json();
+
+        if (tsRepairLocation) tsRepairLocation.clearOptions();
+        if (tsFilterLocation) tsFilterLocation.clearOptions();
+        if (tsRestoreLocation) tsRestoreLocation.clearOptions();
+
+        if (tsFilterLocation) {
+            tsFilterLocation.addOption({ value: '', text: 'Wszystkie lokalizacje' });
+        }
+        if (tsRepairLocation) {
+            tsRepairLocation.addOption({ value: '', text: 'Wybierz lokalizację' });
+        }
+        if (tsRestoreLocation) {
+            tsRestoreLocation.addOption({ value: '', text: 'Wybierz lokalizację' });
+        }
+
+        locations.forEach(loc => {
+            if (tsRepairLocation) {
+                tsRepairLocation.addOption({ value: loc.name, text: loc.name });
+            }
+            if (tsFilterLocation) {
+                tsFilterLocation.addOption({ value: loc.name, text: loc.name });
+            }
+            if (tsRestoreLocation) {
+                tsRestoreLocation.addOption({ value: loc.technicalId, text: loc.name });
+            }
+        });
+
+        if (tsRepairLocation) tsRepairLocation.refreshOptions(false);
+        if (tsFilterLocation) tsFilterLocation.refreshOptions(false);
+        if (tsRestoreLocation) tsRestoreLocation.refreshOptions(false);
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+window.openRestoreModal = function(technicalId) {
+    const repair = repairsData.find(r => r.technicalId === technicalId);
+    if (!repair) return;
+
+    document.getElementById('restoreRepairId').value = technicalId;
+    document.getElementById('restoreRepairPrice').value = repair.purchasePrice || '';
+    document.getElementById('restorePurchasePrice').value = '';
+
+    if (repair.phoneTechnicalId) {
+        fetch(`/api/v1/phones/${repair.phoneTechnicalId}`)
+            .then(res => res.json())
+            .then(phone => {
+                document.getElementById('restoreSellingPrice').value = phone.sellingPrice;
+                document.getElementById('restorePurchasePrice').value = phone.purchasePrice;
+                UI.updateTextFields();
+            })
+            .catch(err => console.error('Błąd pobierania danych telefonu', err));
+    }
+
+    if (tsRestoreLocation) {
+        loadCurrentUser().then(user => {
+            tsRestoreLocation.setValue(user.locationTechnicalId || '');
+        });
+    }
+    UI.updateTextFields();
+    UI.Dialog.getInstance(document.getElementById('restoreToShopModal')).open();
+}
+
+async function confirmRestore() {
+    const technicalId = document.getElementById('restoreRepairId').value;
+    const request = {
+        repairPrice: document.getElementById('restoreRepairPrice').value,
+        sellingPrice: document.getElementById('restoreSellingPrice').value,
+        locationTechnicalId: document.getElementById('restoreLocation').value
+    };
+
+    if (!request.locationTechnicalId) {
+        UI.toast({html: 'Wybierz lokalizację', classes: 'orange'});
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/repairs/${technicalId}/restore-to-shop`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request)
+        });
+
+        if (!response.ok) throw new Error('Błąd przywracania');
+
+        UI.toast({html: 'Telefon przywrócony na sklep', classes: 'green'});
+        UI.Dialog.getInstance(document.getElementById('restoreToShopModal')).close();
+        loadRepairs();
+    } catch (error) {
+        console.error(error);
+        UI.toast({html: 'Błąd podczas przywracania', classes: 'red'});
+    }
+}

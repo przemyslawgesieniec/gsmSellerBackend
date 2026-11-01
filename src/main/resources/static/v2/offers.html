@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Oferty internetowe · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="offers">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Internet
+     </p>
+     <h1>
+      Oferty internetowe
+     </h1>
+     <p class="page-description">
+      Publikuj urządzenia, zarządzaj zdjęciami i opisami ofert.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container wide-layout">
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <div class="panel">
+       <div aria-expanded="false" class="offer-form-header" id="offerFormToggle" role="button" tabindex="0">
+        <div>
+         <span class="panel-title" id="formTitle">
+          Stwórz nową ofertę
+         </span>
+         <p class="offer-form-subtitle">
+          Wybierz telefon, dodaj zdjęcia i ustaw miniaturkę kolejnością zdjęć.
+         </p>
+        </div>
+        <i class="ui-icon" id="offerFormToggleIcon">
+         expand_more
+        </i>
+       </div>
+       <div class="panel-body offer-form-body hide" id="offerFormBody">
+        <form id="offerForm">
+         <input id="editTechnicalId" type="hidden"/>
+         <div class="form-grid">
+          <div class="field grid-cell span-s-12" id="phoneSelectWrapper">
+           <label class="active" for="phoneSelect">
+            Wybierz telefon z magazynu
+           </label>
+           <select id="phoneSelect" placeholder="Wyszukaj telefon po modelu, nazwie lub IMEI...">
+           </select>
+          </div>
+          <div class="grid-cell span-s-12 mb-2 hide" id="selectedPhoneInfo">
+           <div class="tag" id="phoneChip">
+            <span id="phoneDetails">
+            </span>
+            <i class="close ui-icon" id="clearPhone">
+             close
+            </i>
+           </div>
+          </div>
+          <div class="grid-cell span-s-12">
+           <div class="model-specs-preview hide" id="modelSpecsPreview">
+           </div>
+          </div>
+          <div class="grid-cell span-s-12">
+           <p class="grey-text">
+            Dodaj zdjęcia (maksymalnie 5). Zdjęcie nr 1 będzie miniaturką oferty.
+           </p>
+           <div class="file-field field">
+            <div class="button blue">
+             <span>
+              Wybierz pliki
+             </span>
+             <input accept="image/*" id="photoFiles" multiple="" type="file"/>
+            </div>
+            <div class="file-path-wrapper">
+             <input class="file-path validate" placeholder="Prześlij jedno lub więcej zdjęć" type="text"/>
+            </div>
+           </div>
+           <div class="offer-photos-preview" id="photosPreview">
+           </div>
+          </div>
+         </div>
+         <div class="form-grid">
+          <div class="grid-cell span-s-12 right-align">
+           <button class="button-quiet interactive hide" id="cancelBtn" type="button">
+            Anuluj edycję
+           </button>
+           <button class="button interactive interactive-light blue darken-2" id="saveBtn" type="submit">
+            Zapisz ofertę
+            <i class="ui-icon right">
+             send
+            </i>
+           </button>
+          </div>
+          <div class="grid-cell span-s-12 center-align hide" id="formLoader">
+           <div class="preloader-wrapper small active">
+            <div class="spinner-layer spinner-blue-only">
+             <div class="circle-clipper left">
+              <div class="circle">
+              </div>
+             </div>
+             <div class="gap-patch">
+              <div class="circle">
+              </div>
+             </div>
+             <div class="circle-clipper right">
+              <div class="circle">
+              </div>
+             </div>
+            </div>
+           </div>
+           <p class="grey-text">
+            Przetwarzanie...
+           </p>
+          </div>
+         </div>
+        </form>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <div class="offers-section-title">
+       <h5 class="blue-text text-darken-2">
+        Aktualnie wystawione oferty
+       </h5>
+       <span class="grey-text" id="offerResultsMeta">
+       </span>
+      </div>
+      <div class="offers-toolbar">
+       <div class="form-grid">
+        <div class="field grid-cell span-s-12 span-m-4">
+         <label for="offerImeiFilter">
+          IMEI
+         </label>
+         <i class="ui-icon prefix">
+          fingerprint
+         </i>
+         <input id="offerImeiFilter" type="text"/>
+        </div>
+        <div class="field grid-cell span-s-12 span-m-4">
+         <label for="offerNameFilter">
+          Nazwa, marka lub model
+         </label>
+         <i class="ui-icon prefix">
+          search
+         </i>
+         <input id="offerNameFilter" type="text"/>
+        </div>
+        <div class="field grid-cell span-s-12 span-m-3">
+         <label class="active" for="offerLocationFilter">
+          Lokalizacja
+         </label>
+         <select id="offerLocationFilter">
+          <option selected="" value="">
+           Wszystkie lokalizacje
+          </option>
+         </select>
+        </div>
+        <div class="grid-cell span-s-12 span-m-1 right-align">
+         <button class="button-quiet interactive" id="clearOfferFilters" title="Wyczyść filtry" type="button">
+          <i class="ui-icon">
+           filter_alt_off
+          </i>
+         </button>
+        </div>
+       </div>
+      </div>
+      <div class="center-align hide" id="offersLoader">
+       <div class="preloader-wrapper small active">
+        <div class="spinner-layer spinner-blue-only">
+         <div class="circle-clipper left">
+          <div class="circle">
+          </div>
+         </div>
+         <div class="gap-patch">
+          <div class="circle">
+          </div>
+         </div>
+         <div class="circle-clipper right">
+          <div class="circle">
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="offers-list" id="offers-list">
+      </div>
+      <ul class="pagination center-align" id="offersPagination">
+      </ul>
+     </div>
+    </div>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/offers.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/offers.js">
+  </script>
+ </body>
+</html>

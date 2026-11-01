@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Centrum serwisowe · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="repair">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Serwis
+     </p>
+     <h1>
+      Centrum serwisowe
+     </h1>
+     <p class="page-description">
+      Zlecenia, terminy i postęp napraw — pod pełną kontrolą.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container wide-layout">
+    <div class="form-grid">
+     <div class="grid-cell span-s-12 span-m-4 span-l-3">
+      <div id="filterLocationWrapper">
+       <label for="filterLocationSelect">
+        Filtruj wg lokalizacji
+       </label>
+       <select class="native-select" id="filterLocationSelect">
+        <option value="">
+         Wszystkie lokalizacje
+        </option>
+       </select>
+      </div>
+     </div>
+    </div>
+    <div class="kanban-board">
+     <div class="kanban-column" id="col-DO_NAPRAWY" ondragleave="dragLeave(event)" ondragover="allowDrop(event)" ondrop="drop(event)">
+      <div class="kanban-column-header blue-text text-darken-2">
+       DO NAPRAWY
+      </div>
+      <div class="kanban-cards" id="cards-DO_NAPRAWY">
+      </div>
+     </div>
+     <div class="kanban-column" id="col-W_NAPRAWIE" ondragleave="dragLeave(event)" ondragover="allowDrop(event)" ondrop="drop(event)">
+      <div class="kanban-column-header orange-text text-darken-2">
+       W NAPRAWIE
+      </div>
+      <div class="kanban-cards" id="cards-W_NAPRAWIE">
+      </div>
+     </div>
+     <div class="kanban-column" id="col-ZAKONCZONY" ondragleave="dragLeave(event)" ondragover="allowDrop(event)" ondrop="drop(event)">
+      <div class="kanban-column-header green-text text-darken-2">
+       ZAKOŃCZONY
+      </div>
+      <div class="kanban-cards" id="cards-ZAKONCZONY">
+      </div>
+     </div>
+    </div>
+    <div class="mobile-repair-view">
+     <div class="form-grid">
+      <div class="grid-cell span-s-12">
+       <ul class="tab-list">
+        <li class="tab-item grid-cell span-s-4">
+         <a class="blue-text" href="#tab-DO_NAPRAWY">
+          Do naprawy
+         </a>
+        </li>
+        <li class="tab-item grid-cell span-s-4">
+         <a class="orange-text" href="#tab-W_NAPRAWIE">
+          W naprawie
+         </a>
+        </li>
+        <li class="tab-item grid-cell span-s-4">
+         <a class="green-text" href="#tab-ZAKONCZONY">
+          Zakończony
+         </a>
+        </li>
+       </ul>
+      </div>
+      <div class="grid-cell span-s-12" id="tab-DO_NAPRAWY">
+       <div class="form-grid" id="mobile-cards-DO_NAPRAWY">
+       </div>
+      </div>
+      <div class="grid-cell span-s-12" id="tab-W_NAPRAWIE">
+       <div class="form-grid" id="mobile-cards-W_NAPRAWIE">
+       </div>
+      </div>
+      <div class="grid-cell span-s-12" id="tab-ZAKONCZONY">
+       <div class="form-grid" id="mobile-cards-ZAKONCZONY">
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="fab-fixed">
+    <a class="button-icon button-large interactive interactive-light red">
+     <i class="ui-icon">
+      add
+     </i>
+    </a>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/repair.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <dialog aria-label="Szczegóły naprawy Numer RMA Sekcja 1 - Klient Klient anonimowy search Wyszukaj klienta (Im" class="dialog dialog-wide" id="repairModal">
+   <div class="dialog-body">
+    <h5 id="modalTitle">
+     Szczegóły naprawy
+    </h5>
+    <form id="repairForm">
+     <input id="repairTechnicalId" type="hidden"/>
+     <input id="isForCustomer" type="hidden" value="true"/>
+     <input id="phoneTechnicalId" type="hidden"/>
+     <div id="rmaDisplay" style="display: none">
+      <div class="form-grid">
+       <div class="field grid-cell span-s-12">
+        <label class="active" for="repairRma">
+         Numer RMA
+        </label>
+        <input id="repairRma" readonly="" type="text"/>
+       </div>
+      </div>
+     </div>
+     <div id="repairClientSectionWrapper">
+      <div class="section-title blue-text text-darken-2">
+       Sekcja 1 - Klient
+      </div>
+      <div class="form-grid surface grey lighten-5">
+       <div class="grid-cell span-s-12">
+        <p>
+         <label>
+          <input class="filled-in" id="clientAnonymous" type="checkbox"/>
+          <span>
+           Klient anonimowy
+          </span>
+         </label>
+        </p>
+       </div>
+       <div id="clientSearchSection">
+        <div class="field grid-cell span-s-12">
+         <label for="clientSearch">
+          Wyszukaj klienta (Imię, Nazwisko lub Telefon)
+         </label>
+         <i class="ui-icon prefix">
+          search
+         </i>
+         <input class="autocomplete" id="clientSearch" type="text"/>
+         <input id="selectedClientTechnicalId" type="hidden"/>
+        </div>
+        <div class="grid-cell span-s-12">
+         <p class="grey-text">
+          Wybierz klienta z listy lub
+          <a href="#!" id="btnAddNewClient">
+           dodaj nowego klienta
+          </a>
+         </p>
+        </div>
+       </div>
+       <div id="newClientFields" style="display: none">
+        <div id="clientNameSurnameFields">
+         <div class="field grid-cell span-s-12 span-m-4">
+          <label for="clientName">
+           Imię *
+          </label>
+          <input id="clientName" type="text"/>
+         </div>
+         <div class="field grid-cell span-s-12 span-m-4">
+          <label for="clientSurname">
+           Nazwisko *
+          </label>
+          <input id="clientSurname" type="text"/>
+         </div>
+        </div>
+        <div class="field grid-cell span-s-12 span-m-4">
+         <label for="clientPhone">
+          Numer telefonu *
+         </label>
+         <input id="clientPhone" type="text"/>
+        </div>
+        <div class="grid-cell span-s-12">
+         <button class="button-small grey" id="cancelNewClient" type="button">
+          Wróć do wyszukiwania
+         </button>
+        </div>
+       </div>
+       <div class="grid-cell span-s-12" id="selectedClientInfo" style="display: none">
+        <div class="tag blue white-text" id="selectedClientChip">
+         <span id="selectedClientDisplay">
+         </span>
+         <i class="close ui-icon" id="clearSelectedClient">
+          close
+         </i>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div id="ownRepairInfo" style="display: none">
+      <div class="section-title blue-text text-darken-2">
+       Sekcja 1 - Klient
+      </div>
+      <div class="form-grid surface grey lighten-5">
+       <div class="grid-cell span-s-12">
+        <h6 class="blue-text text-darken-2">
+         <b>
+          Naprawa własna
+         </b>
+        </h6>
+        <p>
+         To zlecenie dotyczy naprawy własnego urządzenia na stan sklepowy.
+        </p>
+       </div>
+      </div>
+     </div>
+     <div class="section-title blue-text text-darken-2">
+      Sekcja 2 - Urządzenie
+     </div>
+     <div class="form-grid surface grey lighten-5">
+      <div class="grid-cell span-s-12 span-m-6">
+       <label for="repairDeviceType">
+        Typ urządzenia
+       </label>
+       <select class="native-select" id="repairDeviceType">
+        <option selected="" value="TELEFON">
+         Telefon
+        </option>
+        <option value="TABLET">
+         Tablet
+        </option>
+        <option value="SMARTWATCH">
+         Smartwatch
+        </option>
+        <option value="INNE">
+         Inne
+        </option>
+       </select>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="repairManufacturer">
+        Producent
+       </label>
+       <input id="repairManufacturer" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="repairModel">
+        Model *
+       </label>
+       <input id="repairModel" required="" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="repairImei">
+        IMEI
+       </label>
+       <input id="repairImei" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="repairColor">
+        Kolor
+       </label>
+       <input id="repairColor" type="text"/>
+      </div>
+      <div class="grid-cell span-s-12 span-m-6" id="repairLocationSection" style="display: none">
+       <label for="repairLocation">
+        Lokalizacja (tylko Admin)
+       </label>
+       <select class="native-select" id="repairLocation">
+        <option disabled="" selected="" value="">
+         Wybierz lokalizację
+        </option>
+       </select>
+      </div>
+     </div>
+     <div class="section-title blue-text text-darken-2">
+      Sekcja 3 - Naprawa
+     </div>
+     <div class="form-grid surface grey lighten-5">
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="repairProblemDescription">
+        Opis problemu
+       </label>
+       <textarea class="text-area" id="repairProblemDescription"></textarea>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="repairDeviceCondition">
+        Stan telefonu
+       </label>
+       <textarea class="text-area" id="repairDeviceCondition"></textarea>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-2">
+       <label for="repairLockCode">
+        Kod blokady telefonu
+       </label>
+       <input id="repairLockCode" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-12">
+       <label for="repairRemarks">
+        Uwagi
+       </label>
+       <textarea class="text-area" id="repairRemarks"></textarea>
+      </div>
+      <div class="grid-cell span-s-12 span-m-6">
+       <label for="repairServicePointSearch">
+        Punkt serwisowy (informacja wewnętrzna)
+       </label>
+       <div id="repairServicePointSearchSection">
+        <div class="field">
+         <label for="repairServicePointSearch">
+          Wyszukaj punkt serwisowy
+         </label>
+         <i class="ui-icon prefix">
+          search
+         </i>
+         <input class="autocomplete" id="repairServicePointSearch" type="text"/>
+         <input id="repairServicePointTechnicalId" type="hidden"/>
+        </div>
+        <p class="grey-text">
+         Wybierz punkt z listy lub
+         <a href="#!" id="btnAddNewRepairServicePoint">
+          dodaj nowy punkt serwisowy
+         </a>
+        </p>
+       </div>
+       <div id="repairNewServicePointFields" style="display: none">
+        <div class="field">
+         <label for="repairNewServicePointName">
+          Nazwa nowego punktu serwisowego *
+         </label>
+         <input id="repairNewServicePointName" type="text"/>
+        </div>
+        <button class="button-small grey" id="cancelNewRepairServicePoint" type="button">
+         Wróć do wyszukiwania
+        </button>
+       </div>
+       <div id="repairSelectedServicePointInfo" style="display: none">
+        <div class="tag purple white-text">
+         <span id="repairSelectedServicePointDisplay">
+         </span>
+         <i class="close ui-icon" id="clearRepairServicePoint">
+          close
+         </i>
+        </div>
+       </div>
+      </div>
+      <div class="grid-cell span-s-12 span-m-4">
+       <p>
+        <label>
+         <input class="filled-in" id="repairMoistureTraces" type="checkbox"/>
+         <span>
+          Ślady zawilgocenia
+         </span>
+        </label>
+       </p>
+      </div>
+      <div class="grid-cell span-s-12 span-m-4">
+       <p>
+        <label>
+         <input class="filled-in" id="repairWarrantyRepair" type="checkbox"/>
+         <span>
+          Naprawa gwarancyjna
+         </span>
+        </label>
+       </p>
+      </div>
+      <div class="grid-cell span-s-12 span-m-4">
+       <p>
+        <label>
+         <input class="filled-in" id="repairTurnsOn" type="checkbox"/>
+         <span>
+          Czy telefon się uruchamia?
+         </span>
+        </label>
+       </p>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label class="active" for="repairReceiptDate">
+        Data przyjęcia
+       </label>
+       <input id="repairReceiptDate" type="date"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label class="active" for="repairEstimatedRepairDate">
+        Szacowana data naprawy
+       </label>
+       <input id="repairEstimatedRepairDate" type="date"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-3">
+       <label for="repairEstimatedCost">
+        Szacowany koszt naprawy
+       </label>
+       <input id="repairEstimatedCost" step="0.01" type="number"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-3">
+       <label for="repairAdvancePayment">
+        Kwota przyjętej zaliczki
+       </label>
+       <input id="repairAdvancePayment" step="0.01" type="number"/>
+      </div>
+      <div id="repairFinalPriceWrapper" style="display: none">
+       <div class="field grid-cell span-s-12 span-m-6">
+        <label for="repairPrice">
+         Ostateczna cena naprawy
+        </label>
+        <input id="repairPrice" step="0.01" type="number"/>
+       </div>
+      </div>
+      <div id="shopRepairFields" style="display: none">
+       <div class="field grid-cell span-s-12 span-m-6">
+        <label for="repairPurchasePrice">
+         Cena zakupu / przyjęcia
+        </label>
+        <input id="repairPurchasePrice" step="0.01" type="number"/>
+       </div>
+      </div>
+      <div class="grid-cell span-s-12">
+       <div class="section-title purple-text text-darken-2">
+        Sekcja 4 - Notatki wewnętrzne (niewidoczne dla klienta)
+       </div>
+       <div class="form-grid surface grey lighten-5">
+        <div class="grid-cell span-s-12" id="repairNotesList" style="overflow-y: auto">
+         <p class="grey-text center-align">
+          Brak notatek
+         </p>
+        </div>
+        <div class="field grid-cell span-s-12">
+         <label for="newRepairNoteContent">
+          Dodaj nową notatkę...
+         </label>
+         <i class="ui-icon prefix">
+          comment
+         </i>
+         <textarea class="text-area" id="newRepairNoteContent"></textarea>
+        </div>
+        <div class="grid-cell span-s-12 right-align">
+         <button class="button purple darken-2 interactive interactive-light" id="btnAddRepairNote" type="button">
+          <i class="ui-icon left">
+           add
+          </i>
+          Dodaj notatkę
+         </button>
+        </div>
+       </div>
+      </div>
+     </div>
+    </form>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close interactive waves-red">
+     Anuluj
+    </button>
+    <button class="button orange darken-2 interactive interactive-light" id="editRepairBtn" style="display: none">
+     Edytuj
+    </button>
+    <button class="button blue darken-2 interactive interactive-light" id="saveRepairBtn">
+     Zapisz
+    </button>
+   </div>
+  </dialog>
+  <dialog aria-label="Przywróć telefon na sklep Cena zakupu Koszt naprawy Ostateczna cena sprzedaży Lokalizacja " class="dialog" id="restoreToShopModal">
+   <div class="dialog-body">
+    <h5>
+     Przywróć telefon na sklep
+    </h5>
+    <div class="form-grid">
+     <form id="restoreToShopForm">
+      <input id="restoreRepairId" type="hidden"/>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label class="active" for="restorePurchasePrice">
+        Cena zakupu
+       </label>
+       <input id="restorePurchasePrice" readonly="" step="0.01" type="number"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="restoreRepairPrice">
+        Koszt naprawy
+       </label>
+       <input id="restoreRepairPrice" step="0.01" type="number"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="restoreSellingPrice">
+        Ostateczna cena sprzedaży
+       </label>
+       <input id="restoreSellingPrice" step="0.01" type="number"/>
+      </div>
+      <div class="grid-cell span-s-12">
+       <label for="restoreLocation">
+        Lokalizacja
+       </label>
+       <select class="native-select" id="restoreLocation">
+        <option disabled="" selected="" value="">
+         Wybierz lokalizację
+        </option>
+       </select>
+      </div>
+     </form>
+    </div>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close interactive waves-red">
+     Anuluj
+    </button>
+    <button class="button green darken-2 interactive interactive-light" id="confirmRestoreBtn">
+     Zatwierdź
+    </button>
+   </div>
+  </dialog>
+  <dialog aria-label="Przekaż do naprawy Wybierz punkt serwisowy, do którego trafia urządzenie. Punkt serwisowy " class="dialog" id="servicePointSelectionModal">
+   <div class="dialog-body">
+    <h5>
+     Przekaż do naprawy
+    </h5>
+    <p>
+     Wybierz punkt serwisowy, do którego trafia urządzenie.
+    </p>
+    <input id="servicePointSelectionRepairId" type="hidden"/>
+    <div class="form-grid">
+     <div class="grid-cell span-s-12">
+      <label for="statusServicePointSearch">
+       Punkt serwisowy *
+      </label>
+      <div id="statusServicePointSearchSection">
+       <div class="field">
+        <label for="statusServicePointSearch">
+         Wyszukaj punkt serwisowy
+        </label>
+        <i class="ui-icon prefix">
+         search
+        </i>
+        <input class="autocomplete" id="statusServicePointSearch" type="text"/>
+        <input id="statusServicePointTechnicalId" type="hidden"/>
+       </div>
+       <p class="grey-text">
+        Wybierz punkt z listy lub
+        <a href="#!" id="btnAddNewStatusServicePoint">
+         dodaj nowy punkt serwisowy
+        </a>
+       </p>
+      </div>
+      <div id="statusNewServicePointFields" style="display: none">
+       <div class="field">
+        <label for="statusNewServicePointName">
+         Nazwa nowego punktu serwisowego *
+        </label>
+        <input id="statusNewServicePointName" type="text"/>
+       </div>
+       <button class="button-small grey" id="cancelNewStatusServicePoint" type="button">
+        Wróć do wyszukiwania
+       </button>
+      </div>
+      <div id="statusSelectedServicePointInfo" style="display: none">
+       <div class="tag purple white-text">
+        <span id="statusSelectedServicePointDisplay">
+        </span>
+        <i class="close ui-icon" id="clearStatusServicePoint">
+         close
+        </i>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close interactive waves-red">
+     Anuluj
+    </button>
+    <button class="button orange darken-2 interactive interactive-light" id="confirmServicePointBtn">
+     Przekaż do naprawy
+    </button>
+   </div>
+  </dialog>
+  <dialog aria-label="Zakończenie naprawy Status końcowy Wybierz wynik naprawy Naprawiony Nie do naprawy Anulowa" class="dialog" id="statusSelectionModal">
+   <div class="dialog-body">
+    <h5>
+     Zakończenie naprawy
+    </h5>
+    <input id="statusSelectionRepairId" type="hidden"/>
+    <div class="form-grid" id="finalStatusSelectionWrapper">
+     <div class="grid-cell span-s-12">
+      <label for="finalStatusSelect">
+       Status końcowy
+      </label>
+      <select class="native-select" id="finalStatusSelect">
+       <option disabled="" selected="" value="">
+        Wybierz wynik naprawy
+       </option>
+       <option value="NAPRAWIONY">
+        Naprawiony
+       </option>
+       <option value="NIE_DO_NAPRAWY">
+        Nie do naprawy
+       </option>
+       <option value="ANULOWANY">
+        Anulowany
+       </option>
+      </select>
+     </div>
+    </div>
+    <div id="diagnosticCostSection" style="display: none">
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label class="active" for="diagnosticCost">
+        Koszt diagnostyki (zł)
+       </label>
+       <input id="diagnosticCost" step="0.01" type="number" value="70"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="repairDescriptionDiagnostic">
+        Opis naprawy (widoczny na pokwitowaniu)
+       </label>
+       <textarea class="text-area" id="repairDescriptionDiagnostic"></textarea>
+      </div>
+     </div>
+    </div>
+    <div id="repairFinishedSection" style="display: none">
+     <div class="form-grid" id="repairFinishedCustomerFields">
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label class="active" for="finalAdvancePayment">
+        Wpłacona zaliczka
+       </label>
+       <input id="finalAdvancePayment" readonly="" step="0.01" type="number"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label class="active" for="finalEstimatedCost">
+        Szacowany koszt naprawy
+       </label>
+       <input id="finalEstimatedCost" readonly="" step="0.01" type="number"/>
+      </div>
+     </div>
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12 span-m-6" id="finalRealCostWrapper">
+       <label for="finalRealCost">
+        Realny koszt naprawy (koszt części itp.)
+       </label>
+       <input id="finalRealCost" step="0.01" type="number"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6" id="finalCustomerPriceWrapper">
+       <label for="finalCustomerPrice">
+        Cena dla klienta (suma)
+       </label>
+       <input id="finalCustomerPrice" step="0.01" type="number"/>
+      </div>
+     </div>
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12">
+       <label for="repairDescriptionFinished">
+        Opis naprawy (widoczny na pokwitowaniu)
+       </label>
+       <textarea class="text-area" id="repairDescriptionFinished"></textarea>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet interactive" onclick="cancelStatusSelection()">
+     Anuluj
+    </button>
+    <button class="button blue darken-2 interactive interactive-light" id="btnConfirmFinalizeStatus">
+     Zatwierdź
+    </button>
+   </div>
+  </dialog>
+  <dialog aria-label="Potwierdź zmianę statusu Czy na pewno chcesz zmienić status tego zlecenia? Anuluj Zatwierd" class="dialog" id="confirmStatusChangeModal">
+   <div class="dialog-body">
+    <h5>
+     Potwierdź zmianę statusu
+    </h5>
+    <p id="confirmStatusChangeMessage">
+     Czy na pewno chcesz zmienić status tego zlecenia?
+    </p>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close interactive waves-red">
+     Anuluj
+    </button>
+    <button class="button blue darken-2 interactive interactive-light" id="confirmStatusChangeBtn">
+     Zatwierdź
+    </button>
+   </div>
+  </dialog>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/repair.js">
+  </script>
+  <script src="assets/js/repair-init.js">
+  </script>
+ </body>
+</html>

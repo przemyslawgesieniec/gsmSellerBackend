@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pl">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <meta content="light" name="color-scheme"/>
+  <title>
+   Klienci · GSM Workspace
+  </title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/vendor/tom-select.css" rel="stylesheet"/>
+  <link href="assets/vendor/flatpickr.css" rel="stylesheet"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+ </head>
+ <body data-page="clients">
+  <a class="skip-link" href="#main-content">
+   Przejdź do treści
+  </a>
+  <div id="workspaceShell">
+  </div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+   <header class="page-heading">
+    <div>
+     <p class="eyebrow">
+      Serwis
+     </p>
+     <h1>
+      Klienci
+     </h1>
+     <p class="page-description">
+      Dane kontaktowe i historia współpracy z serwisem.
+     </p>
+    </div>
+    <div class="page-actions" id="pageActions">
+    </div>
+   </header>
+   <div class="container wide-layout">
+    <div class="panel search-container">
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="filterName">
+        Imię
+       </label>
+       <i class="ui-icon prefix">
+        person
+       </i>
+       <input id="filterName" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="filterSurname">
+        Nazwisko
+       </label>
+       <i class="ui-icon prefix">
+        person_outline
+       </i>
+       <input id="filterSurname" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-4">
+       <label for="filterPhone">
+        Numer telefonu
+       </label>
+       <i class="ui-icon prefix">
+        phone
+       </i>
+       <input id="filterPhone" type="text"/>
+      </div>
+     </div>
+     <div class="form-grid">
+      <div class="grid-cell span-s-12 right-align">
+       <button class="button interactive interactive-light grey" id="btnClearFilters">
+        Wyczyść
+       </button>
+       <button class="button interactive interactive-light blue" id="btnSearch">
+        <i class="ui-icon left">
+         search
+        </i>
+        Szukaj
+       </button>
+      </div>
+     </div>
+    </div>
+    <div class="client-table-container">
+     <table class="highlight responsive-table">
+      <thead>
+       <tr>
+        <th>
+         Imię
+        </th>
+        <th>
+         Nazwisko
+        </th>
+        <th>
+         Telefon
+        </th>
+        <th class="right-align">
+         Akcje
+        </th>
+       </tr>
+      </thead>
+      <tbody id="clientsTableBody">
+       <tr>
+        <td class="center-align" colspan="4">
+         Ładowanie...
+        </td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
+    <div class="pagination-container" id="pagination">
+    </div>
+   </div>
+   <div class="fab-fixed">
+    <a class="button-icon button-large interactive interactive-light red dialog-trigger" href="#clientModal" id="btnAddClient">
+     <i class="ui-icon">
+      add
+     </i>
+    </a>
+   </div>
+   <footer class="workspace-footer">
+    <span>
+     Teleakcesoria · GSM Workspace
+    </span>
+    <a href="/clients.html" id="legacyViewLink">
+     Klasyczny widok
+    </a>
+   </footer>
+  </main>
+  <dialog aria-label="Dodaj nowego klienta Imię * Nazwisko * Numer telefonu * Anuluj Zapisz" class="dialog" id="clientModal">
+   <div class="dialog-body">
+    <h5 id="modalTitle">
+     Dodaj nowego klienta
+    </h5>
+    <form id="clientForm">
+     <input id="clientTechnicalId" type="hidden"/>
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="modalClientName">
+        Imię *
+       </label>
+       <input id="modalClientName" required="" type="text"/>
+      </div>
+      <div class="field grid-cell span-s-12 span-m-6">
+       <label for="modalClientSurname">
+        Nazwisko *
+       </label>
+       <input id="modalClientSurname" required="" type="text"/>
+      </div>
+     </div>
+     <div class="form-grid">
+      <div class="field grid-cell span-s-12">
+       <label for="modalClientPhone">
+        Numer telefonu *
+       </label>
+       <input id="modalClientPhone" required="" type="text"/>
+      </div>
+     </div>
+    </form>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close interactive waves-red">
+     Anuluj
+    </button>
+    <button class="button blue darken-2 interactive interactive-light" id="btnSaveClient">
+     Zapisz
+    </button>
+   </div>
+  </dialog>
+  <dialog aria-label="Potwierdź usunięcie Czy na pewno chcesz usunąć klienta ? Tej operacji nie można cofnąć. An" class="dialog" id="deleteConfirmModal">
+   <div class="dialog-body">
+    <h5>
+     Potwierdź usunięcie
+    </h5>
+    <p>
+     Czy na pewno chcesz usunąć klienta
+     <b id="deleteClientInfo">
+     </b>
+     ? Tej operacji nie można cofnąć.
+    </p>
+   </div>
+   <div class="dialog-footer">
+    <button class="button-quiet dialog-close interactive">
+     Anuluj
+    </button>
+    <button class="button red darken-2 interactive interactive-light" id="btnConfirmDelete">
+     Usuń
+    </button>
+   </div>
+  </dialog>
+  <script src="assets/vendor/lucide.js">
+  </script>
+  <script src="assets/vendor/tom-select.js">
+  </script>
+  <script src="assets/vendor/flatpickr.js">
+  </script>
+  <script src="assets/vendor/flatpickr-pl.js">
+  </script>
+  <script src="assets/js/ui.js">
+  </script>
+  <script src="assets/js/auth.js">
+  </script>
+  <script src="assets/js/shell.js">
+  </script>
+  <script src="assets/js/clients.js">
+  </script>
+ </body>
+</html>
