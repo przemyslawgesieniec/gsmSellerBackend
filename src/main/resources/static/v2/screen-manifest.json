@@ -154,6 +154,18 @@
     ]
   },
   {
+    "page": "notifications.html",
+    "title": "Powiadomienia",
+    "section": "Zarządzanie",
+    "legacyFieldIds": [
+      "notificationList",
+      "markAllNotificationsRead"
+    ],
+    "controllers": [
+      "notifications.js"
+    ]
+  },
+  {
     "page": "receipt-edit.html",
     "title": "Popraw fakturę",
     "section": "Sprzedaż",

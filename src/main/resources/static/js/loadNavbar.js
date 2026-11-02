@@ -21,8 +21,23 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // 3️⃣ 🔥 ZAŁADUJ UŻYTKOWNIKA ZAWSZE
         await loadCurrentUser();
+        await refreshNotificationBadge();
 
     } catch (err) {
         console.error("Błąd ładowania navbaru:", err);
     }
 });
+
+async function refreshNotificationBadge() {
+    try {
+        const response = await fetch('/api/v1/notifications/unread-count');
+        if (!response.ok) return;
+        const count = Number(await response.json()) || 0;
+        document.querySelectorAll('#notificationBadge, #notificationBadgeMobile').forEach(badge => {
+            badge.style.display = count ? '' : 'none';
+            badge.textContent = count > 99 ? '99+' : count;
+        });
+    } catch (_) {
+        // The navigation must remain usable when notifications are temporarily unavailable.
+    }
+}

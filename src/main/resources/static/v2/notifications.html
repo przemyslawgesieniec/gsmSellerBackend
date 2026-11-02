@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light"/>
+  <title>Powiadomienia · Teleakcesoria</title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+</head>
+<body data-page="notifications">
+  <a class="skip-link" href="#main-content">Przejdź do treści</a>
+  <div id="workspaceShell"></div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Centrum informacji</p>
+        <h1>Powiadomienia</h1>
+        <p class="page-description">Rezerwacje telefonów wymagające Twojej uwagi.</p>
+      </div>
+      <div class="page-actions">
+        <button class="button-quiet" id="markAllNotificationsRead" type="button">Oznacz wszystkie jako przeczytane</button>
+      </div>
+    </header>
+    <div class="container notification-list" id="notificationList" aria-live="polite"></div>
+    <footer class="workspace-footer">
+      <span>Teleakcesoria · telefony · akcesoria · serwis</span>
+      <a href="/notifications.html" id="legacyViewLink">Klasyczny widok</a>
+    </footer>
+  </main>
+  <script src="assets/vendor/lucide.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/shell.js"></script>
+  <script src="assets/js/notifications.js"></script>
+</body>
+</html>

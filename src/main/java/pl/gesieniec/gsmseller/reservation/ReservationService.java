@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.springframework.context.event.EventListener;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
+import pl.gesieniec.gsmseller.notification.NotificationService;
 
 @Slf4j
 @Service
@@ -21,6 +22,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationService notificationService;
 
     @Transactional
     public void createReservation(ReservationRequest request) {
@@ -44,6 +46,7 @@ public class ReservationService {
         );
 
         reservationRepository.save(reservation);
+        notificationService.createReservationNotification(reservation);
         eventPublisher.publishEvent(new ReservationCreatedEvent(request.technicalId(), true));
     }
 
