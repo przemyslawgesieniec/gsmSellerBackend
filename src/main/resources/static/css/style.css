@@ -505,6 +505,40 @@ body {
 .hidden {
     display: none;
 }
+
+/* Shared feedback for slow reads on classic screens. */
+.page-loading-indicator {
+    position: fixed;
+    z-index: 10000;
+    top: 18px;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 32px);
+    padding: 11px 16px;
+    border: 1px solid #b7e0ea;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(17, 39, 60, 0.18);
+    color: #263238;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transform: translateX(-50%);
+}
+
+.page-loading-spinner {
+    width: 17px;
+    height: 17px;
+    border: 2px solid #bdebf5;
+    border-top-color: #00738e;
+    border-radius: 50%;
+    animation: page-loading-spin 0.7s linear infinite;
+}
+
+@keyframes page-loading-spin {
+    to { transform: rotate(360deg); }
+}
 .save-item-btn {
     transition: opacity 0.2s;
 }

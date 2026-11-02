@@ -29,6 +29,7 @@ async function fixture(t, { admin = true, status = 200, mobile = false } = {}) {
             return route.fulfill({ body: '' });
         }
         if (url.pathname === '/api/v1/users/auth/me') return route.fulfill({ json: { role: admin ? 'ROLE_ADMIN' : 'ROLE_USER' } });
+        if (url.pathname === '/api/v1/notifications/unread-count') return route.fulfill({ json: 0 });
         if (url.pathname.startsWith('/api/v1/receipt/')) {
             if (route.request().method() === 'GET') return route.fulfill({ json: receipt });
             posts.push({ save: url.searchParams.get('save'), body: route.request().postDataJSON() });

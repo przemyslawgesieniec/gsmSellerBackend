@@ -1,3 +1,54 @@
+// Shared feedback for data-heavy classic screens. It is deliberately delayed so
+// quick requests do not flash, while slower reads always tell the user what is happening.
+(() => {
+    if (window.__pageLoadingIndicatorInstalled) return;
+    window.__pageLoadingIndicatorInstalled = true;
+
+    const originalFetch = window.fetch.bind(window);
+    let activeRequests = 0;
+    let revealTimer = null;
+
+    const indicator = () => {
+        let element = document.getElementById('pageLoadingIndicator');
+        if (element) return element;
+
+        element = document.createElement('div');
+        element.id = 'pageLoadingIndicator';
+        element.className = 'page-loading-indicator';
+        element.hidden = true;
+        element.setAttribute('role', 'status');
+        element.setAttribute('aria-live', 'polite');
+        element.setAttribute('aria-atomic', 'true');
+        element.innerHTML = '<span class="page-loading-spinner" aria-hidden="true"></span><span>Pobieranie danych z systemu…</span>';
+        document.body.append(element);
+        return element;
+    };
+
+    const setLoading = loading => {
+        const main = document.querySelector('main') || document.querySelector('.container');
+        if (main) main.setAttribute('aria-busy', String(loading));
+        indicator().hidden = !loading;
+    };
+
+    window.fetch = (input, options = {}) => {
+        const method = (options.method || (input instanceof Request && input.method) || 'GET').toUpperCase();
+        if (method !== 'GET') return originalFetch(input, options);
+
+        activeRequests += 1;
+        if (activeRequests === 1) {
+            revealTimer = window.setTimeout(() => setLoading(true), 250);
+        }
+
+        return originalFetch(input, options).finally(() => {
+            activeRequests = Math.max(0, activeRequests - 1);
+            if (activeRequests !== 0) return;
+            window.clearTimeout(revealTimer);
+            revealTimer = null;
+            setLoading(false);
+        });
+    };
+})();
+
 document.addEventListener("DOMContentLoaded", async function () {
     try {
         // 1️⃣ załaduj navbar HTML

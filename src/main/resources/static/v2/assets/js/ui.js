@@ -196,6 +196,56 @@
     }
     window.UI={Dialog,Menu,Disclosure,Tabs,Autocomplete,DateInput,Select,Tooltip,Drawer,toast,enhance,
         updateTextFields:()=>enhance(),textareaAutoResize:el=>{if(el){el.style.height='auto';el.style.height=Math.min(360,Math.max(96,el.scrollHeight))+'px';}}};
+
+    // A request can take a moment on larger lists and dashboards. Keep the feedback
+    // central so every screen gets the same, non-blocking loading state.
+    (() => {
+        const originalFetch = window.fetch.bind(window);
+        let activeRequests = 0;
+        let revealTimer = null;
+
+        const indicator = () => {
+            let element = document.getElementById('pageLoadingIndicator');
+            if (element) return element;
+
+            element = document.createElement('div');
+            element.id = 'pageLoadingIndicator';
+            element.className = 'page-loading-indicator';
+            element.hidden = true;
+            element.setAttribute('role', 'status');
+            element.setAttribute('aria-live', 'polite');
+            element.setAttribute('aria-atomic', 'true');
+            element.innerHTML = '<span class="page-loading-spinner" aria-hidden="true"></span><span>Pobieranie danych z systemu…</span>';
+            document.body.append(element);
+            return element;
+        };
+
+        const setLoading = loading => {
+            const main = document.querySelector('main');
+            if (main) main.setAttribute('aria-busy', String(loading));
+            const element = indicator();
+            element.hidden = !loading;
+        };
+
+        window.fetch = (input, options = {}) => {
+            const method = (options.method || (input instanceof Request && input.method) || 'GET').toUpperCase();
+            if (method !== 'GET') return originalFetch(input, options);
+
+            activeRequests += 1;
+            if (activeRequests === 1) {
+                revealTimer = window.setTimeout(() => setLoading(true), 250);
+            }
+
+            return originalFetch(input, options).finally(() => {
+                activeRequests = Math.max(0, activeRequests - 1);
+                if (activeRequests !== 0) return;
+                window.clearTimeout(revealTimer);
+                revealTimer = null;
+                setLoading(false);
+            });
+        };
+    })();
+
     document.addEventListener('click',event=>{
         const trigger=event.target.closest('.dialog-trigger');
         if(trigger){event.preventDefault();const id=trigger.dataset.target||trigger.hash?.slice(1);Dialog.getInstance(document.getElementById(id))?.open();}

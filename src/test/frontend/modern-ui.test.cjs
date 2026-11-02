@@ -28,6 +28,23 @@ for(const mobile of [false,true])for(const screen of screens){
  });
 }
 
+test('slow data requests expose a clear loading state until the list is ready', async t => {
+ const {page,errors}=await app.fixture(t);
+ let release;
+ await page.route('**/api/v1/phones?**', route => new Promise(resolve => {
+  release=async()=>{await route.fulfill({json:{content:[phone],number:0,totalPages:1}});resolve();};
+ }));
+ const navigation=page.goto(app.base+'/v2/index.html');
+ await page.locator('#pageLoadingIndicator:not([hidden])').waitFor();
+ assert.equal(await page.locator('#pageLoadingIndicator').textContent(),'Pobieranie danych z systemu…');
+ assert.equal(await page.locator('main').getAttribute('aria-busy'),'true');
+ await release();
+ await navigation;
+ await page.waitForFunction(()=>document.getElementById('pageLoadingIndicator')?.hidden);
+ assert.equal(await page.locator('main').getAttribute('aria-busy'),'false');
+ assert.deepEqual(errors,[]);
+});
+
 test('native dialogs preserve focus, keyboard escape and body scrolling on every screen',async t=>{
  for(const screen of screens){
   const {page,errors,goto}=await app.fixture(t);

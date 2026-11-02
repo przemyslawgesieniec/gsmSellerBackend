@@ -52,6 +52,7 @@
 
 @layer components {
  p a[role="button"]{color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+ .page-loading-indicator{position:fixed;z-index:250;top:18px;left:50%;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:11px 16px;border:1px solid #bfe8f2;border-radius:999px;background:#fff;color:var(--ink);box-shadow:0 8px 24px #11273c24;font-size:13px;font-weight:650;transform:translateX(-50%)}.page-loading-spinner{width:17px;height:17px;border:2px solid #bdebf5;border-top-color:var(--accent);border-radius:50%;animation:page-loading-spin .7s linear infinite}@keyframes page-loading-spin{to{transform:rotate(360deg)}}
 }
 
 /* Teleakcesoria identity: original logos, black navigation and brand cyan. */
