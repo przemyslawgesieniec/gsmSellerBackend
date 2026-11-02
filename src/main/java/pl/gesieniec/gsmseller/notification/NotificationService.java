@@ -69,9 +69,14 @@ public class NotificationService {
 
     private NotificationDto toDto(NotificationRecipient recipient) {
         AppNotification notification = recipient.getNotification();
+        String reservationImei = notification.getReservationTechnicalId() == null
+            ? null
+            : phoneStockRepository.findByTechnicalId(notification.getReservationTechnicalId())
+                .map(phone -> phone.getImei())
+                .orElse(null);
         return new NotificationDto(
             recipient.getId(), notification.getType(), notification.getTitle(), notification.getContent(),
-            notification.getCreatedAt(), recipient.getReadAt(), notification.getReservationTechnicalId()
+            notification.getCreatedAt(), recipient.getReadAt(), notification.getReservationTechnicalId(), reservationImei
         );
     }
 }

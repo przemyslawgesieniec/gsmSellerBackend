@@ -10,6 +10,7 @@ public record NotificationDto(
     String content,
     ZonedDateTime createdAt,
     ZonedDateTime readAt,
-    UUID reservationTechnicalId
+    UUID reservationTechnicalId,
+    String reservationImei
 ) {
 }

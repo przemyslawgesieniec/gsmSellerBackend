@@ -45,6 +45,30 @@ test('slow data requests expose a clear loading state until the list is ready', 
  assert.deepEqual(errors,[]);
 });
 
+test('reservation notification opens the inventory filtered by the reserved phone IMEI', async t => {
+ const {page,errors,goto}=await app.fixture(t);
+ const notification={
+  id: 77,
+  type: 'RESERVATION_CREATED',
+  title: 'Nowa rezerwacja telefonu',
+  content: 'Klient zarezerwował telefon.',
+  createdAt: '2026-11-02T10:00:00+01:00',
+  readAt: null,
+  reservationTechnicalId: id,
+  reservationImei: phone.imei
+ };
+ await page.route('**/api/v1/notifications', route => route.fulfill({json:[notification]}));
+ await goto('notifications.html');
+ const action=page.locator('.notification-stock-action');
+ assert.equal(await action.getAttribute('href'),`index.html?imei=${phone.imei}`);
+ await Promise.all([
+  page.waitForURL(`**/v2/index.html?imei=${phone.imei}`),
+  action.click()
+ ]);
+ assert.equal(await page.locator('#filterImei').inputValue(),phone.imei);
+ assert.deepEqual(errors,[]);
+});
+
 test('native dialogs preserve focus, keyboard escape and body scrolling on every screen',async t=>{
  for(const screen of screens){
   const {page,errors,goto}=await app.fixture(t);

@@ -539,6 +539,37 @@ body {
 @keyframes page-loading-spin {
     to { transform: rotate(360deg); }
 }
+
+.notification-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.notification-row .notification-main {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.notification-stock-action {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 600px) {
+    .notification-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .notification-stock-action {
+        text-align: center;
+    }
+}
 .save-item-btn {
     transition: opacity 0.2s;
 }
