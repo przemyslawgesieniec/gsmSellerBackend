@@ -4,9 +4,24 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import pl.gesieniec.gsmseller.eventlog.EventLogInterceptor;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    private final EventLogInterceptor eventLogInterceptor;
+
+    public WebConfig(EventLogInterceptor eventLogInterceptor) {
+        this.eventLogInterceptor = eventLogInterceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(eventLogInterceptor)
+            .addPathPatterns("/api/**")
+            .excludePathPatterns("/api/v1/admin/event-log/**");
+    }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
