@@ -56,6 +56,10 @@ public class EventLogEntry {
     @Column(length = 1000)
     private String details;
 
+    /** Technical identifier of the affected resource, when the event has one. */
+    @Column(name = "resource_technical_id")
+    private UUID resourceTechnicalId;
+
     EventLogEntry(EventLogRecordedEvent event) {
         this.occurredAt = event.occurredAt();
         this.eventType = event.eventType();
@@ -65,5 +69,6 @@ public class EventLogEntry {
         this.httpMethod = event.httpMethod();
         this.requestPath = event.requestPath();
         this.details = event.details();
+        this.resourceTechnicalId = event.resourceTechnicalId();
     }
 }

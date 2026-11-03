@@ -518,7 +518,9 @@
       "eventFrom",
       "eventTo",
       "eventLogRows",
-      "eventLogPagination"
+      "eventLogPagination",
+      "eventLogPageJump",
+      "eventLogPageNumber"
     ],
     "controllers": [
       "event-log.js"

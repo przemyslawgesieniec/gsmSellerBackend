@@ -51,7 +51,8 @@ public class ReceiptService {
         String imei,
         String invoiceNumber,
         LocalDate dateFrom,
-        LocalDate dateTo
+        LocalDate dateTo,
+        UUID technicalId
     ) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createDate"));
@@ -60,7 +61,8 @@ public class ReceiptService {
         String createdBy = userRole.equals("ROLE_ADMIN") ? null : username;
 
         return receiptRepository.findAll(
-            ReceiptSpecifications.createdBy(createdBy)
+            ReceiptSpecifications.hasTechnicalId(technicalId)
+                .and(ReceiptSpecifications.createdBy(createdBy))
                 .and(ReceiptSpecifications.hasPhoneImeiLike(imei))
                 .and(ReceiptSpecifications.hasNumberLike(invoiceNumber))
                 .and(ReceiptSpecifications.sellDateBetween(dateFrom, dateTo)),

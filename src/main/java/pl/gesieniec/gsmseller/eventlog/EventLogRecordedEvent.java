@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.eventlog;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /** Internal Spring application event. It intentionally contains no request body or secrets. */
 public record EventLogRecordedEvent(
@@ -11,6 +12,7 @@ public record EventLogRecordedEvent(
     String imei,
     String httpMethod,
     String requestPath,
-    String details
+    String details,
+    UUID resourceTechnicalId
 ) {
 }

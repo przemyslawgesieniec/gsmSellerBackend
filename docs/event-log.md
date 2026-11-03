@@ -9,8 +9,10 @@ Każda operacja zmieniająca stan, obsłużona przez REST API, jest automatyczni
 powiązany z tabelą audytową.
 
 Wpis zawiera czas UTC, typ, wynik (`SUCCESS` albo `FAILURE`), login wykonawcy, opcjonalne IMEI,
-metodę i ścieżkę HTTP oraz status odpowiedzi. Treść żądania, hasła i inne sekrety nie są zapisywane.
-IMEI jest odczytywany z parametru/danych telefonu albo odnajdywany po identyfikatorze telefonu.
+identyfikator techniczny obiektu, metodę i ścieżkę HTTP oraz status odpowiedzi. Treść żądania, hasła
+i inne sekrety nie są zapisywane. IMEI jest odczytywany z parametru/danych telefonu albo odnajdywany
+po identyfikatorze telefonu. Identyfikator służy portalowi do przejścia bezpośrednio do naprawy lub
+dokumentu sprzedaży.
 
 `EventLogService` usuwa dane starsze niż **30 dni** codziennie o `00:10` (cron można zmienić przez
 `event-log.retention-cron`). Retencja jest liczona względem chwili wykonania czyszczenia.

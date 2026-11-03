@@ -1,6 +1,7 @@
 package pl.gesieniec.gsmseller.eventlog;
 
 import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -24,9 +25,22 @@ public class EventLogPublisher {
         String requestPath,
         String details
     ) {
+        publish(eventType, outcome, actorUsername, imei, httpMethod, requestPath, details, null);
+    }
+
+    public void publish(
+        EventLogType eventType,
+        EventLogOutcome outcome,
+        String actorUsername,
+        String imei,
+        String httpMethod,
+        String requestPath,
+        String details,
+        UUID resourceTechnicalId
+    ) {
         applicationEventPublisher.publishEvent(new EventLogRecordedEvent(
             Instant.now(), eventType, outcome, trim(actorUsername, 255), trim(imei, 32),
-            trim(httpMethod, 10), trim(requestPath, 500), trim(details, 1000)
+            trim(httpMethod, 10), trim(requestPath, 500), trim(details, 1000), resourceTechnicalId
         ));
     }
 

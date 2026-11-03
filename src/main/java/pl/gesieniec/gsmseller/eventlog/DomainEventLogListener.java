@@ -31,7 +31,8 @@ class DomainEventLogListener {
                 imeiFor(item.getTechnicalId()),
                 "EVENT",
                 "/internal/receipt/" + event.receiptNumber(),
-                "Phone sold on receipt " + event.receiptNumber()
+                "Phone sold on receipt " + event.receiptNumber(),
+                item.getTechnicalId()
             ));
     }
 
@@ -44,7 +45,8 @@ class DomainEventLogListener {
             imeiFor(event.technicalId()),
             "EVENT",
             "/internal/reservations/" + event.technicalId(),
-            "Reservation expired automatically"
+            "Reservation expired automatically",
+            event.technicalId()
         );
     }
 

@@ -12,12 +12,14 @@ public record EventLogDto(
     String imei,
     String httpMethod,
     String requestPath,
-    String details
+    String details,
+    UUID resourceTechnicalId
 ) {
     static EventLogDto from(EventLogEntry entry) {
         return new EventLogDto(
             entry.getId(), entry.getOccurredAt(), entry.getEventType(), entry.getOutcome(),
-            entry.getActorUsername(), entry.getImei(), entry.getHttpMethod(), entry.getRequestPath(), entry.getDetails()
+            entry.getActorUsername(), entry.getImei(), entry.getHttpMethod(), entry.getRequestPath(), entry.getDetails(),
+            entry.getResourceTechnicalId()
         );
     }
 }

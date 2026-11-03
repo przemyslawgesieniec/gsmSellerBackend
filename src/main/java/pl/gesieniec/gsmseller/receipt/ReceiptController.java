@@ -41,7 +41,8 @@ public class ReceiptController {
         @RequestParam(required = false) String imei,
         @RequestParam(required = false) String invoiceNumber,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+        @RequestParam(required = false) UUID technicalId
     ) {
 
         if (principal == null) {
@@ -55,7 +56,7 @@ public class ReceiptController {
             username, page, size, imei, invoiceNumber, dateFrom, dateTo
         );
 
-        return receiptService.getReceipts(username, page, size, imei, invoiceNumber, dateFrom, dateTo);
+        return receiptService.getReceipts(username, page, size, imei, invoiceNumber, dateFrom, dateTo, technicalId);
     }
 
 

@@ -30,6 +30,19 @@
     const labelForType = type => typeLabels[type] || String(type || '').replaceAll('_', ' ');
     const clearResults = () => rows.replaceChildren();
 
+    function destinationFor(entry) {
+        if (entry.eventType?.startsWith('REPAIR_') && entry.resourceTechnicalId) {
+            return { href: `repair.html?highlight=${encodeURIComponent(entry.resourceTechnicalId)}`, label: 'Serwis' };
+        }
+        if (entry.eventType?.startsWith('RECEIPT_') && entry.resourceTechnicalId) {
+            return { href: `receipts.html?receiptId=${encodeURIComponent(entry.resourceTechnicalId)}`, label: 'Dokument' };
+        }
+        if ((entry.eventType?.startsWith('PHONE_') || entry.eventType?.startsWith('CART_') || entry.eventType?.startsWith('RESERVATION_')) && entry.imei) {
+            return { href: `index.html?imei=${encodeURIComponent(entry.imei)}`, label: 'Magazyn' };
+        }
+        return null;
+    }
+
     function query() {
         const params = new URLSearchParams({ page: String(state.page), size: String(pageSize), sort: 'occurredAt,desc' });
         for (const [key, value] of new FormData(form).entries()) {
@@ -62,6 +75,18 @@
             outcomeCell.append(outcome);
             row.append(timeCell, typeCell, outcomeCell, createCell(entry.actorUsername), createCell(entry.imei, 'event-imei'));
             row.append(createCell(entry.details || entry.requestPath));
+            const actionCell = document.createElement('td');
+            const destination = destinationFor(entry);
+            if (destination) {
+                const action = document.createElement('a');
+                action.className = 'button-small event-log-link'; action.href = destination.href;
+                action.textContent = destination.label;
+                const icon = document.createElement('i'); icon.className = 'ui-icon'; icon.textContent = 'arrow_forward';
+                action.append(icon); actionCell.append(action);
+            } else {
+                actionCell.textContent = '—';
+            }
+            row.append(actionCell);
             rows.append(row);
         });
     }
@@ -73,6 +98,9 @@
         document.getElementById('eventLogPrevious').disabled = state.page <= 1;
         document.getElementById('eventLogNext').disabled = state.page >= state.totalPages;
         document.getElementById('eventLogPageInfo').textContent = `Strona ${state.page} z ${state.totalPages}`;
+        const pageNumber = document.getElementById('eventLogPageNumber');
+        pageNumber.max = String(Math.max(1, state.totalPages));
+        pageNumber.value = String(state.page);
     }
 
     async function loadTypes() {
@@ -111,6 +139,14 @@
     document.getElementById('refreshEventLog').addEventListener('click', loadEntries);
     document.getElementById('eventLogPrevious').addEventListener('click', () => { if (state.page > 1) { state.page -= 1; loadEntries(); } });
     document.getElementById('eventLogNext').addEventListener('click', () => { if (state.page < state.totalPages) { state.page += 1; loadEntries(); } });
+    document.getElementById('eventLogPageJump').addEventListener('submit', event => {
+        event.preventDefault();
+        const requestedPage = Number(document.getElementById('eventLogPageNumber').value);
+        if (Number.isInteger(requestedPage) && requestedPage >= 1 && requestedPage <= state.totalPages && requestedPage !== state.page) {
+            state.page = requestedPage;
+            loadEntries();
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', async () => {
         const user = await loadCurrentUser();

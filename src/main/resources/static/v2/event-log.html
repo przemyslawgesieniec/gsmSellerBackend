@@ -82,6 +82,7 @@
                 <th scope="col">Pracownik</th>
                 <th scope="col">IMEI</th>
                 <th scope="col">Szczegóły</th>
+                <th scope="col">Przejdź do</th>
               </tr>
             </thead>
             <tbody id="eventLogRows"></tbody>
@@ -90,6 +91,11 @@
         <nav class="event-log-pagination" aria-label="Strony dziennika zdarzeń" id="eventLogPagination" hidden>
           <button class="button-quiet" id="eventLogPrevious" type="button"><i class="ui-icon">chevron_left</i>Poprzednia</button>
           <span id="eventLogPageInfo" aria-live="polite"></span>
+          <form class="event-log-page-jump" id="eventLogPageJump">
+            <label for="eventLogPageNumber">Strona</label>
+            <input id="eventLogPageNumber" min="1" type="number" value="1"/>
+            <button class="button-quiet" type="submit">Przejdź</button>
+          </form>
           <button class="button-quiet" id="eventLogNext" type="button">Następna<i class="ui-icon">chevron_right</i></button>
         </nav>
       </section>

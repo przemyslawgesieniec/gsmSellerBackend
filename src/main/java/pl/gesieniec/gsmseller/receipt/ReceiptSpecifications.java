@@ -14,6 +14,10 @@ import pl.gesieniec.gsmseller.receipt.entity.ReceiptItemEntity;
 
 public class ReceiptSpecifications {
 
+    public static Specification<ReceiptEntity> hasTechnicalId(UUID technicalId) {
+        return (root, query, cb) -> technicalId == null ? null : cb.equal(root.get("technicalId"), technicalId);
+    }
+
     public static Specification<ReceiptEntity> createdBy(String username) {
         return (root, query, cb) ->
             username == null || username.isBlank()

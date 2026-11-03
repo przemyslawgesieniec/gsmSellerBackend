@@ -1,6 +1,7 @@
     let currentPage = 0;
     const pageSize = 10;
     let dateRangePicker = null;
+    const highlightedReceiptId = new URLSearchParams(window.location.search).get('receiptId');
 
     document.addEventListener("DOMContentLoaded", async () => {
         await loadCurrentUser();
@@ -65,6 +66,7 @@
 
         if (invoiceNumber) params.append("invoiceNumber", invoiceNumber);
         if (imei) params.append("imei", imei);
+        if (highlightedReceiptId) params.append("technicalId", highlightedReceiptId);
 
         if (dateRangePicker && dateRangePicker.selectedDates.length === 2) {
             params.append("dateFrom", formatDateOnly(dateRangePicker.selectedDates[0]));
@@ -79,6 +81,10 @@
 
         if (currentPage === 0) {
             list.innerHTML = "";
+            const description = document.getElementById('receiptListDescription');
+            if (description && highlightedReceiptId) {
+                description.textContent = 'Dokument wskazany z dziennika zdarzeń.';
+            }
         }
 
         if (!pageData.content.length && currentPage === 0) {
@@ -88,6 +94,9 @@
         pageData.content.forEach(receipt => {
 
             const li = document.createElement("li");
+            if (receipt.technicalId === highlightedReceiptId) {
+                li.classList.add('expanded', 'highlight-card');
+            }
             const statusBadge = receipt.status === "WYCOFANA"
                 ? `<span class="new badge red" data-badge-caption="WYCOFANA"></span>`
                 : "";
@@ -167,6 +176,9 @@
         });
 
         UI.Disclosure.init(document.querySelectorAll('.disclosure'));
+        if (highlightedReceiptId) {
+            document.querySelector('.highlight-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         updateLoadMoreButton(pageData);
     }
 
