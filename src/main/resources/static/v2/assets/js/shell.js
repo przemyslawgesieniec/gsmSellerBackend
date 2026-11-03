@@ -1,9 +1,9 @@
 (() => {
     const page=document.body.dataset.page;
     if(page==='login')return;
-    const groups=[['PRACA', [['index','Magazyn','inventory_2'],['addPhones','Dodaj telefony','add_circle']]],['SPRZEDAŻ', [['invoice','Wystaw dokument','receipt_long'],['receipts','Dokumenty','description']]],['SERWIS', [['repair','Zlecenia napraw','build'],['serviceHistory','Historia serwisu','history'],['clients','Klienci','people']]],['INTERNET', [['offers','Oferty','local_offer'],['purchase','Skup urządzeń','shopping_basket'],['modelsBase','Baza modeli','dns']]],['ZARZĄDZANIE', [['reports','Raporty','bar_chart'],['notifications','Powiadomienia','notifications'],['settings','Ustawienia','settings']]]];
+    const groups=[['PRACA', [['index','Magazyn','inventory_2'],['addPhones','Dodaj telefony','add_circle']]],['SPRZEDAŻ', [['invoice','Wystaw dokument','receipt_long'],['receipts','Dokumenty','description']]],['SERWIS', [['repair','Zlecenia napraw','build'],['serviceHistory','Historia serwisu','history'],['clients','Klienci','people']]],['INTERNET', [['offers','Oferty','local_offer'],['purchase','Skup urządzeń','shopping_basket'],['modelsBase','Baza modeli','dns']]],['ZARZĄDZANIE', [['reports','Raporty','bar_chart'],['event-log','Dziennik zdarzeń','history'],['notifications','Powiadomienia','notifications'],['settings','Ustawienia','settings']]]];
     const activePage=page==='receipt-edit'?'receipts':page;
-    const menu=groups.map(([title,items])=>`<section class="nav-group"><p>${title}</p>${items.map(([key,label,icon])=>`<a href="${key}.html" class="nav-link ${key===activePage?'selected':''} ${key==='reports'?'admin-only hide':''}" ${key===activePage?'aria-current="page"':''}><i class="ui-icon">${icon}</i><span>${label}</span>${key===activePage?'<span class="nav-dot"></span>':''}</a>`).join('')}</section>`).join('');
+    const menu=groups.map(([title,items])=>`<section class="nav-group"><p>${title}</p>${items.map(([key,label,icon])=>`<a href="${key}.html" class="nav-link ${key===activePage?'selected':''} ${['reports','event-log'].includes(key)?'admin-only hide':''}" ${key===activePage?'aria-current="page"':''}><i class="ui-icon">${icon}</i><span>${label}</span>${key===activePage?'<span class="nav-dot"></span>':''}</a>`).join('')}</section>`).join('');
     document.getElementById('workspaceShell').innerHTML=`
         <div class="nav-scrim" id="navScrim"></div>
         <aside class="workspace-nav" aria-label="Menu główne"><a class="brand" href="index.html"><img class="brand-logo" src="assets/brand/logo_gsm_black.png" width="915" height="248" alt="Teleakcesoria — telefony, akcesoria, serwis"></a><button id="closeNavigation" class="nav-close button-quiet" aria-label="Zamknij menu">×</button><nav>${menu}</nav>
@@ -60,7 +60,7 @@
         const user=await loadCurrentUser();
         if(!user){location.replace('login.html');return;}
         if(page==='receipt-edit'&&!IS_ADMIN){document.getElementById('receiptEditForm')?.classList.add('hide');return;}
-        if(page==='reports'&&!IS_ADMIN){location.replace('index.html');return;}
+        if(['reports','event-log'].includes(page)&&!IS_ADMIN){location.replace('index.html');return;}
         document.getElementById('workspaceLocation').textContent=user.location||'Wszystkie lokalizacje';
         document.getElementById('workspaceAvatar').textContent=(user.username||user.email||'G').slice(0,2).toUpperCase();
         UI.enhance();

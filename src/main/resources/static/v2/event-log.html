@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light"/>
+  <title>Dziennik zdarzeń · Teleakcesoria</title>
+  <link href="/favicon.ico" rel="icon"/>
+  <link href="assets/css/workspace.css" rel="stylesheet"/>
+</head>
+<body data-page="event-log">
+  <a class="skip-link" href="#main-content">Przejdź do treści</a>
+  <div id="workspaceShell"></div>
+  <main class="workspace-main" id="main-content" tabindex="-1">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Zarządzanie</p>
+        <h1>Dziennik zdarzeń</h1>
+        <p class="page-description">Historia operacji w systemie z retencją danych do 30 dni.</p>
+      </div>
+      <div class="page-actions" id="pageActions">
+        <button class="button-quiet" id="refreshEventLog" type="button"><i class="ui-icon">refresh</i>Odśwież</button>
+      </div>
+    </header>
+
+    <div class="container event-log-layout">
+      <section class="surface event-log-filter-panel" aria-labelledby="eventLogFiltersTitle">
+        <div class="event-log-filter-heading">
+          <div>
+            <h2 id="eventLogFiltersTitle">Filtry</h2>
+            <p>Wyniki zawężysz według rodzaju operacji, urządzenia, pracownika lub czasu.</p>
+          </div>
+          <button class="button-quiet" id="clearEventLogFilters" type="button">Wyczyść filtry</button>
+        </div>
+        <form id="eventLogFilters" class="event-log-filters">
+          <div class="field">
+            <label for="eventType">Typ zdarzenia</label>
+            <select id="eventType" name="eventType"><option value="">Wszystkie typy</option></select>
+          </div>
+          <div class="field">
+            <label for="eventImei">IMEI telefonu</label>
+            <input id="eventImei" name="imei" inputmode="numeric" autocomplete="off" placeholder="np. 123456789012345" type="search"/>
+          </div>
+          <div class="field">
+            <label for="eventActor">Login pracownika</label>
+            <input id="eventActor" name="actorUsername" autocomplete="username" placeholder="np. anna@firma.pl" type="search"/>
+          </div>
+          <div class="field">
+            <label for="eventFrom">Od</label>
+            <input id="eventFrom" name="from" type="datetime-local"/>
+          </div>
+          <div class="field">
+            <label for="eventTo">Do</label>
+            <input id="eventTo" name="to" type="datetime-local"/>
+          </div>
+          <div class="event-log-filter-action">
+            <button class="button" type="submit"><i class="ui-icon">search</i>Szukaj</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="surface event-log-results" aria-labelledby="eventLogResultsTitle">
+        <div class="event-log-results-heading">
+          <div>
+            <h2 id="eventLogResultsTitle">Zdarzenia</h2>
+            <p id="eventLogSummary" aria-live="polite">Pobieranie zdarzeń…</p>
+          </div>
+        </div>
+        <div id="eventLogError" class="event-log-message event-log-error" role="alert" hidden></div>
+        <div id="eventLogEmpty" class="event-log-message event-log-empty" hidden>
+          <i class="ui-icon">history</i>
+          <h3>Brak zdarzeń</h3>
+          <p>Nie znaleziono wpisów dla wybranych filtrów.</p>
+        </div>
+        <div class="table-scroll" id="eventLogTableContainer">
+          <table aria-describedby="eventLogSummary">
+            <thead>
+              <tr>
+                <th scope="col">Czas</th>
+                <th scope="col">Zdarzenie</th>
+                <th scope="col">Wynik</th>
+                <th scope="col">Pracownik</th>
+                <th scope="col">IMEI</th>
+                <th scope="col">Szczegóły</th>
+              </tr>
+            </thead>
+            <tbody id="eventLogRows"></tbody>
+          </table>
+        </div>
+        <nav class="event-log-pagination" aria-label="Strony dziennika zdarzeń" id="eventLogPagination" hidden>
+          <button class="button-quiet" id="eventLogPrevious" type="button"><i class="ui-icon">chevron_left</i>Poprzednia</button>
+          <span id="eventLogPageInfo" aria-live="polite"></span>
+          <button class="button-quiet" id="eventLogNext" type="button">Następna<i class="ui-icon">chevron_right</i></button>
+        </nav>
+      </section>
+    </div>
+
+    <footer class="workspace-footer"><span>Teleakcesoria · telefony · akcesoria · serwis</span></footer>
+  </main>
+  <script src="assets/vendor/lucide.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/shell.js"></script>
+  <script src="assets/js/event-log.js"></script>
+</body>
+</html>

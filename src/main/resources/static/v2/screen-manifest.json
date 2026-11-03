@@ -507,6 +507,24 @@
     ]
   },
   {
+    "page": "event-log.html",
+    "title": "Dziennik zdarzeń",
+    "section": "Zarządzanie",
+    "legacyFieldIds": [
+      "eventLogFilters",
+      "eventType",
+      "eventImei",
+      "eventActor",
+      "eventFrom",
+      "eventTo",
+      "eventLogRows",
+      "eventLogPagination"
+    ],
+    "controllers": [
+      "event-log.js"
+    ]
+  },
+  {
     "page": "settings.html",
     "title": "Ustawienia",
     "section": "Zarządzanie",
