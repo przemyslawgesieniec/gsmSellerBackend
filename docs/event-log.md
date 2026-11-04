@@ -14,6 +14,9 @@ i inne sekrety nie są zapisywane. IMEI jest odczytywany z parametru/danych tele
 po identyfikatorze telefonu. Identyfikator służy portalowi do przejścia bezpośrednio do naprawy lub
 dokumentu sprzedaży.
 
+Przy `PHONE_UPDATED` szczegóły zawierają listę pól, których wartość faktycznie zmieniła się, w formacie
+`pole: wartość poprzednia → wartość nowa`.
+
 `EventLogService` usuwa dane starsze niż **30 dni** codziennie o `00:10` (cron można zmienić przez
 `event-log.retention-cron`). Retencja jest liczona względem chwili wykonania czyszczenia.
 
@@ -56,4 +59,5 @@ Każdy z powyższych typów może mieć wynik `FAILURE`, jeżeli żądanie zako�
 albo nieobsłużonym wyjątkiem. Zdarzenia logowania i wylogowania są przechwytywane jako Spring
 Security events, ponieważ nie przechodzą przez kontrolery MVC. Sprzedaż telefonu i automatyczne
 wygaśnięcie rezerwacji są także zapisywane z ich istniejących zdarzeń domenowych Spring; dlatego
-obejmują również pracę cykliczną, która nie ma żądania HTTP.
+obejmują również pracę cykliczną, która nie ma żądania HTTP. Dla `RESERVATION_EXPIRED` kolumna
+szczegółów zawiera imię i nazwisko (pole `name` rezerwacji) oraz numer telefonu osoby rezerwującej.

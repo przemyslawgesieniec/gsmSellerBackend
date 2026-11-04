@@ -45,9 +45,19 @@ class DomainEventLogListener {
             imeiFor(event.technicalId()),
             "EVENT",
             "/internal/reservations/" + event.technicalId(),
-            "Reservation expired automatically",
+            reservationExpirationDetails(event),
             event.technicalId()
         );
+    }
+
+    private String reservationExpirationDetails(ReservationExpiredEvent event) {
+        String customer = event.reservingCustomerName() == null || event.reservingCustomerName().isBlank()
+            ? "unknown"
+            : event.reservingCustomerName();
+        String phone = event.reservingCustomerPhoneNumber() == null || event.reservingCustomerPhoneNumber().isBlank()
+            ? "unknown"
+            : event.reservingCustomerPhoneNumber();
+        return "Rezerwacja wygasła automatycznie. Rezerwujący: " + customer + "; telefon: " + phone;
     }
 
     private String imeiFor(java.util.UUID technicalId) {

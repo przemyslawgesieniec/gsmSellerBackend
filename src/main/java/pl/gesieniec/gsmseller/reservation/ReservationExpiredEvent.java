@@ -4,5 +4,7 @@ import java.util.UUID;
 
 public record ReservationExpiredEvent(
     UUID technicalId,
-    Boolean reserved
+    Boolean reserved,
+    String reservingCustomerName,
+    String reservingCustomerPhoneNumber
 ) {}

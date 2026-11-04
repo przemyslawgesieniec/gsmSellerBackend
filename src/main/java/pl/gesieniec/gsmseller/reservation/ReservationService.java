@@ -35,7 +35,7 @@ public class ReservationService {
                     } else {
                         log.info("Removing expired reservation for phone: {} before creating new one", request.technicalId());
                         reservationRepository.delete(r);
-                        eventPublisher.publishEvent(new ReservationExpiredEvent(request.technicalId(), false));
+                        eventPublisher.publishEvent(expiredEvent(r));
                     }
                 });
 
@@ -60,7 +60,7 @@ public class ReservationService {
             log.info("Removing {} expired reservations", expired.size());
             expired.forEach(r -> {
                 reservationRepository.delete(r);
-                eventPublisher.publishEvent(new ReservationExpiredEvent(r.getTechnicalId(), false));
+                eventPublisher.publishEvent(expiredEvent(r));
             });
         }
     }
@@ -103,5 +103,14 @@ public class ReservationService {
             reservationRepository.delete(reservation);
             eventPublisher.publishEvent(new ReservationCancelledEvent(technicalId, false, reason));
         });
+    }
+
+    private ReservationExpiredEvent expiredEvent(Reservation reservation) {
+        return new ReservationExpiredEvent(
+            reservation.getTechnicalId(),
+            false,
+            reservation.getName(),
+            reservation.getPhoneNumber()
+        );
     }
 }
