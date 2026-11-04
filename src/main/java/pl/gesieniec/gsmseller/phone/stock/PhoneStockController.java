@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.gesieniec.gsmseller.phone.scan.PhoneScanDto;
 import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
+import pl.gesieniec.gsmseller.phone.stock.model.MovePhoneRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneModelAssignmentRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
@@ -115,6 +116,16 @@ public class PhoneStockController {
         @PathVariable UUID technicalId
     ) {
         service.removePhoneFromLocation(technicalId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{technicalId}/move-to-location")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Void> movePhoneToLocation(
+        @PathVariable UUID technicalId,
+        @RequestBody MovePhoneRequest request
+    ) {
+        service.movePhoneToLocation(technicalId, request);
         return ResponseEntity.ok().build();
     }
 

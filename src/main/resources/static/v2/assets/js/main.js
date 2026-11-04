@@ -2,6 +2,8 @@ const pageSize = 20;
 let currentPage = 0;
 let phoneToHandover = null;
 let phoneToReserve = null;
+let phoneToMove = null;
+let movePhoneLocationSelect = null;
 let phoneToAssignModel = null;
 let assignPhoneModelSelect = null;
 let assignRamSelect = null;
@@ -1034,6 +1036,7 @@ function renderPhones(phones) {
           data-purchase-price="${phone.purchasePrice ?? ""}"
           data-phone-model-technical-id="${phone.phoneModelTechnicalId ?? ""}"
           data-phone-model-display-name="${phone.phoneModelDisplayName ?? ""}"
+          data-location-name="${phone.locationName ?? ""}"
         >
           <div class="panel-body phone-card">
             <div class="phone-left">
@@ -1180,6 +1183,13 @@ function renderPhones(phones) {
                 Usuń z lokalizacji
               </a>
             </li>
+            ${IS_ADMIN && phone.locationName && phone.status === 'DOSTĘPNY' ? `
+            <li>
+              <a href="#!" data-action="move-to-location" data-id="${phone.technicalId}">
+                Przenieś do innej lokalizacji
+              </a>
+            </li>
+            ` : ''}
             <li>
               <a href="#!"
                  data-action="handover"
@@ -1439,6 +1449,7 @@ function createCartButton() {
 
 document.addEventListener("DOMContentLoaded", async function () {
     initStockModals();
+    if (typeof loadCurrentUser === "function") await loadCurrentUser();
     createCartButton();
     [
         ...stockFilterFieldIds,
@@ -1986,6 +1997,10 @@ function handleDropdownAction(e) {
             removePhoneFromLocation(id);
             break;
 
+        case "move-to-location":
+            openMovePhoneModal(id);
+            break;
+
         case "delete":
             confirmDeletePhone(id);
             break;
@@ -2109,6 +2124,73 @@ function removePhoneFromLocation(technicalId) {
             UI.toast({ html: err.message });
         });
 }
+
+async function openMovePhoneModal(technicalId) {
+    if (!IS_ADMIN) return;
+
+    const card = document.querySelector(`.panel[data-technical-id="${technicalId}"]`);
+    if (!card) return;
+
+    const select = document.getElementById("movePhoneLocationSelect");
+    const info = document.getElementById("movePhoneInfo");
+    phoneToMove = technicalId;
+    info.textContent = `${card.dataset.name || "Telefon"}${card.dataset.imei ? ` · IMEI: ${card.dataset.imei}` : ""}`;
+
+    if (movePhoneLocationSelect) {
+        movePhoneLocationSelect.destroy();
+        movePhoneLocationSelect = null;
+    }
+    select.innerHTML = '<option value="">Wybierz lokalizację</option>';
+
+    try {
+        const response = await fetch("/api/v1/locations");
+        if (!response.ok) throw new Error("Nie udało się pobrać lokalizacji");
+
+        const locations = await response.json();
+        const destinations = locations.filter(location => location.name !== card.dataset.locationName);
+        destinations.forEach(location => {
+            const option = document.createElement("option");
+            option.value = location.technicalId;
+            option.textContent = location.name;
+            select.appendChild(option);
+        });
+
+        if (!destinations.length) {
+            UI.toast({ html: "Brak innej lokalizacji, do której można przenieść telefon", classes: "orange" });
+            return;
+        }
+
+        movePhoneLocationSelect = initSimpleSelect("#movePhoneLocationSelect");
+        UI.Dialog.getInstance(document.getElementById("movePhoneModal")).open();
+    } catch (error) {
+        UI.toast({ html: error.message, classes: "red" });
+    }
+}
+
+document.getElementById("confirmMovePhoneBtn").addEventListener("click", async () => {
+    const locationTechnicalId = movePhoneLocationSelect?.getValue()
+        || document.getElementById("movePhoneLocationSelect").value;
+
+    if (!phoneToMove || !locationTechnicalId) {
+        UI.toast({ html: "Wybierz docelową lokalizację", classes: "orange" });
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/v1/phones/${phoneToMove}/move-to-location`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ locationTechnicalId })
+        });
+        if (!response.ok) throw new Error(await response.text() || "Nie udało się przenieść telefonu");
+
+        UI.Dialog.getInstance(document.getElementById("movePhoneModal")).close();
+        UI.toast({ html: "Telefon został przeniesiony do wybranej lokalizacji", classes: "green" });
+        await refreshStockListPreservingState();
+    } catch (error) {
+        UI.toast({ html: error.message, classes: "red" });
+    }
+});
 
 function restorePhone(technicalId) {
     fetch(`/api/v1/phones/${technicalId}/restore`, {

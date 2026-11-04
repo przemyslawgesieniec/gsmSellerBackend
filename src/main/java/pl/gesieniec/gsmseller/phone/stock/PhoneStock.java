@@ -237,6 +237,20 @@ public class PhoneStock {
         this.status = Status.WPROWADZONY;
     }
 
+    public void moveToLocation(LocationEntity destination) {
+        if (this.status != Status.DOSTĘPNY) {
+            throw new IllegalStateException("Tylko dostępny telefon można przenieść do innej lokalizacji");
+        }
+        if (this.location == null) {
+            throw new IllegalStateException("Telefon nie jest przypisany do lokalizacji");
+        }
+        if (this.location == destination || (this.location.getId() != null && this.location.getId().equals(destination.getId()))) {
+            throw new IllegalStateException("Telefon już znajduje się w tej lokalizacji");
+        }
+
+        this.location = destination;
+    }
+
     public void moveToService() {
         this.status = Status.SERWIS;
     }

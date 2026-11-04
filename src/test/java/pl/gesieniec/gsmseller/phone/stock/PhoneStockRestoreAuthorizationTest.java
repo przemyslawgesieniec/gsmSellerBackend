@@ -18,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import pl.gesieniec.gsmseller.phone.stock.model.MovePhoneRequest;
 
 @SpringJUnitConfig(PhoneStockRestoreAuthorizationTest.Config.class)
 class PhoneStockRestoreAuthorizationTest {
@@ -43,6 +44,24 @@ class PhoneStockRestoreAuthorizationTest {
     @WithMockUser(roles = "USER")
     void shouldRejectNonAdministratorBeforeChangingPhone() {
         assertThatThrownBy(() -> controller.restorePhone(UUID.randomUUID()))
+            .isInstanceOf(AccessDeniedException.class);
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldAllowAdministratorToMovePhoneToAnotherLocation() {
+        UUID phoneId = UUID.randomUUID();
+        MovePhoneRequest request = new MovePhoneRequest(UUID.randomUUID());
+
+        assertThat(controller.movePhoneToLocation(phoneId, request).getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(service).movePhoneToLocation(phoneId, request);
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void shouldRejectNonAdministratorBeforeMovingPhone() {
+        assertThatThrownBy(() -> controller.movePhoneToLocation(UUID.randomUUID(), new MovePhoneRequest(UUID.randomUUID())))
             .isInstanceOf(AccessDeniedException.class);
         verifyNoInteractions(service);
     }

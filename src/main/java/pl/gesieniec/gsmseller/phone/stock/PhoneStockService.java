@@ -25,6 +25,7 @@ import pl.gesieniec.gsmseller.reservation.ReservationCreatedEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationExpiredEvent;
 import pl.gesieniec.gsmseller.reservation.ReservationCancelledEvent;
 import pl.gesieniec.gsmseller.location.LocationEntity;
+import pl.gesieniec.gsmseller.location.LocationRepository;
 import pl.gesieniec.gsmseller.phone.model.PhoneModels;
 import pl.gesieniec.gsmseller.phone.model.PhoneModelsService;
 import pl.gesieniec.gsmseller.phone.model.PhoneModelsRepository;
@@ -35,6 +36,7 @@ import pl.gesieniec.gsmseller.phone.stock.handler.PhoneSoldHandler;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneHandedOverEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneSoldEvent;
 import pl.gesieniec.gsmseller.phone.stock.model.HandoverRequest;
+import pl.gesieniec.gsmseller.phone.stock.model.MovePhoneRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneModelAssignmentRequest;
 import pl.gesieniec.gsmseller.phone.stock.model.PhoneStockDto;
 import pl.gesieniec.gsmseller.phone.stock.model.Status;
@@ -55,6 +57,7 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
     private final RepairRepository repairRepository;
     private final pl.gesieniec.gsmseller.repair.RepairService repairService;
     private final PhoneModelsRepository phoneModelsRepository;
+    private final LocationRepository locationRepository;
 
 
     public PhoneStockDto getByTechnicalId(UUID id) {
@@ -346,6 +349,24 @@ public class PhoneStockService implements PhoneSoldHandler, PhoneReturnHandler {
         phone.removeFromLocation();
 
         repository.save(phone);
+    }
+
+    @Transactional
+    public void movePhoneToLocation(UUID technicalId, MovePhoneRequest request) {
+        if (request == null || request.locationTechnicalId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Docelowa lokalizacja jest wymagana");
+        }
+
+        PhoneStock phone = repository.findByTechnicalId(technicalId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Phone not found"));
+        LocationEntity destination = locationRepository.findByTechnicalId(request.locationTechnicalId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Location not found"));
+
+        try {
+            phone.moveToLocation(destination);
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @Transactional

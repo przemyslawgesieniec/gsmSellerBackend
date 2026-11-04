@@ -107,6 +107,50 @@ test('menu actions still work with keyboard and ignore disabled items', async t 
     assert.equal(ignored, 0);
 });
 
+test('only administrators can move an available phone to another location', async t => {
+    const page = await fixture(t);
+    const result = await page.evaluate(async () => {
+        await loadStock();
+        const visibleToSeller = !!document.querySelector('[data-action="move-to-location"]');
+
+        IS_ADMIN = true;
+        await loadStock();
+        const visibleToAdmin = !!document.querySelector('[data-action="move-to-location"]');
+        window.TomSelect = class {
+            constructor(el) { this.el = el; el.tomselect = this; }
+            getValue() { return this.el.value; }
+            setValue(value) { this.el.value = value; }
+            destroy() { delete this.el.tomselect; }
+        };
+        let request;
+        window.fetch = async (url, options = {}) => {
+            if (url === '/api/v1/locations') {
+                return { ok: true, json: async () => [
+                    { technicalId: 'location-shop', name: 'Shop' },
+                    { technicalId: 'location-other', name: 'Other shop' }
+                ] };
+            }
+            if (url === '/api/v1/phones/test-0/move-to-location') {
+                request = { method: options.method, body: JSON.parse(options.body) };
+                return { ok: true, text: async () => '' };
+            }
+            return { ok: true, json: async () => ({ content: testPhones, number: 0, totalPages: 1 }) };
+        };
+
+        await openMovePhoneModal('test-0');
+        movePhoneLocationSelect.setValue('location-other');
+        await document.getElementById('confirmMovePhoneBtn').click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        return { visibleToSeller, visibleToAdmin, request };
+    });
+
+    assert.deepEqual(result, {
+        visibleToSeller: false,
+        visibleToAdmin: true,
+        request: { method: 'POST', body: { locationTechnicalId: 'location-other' } }
+    });
+});
+
 test('repeated refreshes release detached menus, tooltips and reservation timers', async t => {
     const page = await fixture(t);
     await page.evaluate(() => {
