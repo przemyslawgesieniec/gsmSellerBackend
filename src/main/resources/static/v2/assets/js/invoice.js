@@ -240,8 +240,16 @@ async function saveAndPrint() {
         if (!res.ok || res.redirected) throw new Error();
 
         const receiptUuid = await res.json();
-        UI.toast({ html: "Dokument zapisany", classes: "green" });
-        openReceiptPdf(receiptUuid);
+        try {
+            await downloadReceiptPdf(receiptUuid);
+            UI.toast({ html: "Dokument zapisany i pobrany", classes: "green" });
+        } catch (downloadError) {
+            console.error("Błąd pobierania zapisanego dokumentu", downloadError);
+            UI.toast({
+                html: "Dokument zapisany, ale nie udało się pobrać PDF",
+                classes: "red"
+            });
+        }
         resetInvoiceForm();
 
     } catch {
@@ -294,8 +302,20 @@ function collectInvoiceExtraData(cart) {
  *  HELPERS
  * =========================
  */
-function openReceiptPdf(uuid) {
-    window.open(`/api/v1/receipt/${uuid}`, "_blank");
+async function downloadReceiptPdf(uuid) {
+    const response = await fetch(`/api/v1/receipt/${encodeURIComponent(uuid)}`);
+    if (!response.ok || response.redirected) throw new Error("Nie udało się pobrać PDF");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "potwierdzenie_sprzedazy.pdf";
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
 }
 
 function getSellDate() {

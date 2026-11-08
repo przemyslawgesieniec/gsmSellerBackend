@@ -318,11 +318,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.dialog').forEach(modal => {
         if (!UI.Dialog.getInstance(modal)) UI.Dialog.init(modal);
     });
+});
 
-    const cartBtn = document.getElementById("cartBtn");
-    if (cartBtn) {
-        cartBtn.addEventListener("click", openCart);
-    }
+// The cart button is injected asynchronously by main.js after the current user
+// has loaded. Delegation keeps it interactive regardless of creation timing.
+document.addEventListener("click", event => {
+    if (event.target.closest("#cartBtn")) openCart();
 });
 
 

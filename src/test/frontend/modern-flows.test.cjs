@@ -32,7 +32,9 @@ test('manual invoice and edit download retain payloads and administrator control
  await page.locator('#addManualItemBtn').click();await page.locator('.manual-description').fill('Usługa');await page.locator('.manual-price').fill('200.50');
  await page.evaluate(()=>document.getElementById('vatSelect').tomselect.setValue('23%'));
  assert.equal(await page.locator('#invoiceTotal').textContent(),'246.62');
- await page.locator('#saveInvoiceBtn').click();const req=await waitRequest(page,requests,'/api/v1/receipt');assert.equal(req.json().items[0].price,200.5);
+ const savedDownload=page.waitForEvent('download');await page.locator('#saveInvoiceBtn').click();
+ assert.equal((await savedDownload).suggestedFilename(),'potwierdzenie_sprzedazy.pdf');
+ const req=await waitRequest(page,requests,'/api/v1/receipt');assert.equal(req.json().items[0].price,200.5);
  await goto('receipt-edit.html?id='+id);await page.locator('#amount-0').fill('99');
  const download=page.waitForEvent('download');await page.locator('button[value=download]').click();await download;
  const edit=await waitRequest(page,requests,`/api/v1/receipt/${id}/edit`);assert.equal(edit.search,'?save=false');assert.equal(edit.json().items[0].nettAmount,'99');assert.deepEqual(errors,[]);
