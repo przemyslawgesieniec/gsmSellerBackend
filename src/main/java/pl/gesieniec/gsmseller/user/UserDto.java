@@ -11,4 +11,5 @@ public class UserDto {
     private UserStatus status;
     private String role;
     private String location;
+    private int fontSizeLevel;
 }

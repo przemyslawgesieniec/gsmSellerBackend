@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.gesieniec.gsmseller.location.LocationEntity;
@@ -29,6 +30,15 @@ public class UserSettingsController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/font-size")
+    public ResponseEntity<Void> updateFontSize(
+        @RequestBody FontSizeRequest request,
+        Principal principal
+    ) {
+        userService.setFontSizeLevel(principal.getName(), request.level());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/auth/me")
     public UserDto me(Authentication auth) {
 
@@ -44,7 +54,8 @@ public class UserSettingsController {
             user.getUsername(),
             user.getStatus(),
             user.getRole(),
-            location
+            location,
+            user.getFontSizeLevel()
         );
     }
 }

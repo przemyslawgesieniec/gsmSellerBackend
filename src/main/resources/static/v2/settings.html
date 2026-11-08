@@ -37,6 +37,25 @@
    <div class="container">
     <div class="form-grid">
      <div class="grid-cell span-s-12 span-m-12 span-l-12">
+      <section class="panel" aria-labelledby="fontSizeSettingsTitle">
+       <div class="panel-body">
+        <h2 class="panel-title" id="fontSizeSettingsTitle">
+         Wielkość tekstu
+        </h2>
+        <p class="helper-text">
+         Dopasuj wielkość tekstu w aplikacji do swoich potrzeb. Zmiana zostanie zapisana dla Twojego konta.
+        </p>
+        <div class="font-size-control">
+         <div class="font-size-control-labels" aria-hidden="true">
+          <span>Mała</span><span>Średnia</span><span>Duża</span><span>Największa</span>
+         </div>
+         <input aria-describedby="fontSizeHelp" aria-label="Wielkość tekstu" id="fontSizeLevel" max="3" min="0" step="1" type="range" value="0"/>
+         <p class="helper-text" id="fontSizeHelp">
+          Wybrany rozmiar: <strong id="fontSizeLevelLabel">Mała</strong>
+         </p>
+        </div>
+       </div>
+      </section>
       <div class="panel location-settings hide">
        <div class="panel-body">
         <div class="form-grid">

@@ -36,6 +36,13 @@ public class User {
     @JoinColumn(name = "location_id")
     private LocationEntity location;
 
+    /**
+     * 0 is the existing application size; the remaining values map to the three
+     * larger accessibility levels exposed in the settings screen.
+     */
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int fontSizeLevel = 0;
+
     public User(String username, String password, String role) {
         this.username = username;
         this.password = password;

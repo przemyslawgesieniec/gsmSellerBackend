@@ -546,7 +546,7 @@ function createCard(repair) {
         UI.Tooltip.init(div.querySelectorAll('.hint'));
     }, 0);
 
-    addRepairCardActions(div, repair);
+    addRepairCardActions(div, repair, false);
     return div;
 }
 
@@ -672,12 +672,13 @@ function createMobileCard(repair) {
         UI.Tooltip.init(div.querySelectorAll('.hint'));
     }, 0);
 
-    addRepairCardActions(div, repair);
+    addRepairCardActions(div, repair, true);
     return div;
 }
 
-// The same actions are reachable by touch and keyboard as well as drag and drop.
-function addRepairCardActions(root, repair) {
+// Cards remain keyboard accessible; the status control is reserved for the
+// compact single-column view where drag and drop is not available.
+function addRepairCardActions(root, repair, showStatusAction) {
     const card = root.matches('.kanban-card') ? root : root.querySelector('.panel');
     card.tabIndex = 0;
     card.setAttribute('aria-label', `Szczegóły naprawy ${repair.businessId || repair.model || ''}`);
@@ -686,6 +687,8 @@ function addRepairCardActions(root, repair) {
             event.preventDefault(); openRepairDetails(repair.technicalId);
         }
     });
+    if (!showStatusAction) return;
+
     const field = document.createElement('label');
     field.className = 'repair-status-action';
     field.textContent = 'Zmień etap';

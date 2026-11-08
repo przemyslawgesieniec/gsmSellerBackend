@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
     await loadCurrentUser(); // 🔥 z auth.js
 
+    initFontSizeSettings();
+
     // CARD zawsze widoczny
     showLocationCard();
 
@@ -19,6 +21,45 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadAllUsers();
     }
 });
+
+const FONT_SIZE_LABELS = ['Mała', 'Średnia', 'Duża', 'Największa'];
+
+function initFontSizeSettings() {
+    const slider = document.getElementById('fontSizeLevel');
+    const label = document.getElementById('fontSizeLevelLabel');
+    if (!slider || !label) return;
+
+    const updatePreview = level => {
+        const normalizedLevel = Math.max(0, Math.min(3, Number(level) || 0));
+        slider.value = String(normalizedLevel);
+        label.textContent = FONT_SIZE_LABELS[normalizedLevel];
+        slider.setAttribute('aria-valuetext', FONT_SIZE_LABELS[normalizedLevel]);
+        applyFontSizeLevel(normalizedLevel);
+        return normalizedLevel;
+    };
+
+    updatePreview(CURRENT_USER?.fontSizeLevel);
+    slider.addEventListener('input', event => updatePreview(event.target.value));
+    slider.addEventListener('change', async event => {
+        const level = updatePreview(event.target.value);
+        slider.disabled = true;
+        try {
+            const response = await fetch('/api/v1/users/font-size', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({level})
+            });
+            if (!response.ok) throw new Error('Could not save font size');
+            CURRENT_USER.fontSizeLevel = level;
+            UI.toast({html: 'Wielkość tekstu została zapisana', classes: 'green'});
+        } catch {
+            updatePreview(CURRENT_USER?.fontSizeLevel);
+            UI.toast({html: 'Nie udało się zapisać wielkości tekstu', classes: 'red'});
+        } finally {
+            slider.disabled = false;
+        }
+    });
+}
 
 
 function showLocationCard() {

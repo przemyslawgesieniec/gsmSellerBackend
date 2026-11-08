@@ -60,11 +60,20 @@ test('client create and delete retain existing API and field validation',async t
 test('repair create, autocomplete and mobile status tabs remain available',async t=>{
  const {page,goto,requests,errors}=await app.fixture(t,{mobile:true});await goto('repair.html');
  assert.equal(await page.locator('#mobile-cards-DO_NAPRAWY .panel').count(),1);
+ assert.equal(await page.locator('#mobile-cards-DO_NAPRAWY .repair-status-action').count(),1);
  await page.locator('a[href="#tab-W_NAPRAWIE"]').click();assert.equal(await page.locator('#tab-W_NAPRAWIE').isVisible(),true);
  await page.locator('.fab-fixed a').click();
  await page.locator('#clientSearch').fill('Ann');await page.locator('#clientSearch-suggestions button').first().click();
  await page.locator('#repairModel').fill('Telefon testowy');await page.locator('#repairProblemDescription').fill('Wymiana baterii');await page.locator('#saveRepairBtn').click();
  const req=await waitRequest(page,requests,'/api/v1/repairs');assert.equal(req.json().clientTechnicalId,'client-1');assert.equal(req.json().model,'Telefon testowy');assert.deepEqual(errors,[]);
+});
+
+test('desktop repair board has equal-height columns and uses drag and drop without status selects',async t=>{
+ const {page,goto,errors}=await app.fixture(t);await goto('repair.html');
+ const heights=await page.locator('.kanban-column').evaluateAll(columns=>columns.map(column=>column.getBoundingClientRect().height));
+ assert.equal(new Set(heights.map(Math.round)).size,1);
+ assert.equal(await page.locator('.kanban-board .repair-status-action').count(),0);
+ assert.deepEqual(errors,[]);
 });
 
 test('repair history filters and links stay inside v2',async t=>{
@@ -89,6 +98,16 @@ test('purchase details preserve price agreement, comments and closure controls',
 
 test('settings preserve account activation and dynamic-location actions',async t=>{
  const {page,goto,requests,errors}=await app.fixture(t);await goto('settings.html');
+ assert.equal(await page.locator('#fontSizeLevel').inputValue(),'0');
+ await page.locator('#fontSizeLevel').evaluate(input=>{
+  input.value='3';
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.dispatchEvent(new Event('change',{bubbles:true}));
+ });
+ assert.deepEqual((await waitRequest(page,requests,'/api/v1/users/font-size','PUT')).json(),{level:3});
+ assert.equal(await page.locator('html').getAttribute('data-font-size-level'),'3');
+ assert.equal(await page.locator('body').evaluate(body=>getComputedStyle(body).zoom),'1.45');
+ assert.equal(await page.locator('#fontSizeLevelLabel').textContent(),'Największa');
  const row=page.locator('#usersTableBody tr').nth(1);await row.locator('input[type=checkbox]').first().check();
  assert.equal((await waitRequest(page,requests,'/api/v1/admin/users/2/active','PUT')).json().active,true);
  await row.locator('input[type=checkbox]').nth(1).check();assert.equal((await waitRequest(page,requests,'/api/v1/admin/users/2/dynamic-location','PUT')).json().enabled,true);assert.deepEqual(errors,[]);

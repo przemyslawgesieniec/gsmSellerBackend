@@ -41,6 +41,17 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    @Transactional
+    public void setFontSizeLevel(String username, int level) {
+        if (level < 0 || level > 3) {
+            throw new IllegalArgumentException("Nieprawidłowy poziom wielkości tekstu");
+        }
+
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setFontSizeLevel(level);
+    }
+
     public void register(RegisterRequest req) {
         if (!req.password().equals(req.confirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
@@ -97,7 +108,8 @@ public class UserService {
                 u.getUsername(),
                 u.getStatus(),
                 u.getRole(),
-                u.getLocation() != null ? u.getLocation().getName() : null))
+                u.getLocation() != null ? u.getLocation().getName() : null,
+                u.getFontSizeLevel()))
             .toList();
     }
 
