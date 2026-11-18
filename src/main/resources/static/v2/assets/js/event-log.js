@@ -67,7 +67,7 @@
             time.dateTime = entry.occurredAt;
             time.textContent = entry.occurredAt ? dateFormat.format(new Date(entry.occurredAt)) : '—';
             const timeCell = document.createElement('td'); timeCell.append(time);
-            const typeCell = createCell(labelForType(entry.eventType));
+            const typeCell = createCell(entry.deletedRepairSnapshot ? 'Usunięto naprawę' : labelForType(entry.eventType));
             const outcomeCell = document.createElement('td');
             const outcome = document.createElement('span');
             outcome.className = `event-outcome event-outcome-${entry.outcome === 'SUCCESS' ? 'success' : 'failure'}`;
@@ -77,7 +77,17 @@
             row.append(createCell(entry.details || entry.requestPath));
             const actionCell = document.createElement('td');
             const destination = destinationFor(entry);
-            if (destination) {
+            if (entry.deletedRepairSnapshot) {
+                const snapshot = document.createElement('details');
+                const summary = document.createElement('summary');
+                summary.textContent = 'Dane usuniętej naprawy';
+                const content = document.createElement('pre');
+                content.style.whiteSpace = 'pre-wrap';
+                content.style.overflowWrap = 'anywhere';
+                content.textContent = JSON.stringify(JSON.parse(entry.deletedRepairSnapshot), null, 2);
+                snapshot.append(summary, content);
+                actionCell.append(snapshot);
+            } else if (destination) {
                 const action = document.createElement('a');
                 action.className = 'button-small event-log-link'; action.href = destination.href;
                 action.textContent = destination.label;

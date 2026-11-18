@@ -3,19 +3,22 @@
 ## Cel i retencja
 
 Moduł `pl.gesieniec.gsmseller.eventlog` zapisuje zdarzenia audytowe jako osobną tabelę `event_log`.
-Każda operacja zmieniająca stan, obsłużona przez REST API, jest automatycznie rejestrowana przez
+Operacje zmieniające stan, obsłużone przez REST API, są domyślnie rejestrowane przez
 `EventLogInterceptor`. Po zakończeniu żądania interceptor publikuje Spring event
 `EventLogRecordedEvent`; `EventLogListener` zapisuje go w bazie. Dzięki temu kod domenowy nie jest
 powiązany z tabelą audytową.
 
 Wpis zawiera czas UTC, typ, wynik (`SUCCESS` albo `FAILURE`), login wykonawcy, opcjonalne IMEI,
-identyfikator techniczny obiektu, metodę i ścieżkę HTTP oraz status odpowiedzi. Treść żądania, hasła
-i inne sekrety nie są zapisywane. IMEI jest odczytywany z parametru/danych telefonu albo odnajdywany
+identyfikator techniczny obiektu, metodę i ścieżkę HTTP oraz status odpowiedzi. Ogólny zapis HTTP pomija treść żądań i sekrety. IMEI jest odczytywany z parametru/danych telefonu albo odnajdywany
 po identyfikatorze telefonu. Identyfikator służy portalowi do przejścia bezpośrednio do naprawy lub
 dokumentu sprzedaży.
 
 Przy `PHONE_UPDATED` szczegóły zawierają listę pól, których wartość faktycznie zmieniła się, w formacie
 `pole: wartość poprzednia → wartość nowa`.
+
+Usunięcie naprawy zapisuje w tej samej transakcji pojedynczy wpis `REPAIR_UPDATED` z metodą `DELETE`.
+Pole `deletedRepairSnapshot` zawiera dane naprawy, w tym zapisany kod blokady urządzenia, notatki oraz
+dane powiązanego klienta i punktu serwisowego. Widok audytu pokazuje ten wpis jako „Usunięto naprawę”.
 
 `EventLogService` usuwa dane starsze niż **30 dni** codziennie o `00:10` (cron można zmienić przez
 `event-log.retention-cron`). Retencja jest liczona względem chwili wykonania czyszczenia.

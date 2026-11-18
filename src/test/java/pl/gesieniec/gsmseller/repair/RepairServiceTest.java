@@ -48,7 +48,7 @@ class RepairServiceTest {
         RepairServicePoint servicePoint = RepairServicePoint.create("Serwis Centrum");
         RepairDto mapped = RepairDto.builder().status(RepairStatus.W_NAPRAWIE).build();
 
-        when(repository.findByTechnicalId(repair.getTechnicalId())).thenReturn(Optional.of(repair));
+        when(repository.findForUpdate(repair.getTechnicalId())).thenReturn(Optional.of(repair));
         when(servicePointService.resolve(servicePointTechnicalId, null)).thenReturn(servicePoint);
         when(mapper.toDto(repair)).thenReturn(mapped);
 

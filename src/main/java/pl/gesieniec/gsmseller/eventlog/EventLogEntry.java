@@ -56,6 +56,15 @@ public class EventLogEntry {
     @Column(length = 1000)
     private String details;
 
+    @Column(columnDefinition = "TEXT", updatable = false)
+    private String deletedRepairSnapshot;
+
+    static EventLogEntry repairDeletion(EventLogRecordedEvent event, String snapshot) {
+        EventLogEntry entry = new EventLogEntry(event);
+        entry.deletedRepairSnapshot = snapshot;
+        return entry;
+    }
+
     /** Technical identifier of the affected resource, when the event has one. */
     @Column(name = "resource_technical_id")
     private UUID resourceTechnicalId;

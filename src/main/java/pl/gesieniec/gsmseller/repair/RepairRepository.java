@@ -1,19 +1,34 @@
 package pl.gesieniec.gsmseller.repair;
 
+import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RepairRepository extends JpaRepository<Repair, Long>, JpaSpecificationExecutor<Repair> {
     Optional<Repair> findByTechnicalId(UUID technicalId);
 
-    long countByCreateDateTimeBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
-    
-    @org.springframework.data.jpa.repository.Query("SELECT r.businessId FROM Repair r WHERE r.businessId LIKE %:year AND r.businessId LIKE 'RMA/%' ORDER BY r.id DESC")
-    java.util.List<String> findBusinessIdsByYear(@org.springframework.data.repository.query.Param("year") int year);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Repair r WHERE r.technicalId = :technicalId")
+    Optional<Repair> findForUpdate(@Param("technicalId") UUID technicalId);
 
-    java.util.List<Repair> findAllByArchivedAndHandoverDateBetween(boolean archived, java.time.LocalDateTime start, java.time.LocalDateTime end);
+    long countByCreateDateTimeBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query("""
+        SELECT r.businessId FROM Repair r WHERE r.businessId LIKE concat('%/', :year) AND r.businessId LIKE 'RMA/%'
+        UNION ALL
+        SELECT e.details FROM EventLogEntry e WHERE e.deletedRepairSnapshot IS NOT NULL
+            AND e.details LIKE concat('%/', :year) AND e.details LIKE 'RMA/%'
+        """)
+    List<String> findBusinessIdsByYear(@Param("year") String year);
+
+    List<Repair> findAllByArchivedAndHandoverDateBetween(boolean archived, LocalDateTime start, LocalDateTime end);
 }

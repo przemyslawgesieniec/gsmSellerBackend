@@ -13,6 +13,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.gesieniec.gsmseller.repair.model.RepairDto;
@@ -66,6 +67,14 @@ public class RepairController {
         log.info("Dodawanie nowej naprawy: {}", dto);
         return service.addRepair(dto);
     }
+
+    @DeleteMapping("/{technicalId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRepair(@PathVariable UUID technicalId, @RequestBody(required = false) DeleteRepairRequest request) {
+        service.deleteRepair(technicalId, request == null ? null : request.rma());
+    }
+
+    public record DeleteRepairRequest(String rma) {}
 
     @PutMapping("/{technicalId}")
     public RepairDto updateRepair(@PathVariable UUID technicalId, @RequestBody RepairDto dto) {

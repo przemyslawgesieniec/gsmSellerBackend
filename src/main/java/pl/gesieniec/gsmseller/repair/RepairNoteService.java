@@ -20,7 +20,7 @@ public class RepairNoteService {
 
     @Transactional
     public RepairNoteDto addNote(UUID repairTechnicalId, String content, String username) {
-        Repair repair = repairRepository.findByTechnicalId(repairTechnicalId)
+        Repair repair = repairRepository.findForUpdate(repairTechnicalId)
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono naprawy o ID: " + repairTechnicalId));
 
         User author = userService.getUserByUsername(username)
@@ -34,6 +34,11 @@ public class RepairNoteService {
 
     @Transactional
     public void deleteNote(Long noteId, String username) {
+        UUID repairTechnicalId = repairNoteRepository.findRepairTechnicalId(noteId)
+            .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono notatki o ID: " + noteId));
+        repairRepository.findForUpdate(repairTechnicalId)
+            .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono naprawy o ID: " + repairTechnicalId));
+
         RepairNote note = repairNoteRepository.findById(noteId)
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono notatki o ID: " + noteId));
 

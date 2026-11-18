@@ -9,10 +9,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import pl.gesieniec.gsmseller.eventlog.EventLogService;
 import pl.gesieniec.gsmseller.location.LocationEntity;
 import pl.gesieniec.gsmseller.location.LocationRepository;
 import pl.gesieniec.gsmseller.phone.stock.PhoneStock;
@@ -24,6 +27,7 @@ import pl.gesieniec.gsmseller.repair.model.RepairStatus;
 import pl.gesieniec.gsmseller.repair.model.RestoreToShopRequest;
 import pl.gesieniec.gsmseller.repair.servicepoint.RepairServicePoint;
 import pl.gesieniec.gsmseller.repair.servicepoint.RepairServicePointService;
+import pl.gesieniec.gsmseller.user.AdminAccess;
 import pl.gesieniec.gsmseller.user.User;
 import pl.gesieniec.gsmseller.user.UserRepository;
 
@@ -33,6 +37,7 @@ import pl.gesieniec.gsmseller.user.UserRepository;
 public class RepairService {
 
     private final RepairRepository repository;
+    private final EventLogService eventLogService;
     private final RepairMapper mapper;
     private final RepairPdfService pdfService;
     private final RepairHandoverPdfService handoverPdfService;
@@ -91,7 +96,7 @@ public class RepairService {
 
     @Transactional
     public byte[] generateHandoverPdf(UUID technicalId) {
-        Repair repair = repository.findByTechnicalId(technicalId)
+        Repair repair = repository.findForUpdate(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
         if (!repair.isForCustomer()) {
             throw new IllegalStateException("Handover documents are only available for customer repairs");
@@ -169,7 +174,7 @@ public class RepairService {
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         int currentYear = now.getYear();
         try {
-            List<String> businessIds = repository.findBusinessIdsByYear(currentYear);
+            List<String> businessIds = repository.findBusinessIdsByYear(Integer.toString(currentYear));
 
             int nextNumber = 1;
             if (!businessIds.isEmpty()) {
@@ -204,7 +209,7 @@ public class RepairService {
 
     @Transactional
     public RepairDto updateRepair(UUID technicalId, RepairDto dto) {
-        Repair repair = repository.findByTechnicalId(technicalId)
+        Repair repair = repository.findForUpdate(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
 
         RepairClient client = null;
@@ -272,7 +277,7 @@ public class RepairService {
         UUID servicePointTechnicalId,
         String servicePointName
     ) {
-        Repair repair = repository.findByTechnicalId(technicalId)
+        Repair repair = repository.findForUpdate(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
 
         if (status == RepairStatus.W_NAPRAWIE) {
@@ -291,10 +296,24 @@ public class RepairService {
 
     @Transactional
     public RepairDto unarchiveRepair(UUID technicalId) {
-        Repair repair = repository.findByTechnicalId(technicalId)
+        Repair repair = repository.findForUpdate(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
         repair.unarchive();
         return mapper.toDto(repair);
+    }
+
+    @Transactional
+    public void deleteRepair(UUID technicalId, String rma) {
+        String actor = AdminAccess.requireAdmin();
+        Repair repair = repository.findForUpdate(technicalId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nie znaleziono naprawy"));
+        if (!repair.getBusinessId().equals(rma)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Numer RMA jest nieprawidłowy");
+        }
+
+        eventLogService.recordRepairDeletion(actor, technicalId, repair.getImei(), repair.getBusinessId(),
+            RepairDeletionSnapshot.from(repair));
+        repository.delete(repair);
     }
 
     @Transactional(readOnly = true)
@@ -306,7 +325,7 @@ public class RepairService {
 
     @Transactional
     public void restoreToShop(UUID technicalId, RestoreToShopRequest request) {
-        Repair repair = repository.findByTechnicalId(technicalId)
+        Repair repair = repository.findForUpdate(technicalId)
             .orElseThrow(() -> new RuntimeException("Repair not found: " + technicalId));
 
         if (repair.isForCustomer() || repair.getPhoneTechnicalId() == null) {

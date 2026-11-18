@@ -13,13 +13,14 @@ public record EventLogDto(
     String httpMethod,
     String requestPath,
     String details,
-    UUID resourceTechnicalId
+    UUID resourceTechnicalId,
+    String deletedRepairSnapshot
 ) {
     static EventLogDto from(EventLogEntry entry) {
         return new EventLogDto(
             entry.getId(), entry.getOccurredAt(), entry.getEventType(), entry.getOutcome(),
             entry.getActorUsername(), entry.getImei(), entry.getHttpMethod(), entry.getRequestPath(), entry.getDetails(),
-            entry.getResourceTechnicalId()
+            entry.getResourceTechnicalId(), entry.getDeletedRepairSnapshot()
         );
     }
 }

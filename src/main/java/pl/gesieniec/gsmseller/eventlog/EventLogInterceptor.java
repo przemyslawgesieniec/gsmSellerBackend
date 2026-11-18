@@ -29,6 +29,7 @@ public class EventLogInterceptor implements HandlerInterceptor {
 
     private static final Pattern IMEI_IN_BODY = Pattern.compile("\\\"imei\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"", Pattern.CASE_INSENSITIVE);
     private static final Pattern RESOURCE_UUID_IN_PATH = Pattern.compile("/api/v1/(?:phones|repairs|receipt|offers)/(?:[a-z-]+/)?([0-9a-fA-F-]{36})(?:/|$)");
+    private static final Pattern REPAIR_DELETE_PATH = Pattern.compile(".*/api/v1/repairs/[0-9a-fA-F-]{36}");
     private static final Pattern CART_UUID_IN_PATH = Pattern.compile("/api/v1/cart/(?:item/)?([0-9a-fA-F-]{36})(?:/|$)");
     private static final Pattern UUID_IN_RESPONSE = Pattern.compile("[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}");
     private static final String PHONE_SNAPSHOT_ATTRIBUTE = EventLogInterceptor.class.getName() + ".phoneSnapshot";
@@ -60,6 +61,10 @@ public class EventLogInterceptor implements HandlerInterceptor {
         EventLogOutcome outcome = ex == null && response.getStatus() < 400 ? EventLogOutcome.SUCCESS : EventLogOutcome.FAILURE;
         UUID resourceTechnicalId = resolveResourceTechnicalId(request, response, path);
         EventLogType eventType = eventLogTypeResolver.resolve(request.getMethod(), path);
+        if (outcome == EventLogOutcome.SUCCESS && HttpMethod.DELETE.matches(request.getMethod())
+            && REPAIR_DELETE_PATH.matcher(path).matches()) {
+            return; // The deletion and its snapshot were recorded in the same transaction.
+        }
         eventLogPublisher.publish(
             eventType,
             outcome,

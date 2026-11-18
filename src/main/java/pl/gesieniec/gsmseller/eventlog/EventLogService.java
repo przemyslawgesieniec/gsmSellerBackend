@@ -1,13 +1,18 @@
 package pl.gesieniec.gsmseller.eventlog;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -18,6 +23,21 @@ public class EventLogService {
     static final int RETENTION_DAYS = 30;
 
     private final EventLogRepository eventLogRepository;
+
+    private final ObjectMapper objectMapper;
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordRepairDeletion(String actor, UUID technicalId, String imei, String rma, Object snapshot) {
+        EventLogRecordedEvent event = new EventLogRecordedEvent(
+            Instant.now(), EventLogType.REPAIR_UPDATED, EventLogOutcome.SUCCESS, actor, imei,
+            "DELETE", "/api/v1/repairs/" + technicalId, rma, technicalId
+        );
+        try {
+            eventLogRepository.save(EventLogEntry.repairDeletion(event, objectMapper.writeValueAsString(snapshot)));
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException("Nie udało się zapisać danych usuwanej naprawy w audycie", e);
+        }
+    }
 
     @Transactional(readOnly = true)
     public Page<EventLogDto> search(

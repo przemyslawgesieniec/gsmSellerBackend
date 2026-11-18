@@ -1052,6 +1052,10 @@ async function openRepairDetails(technicalId) {
     document.getElementById('saveRepairBtn').style.display = 'none';
 
     const modal = UI.Dialog.getInstance(document.getElementById('repairModal'));
+    configureRepairDeletion(repair, () => {
+        modal.close();
+        loadRepairs();
+    });
     modal.open();
 }
 
@@ -1256,6 +1260,7 @@ async function saveRepair() {
 }
 
 function resetForm() {
+    configureRepairDeletion(null);
     document.getElementById('repairForm').reset();
     document.getElementById('newRepairNoteContent').value = '';
     document.getElementById('repairNotesList').innerHTML = '<p class="grey-text center-align">Brak notatek</p>';

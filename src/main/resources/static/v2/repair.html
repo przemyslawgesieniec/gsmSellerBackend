@@ -471,6 +471,7 @@
     <button class="button orange darken-2 interactive interactive-light" id="editRepairBtn" style="display: none">
      Edytuj
     </button>
+    <button type="button" class="button red darken-2" id="deleteRepairBtn" hidden style="display: none">Usuń</button>
     <button class="button blue darken-2 interactive interactive-light" id="saveRepairBtn">
      Zapisz
     </button>
@@ -697,6 +698,18 @@
     </button>
    </div>
   </dialog>
+  <dialog style="width: min(480px, calc(100vw - 32px))" id="deleteRepairDialog" aria-labelledby="deleteRepairTitle" aria-describedby="deleteRepairWarning">
+   <form id="deleteRepairForm" autocomplete="off" class="dialog-body">
+     <h5 id="deleteRepairTitle">Trwale usunąć naprawę?</h5>
+     <p id="deleteRepairWarning"><strong>Tej operacji nie można cofnąć.</strong> Naprawa i jej notatki zostaną trwale usunięte.</p>
+     <label for="deleteRepairRma">Przepisz numer RMA <strong id="deleteRepairExpectedRma"></strong></label>
+     <input id="deleteRepairRma" type="text" required spellcheck="false" autocapitalize="off" autofocus>
+     <p id="deleteRepairError" role="alert" hidden></p>
+     <button type="button" id="cancelDeleteRepairBtn" class="button-quiet">Anuluj</button>
+     <button type="submit" id="confirmDeleteRepairBtn" class="button red darken-2" disabled>Usuń trwale</button>
+   </form>
+  </dialog>
+  <script src="/js/repair-delete.js"></script>
   <script src="assets/vendor/lucide.js">
   </script>
   <script src="assets/vendor/tom-select.js">
